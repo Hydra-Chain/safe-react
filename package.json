@@ -87,6 +87,7 @@
     "redux-thunk": "^2.3.0",
     "reselect": "^4.0.0",
     "semver": "^7.1.1",
+    "sharp": "^0.30.5",
     "styled-components": "^5.0.1",
     "web3": "1.2.6"
   },
