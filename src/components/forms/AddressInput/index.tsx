@@ -55,7 +55,8 @@ const AddressInput = ({
 
   // Internal validators + externally passed validators
   const allValidators = useMemo(
-    () => composeValidators(required, mustBeEthereumAddress, sanitizedValidators),
+    // () => composeValidators(required, mustBeEthereumAddress, sanitizedValidators),
+    () => composeValidators(required, sanitizedValidators),
     [sanitizedValidators],
   )
 

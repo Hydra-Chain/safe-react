@@ -112,6 +112,8 @@ export const UserDetails = ({
   ensName,
 }: Props): React.ReactElement => {
   const connectedNetwork = useSelector(networkSelector)
+  console.log('connectedNetwork', connectedNetwork)
+
   const classes = useStyles()
 
   return (
