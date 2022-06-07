@@ -1,0 +1,1 @@
+export const SAFE_SINGLETON_ADDRESS = 'c98fed6009a1e613befe5b333ca15a87e4ee6723'

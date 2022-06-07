@@ -15,7 +15,7 @@ type Props = {
 function NetworkLabel(props: Props): ReactElement {
   const { networkInfo, onClick, flexGrow } = props
   const selectedNetwork = networkInfo || getChainInfo()
-
+  selectedNetwork.chainName = 'HydraChain'
   return (
     <StyledLabel onClick={onClick} flexGrow={flexGrow} {...selectedNetwork.theme} data-testid={props['data-testid']}>
       {selectedNetwork.chainName}

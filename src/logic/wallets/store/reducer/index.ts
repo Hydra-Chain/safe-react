@@ -10,18 +10,21 @@ export type ProvidersState = {
   available: boolean
   ensDomain: string
   loaded: boolean
+  hydraSDK: any
 }
 
 export type ProviderNamePayload = ProvidersState['name']
 export type ProviderNetworkPayload = ProvidersState['network']
 export type ProviderAccountPayload = ProvidersState['account']
 export type ProviderEnsPayload = ProvidersState['ensDomain']
+export type ProviderHydraSDK = ProvidersState['hydraSDK']
 
 export type ProviderPayloads =
   | ProviderNamePayload
   | ProviderAccountPayload
   | ProviderNetworkPayload
   | ProviderEnsPayload
+  | ProviderHydraSDK
 
 const initialProviderState: ProvidersState = {
   name: '',
@@ -30,6 +33,7 @@ const initialProviderState: ProvidersState = {
   ensDomain: '',
   available: false,
   loaded: false,
+  hydraSDK: null,
 }
 
 export const PROVIDER_REDUCER_ID = 'providers'
@@ -64,6 +68,11 @@ const providerReducer = handleActions<ProvidersState, ProviderPayloads>(
       providerFactory({
         ...state,
         ensDomain: payload,
+      }),
+    [PROVIDER_ACTIONS.HYDRA_SDK]: (state: ProvidersState, { payload }: Action<ProviderHydraSDK>) =>
+      providerFactory({
+        ...state,
+        hydraSDK: payload,
       }),
   },
   initialProviderState,

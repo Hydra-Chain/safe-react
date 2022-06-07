@@ -5,7 +5,7 @@ import { withStyles } from '@material-ui/core/styles'
 import { Link } from 'react-router-dom'
 
 import Provider from './Provider'
-import NetworkSelector from './NetworkSelector'
+// import NetworkSelector from './NetworkSelector'
 import Spacer from 'src/components/Spacer'
 import Col from 'src/components/layout/Col'
 import Img from 'src/components/layout/Img'
@@ -91,7 +91,7 @@ const WalletPopup = ({ anchorEl, providerDetails, classes, open, onClose }) => {
 
 const Layout = ({ classes, providerDetails, providerInfo }) => {
   const { clickAway, open, toggle } = useStateHandler()
-  const { clickAway: clickAwayNetworks, open: openNetworks, toggle: toggleNetworks } = useStateHandler()
+  // const { clickAway: clickAwayNetworks, open: openNetworks, toggle: toggleNetworks } = useStateHandler()
   const isWrongChain = useSelector(shouldSwitchWalletChain)
 
   return (
@@ -132,7 +132,7 @@ const Layout = ({ classes, providerDetails, providerInfo }) => {
       />
       <Divider />
 
-      <NetworkSelector open={openNetworks} toggle={toggleNetworks} clickAway={clickAwayNetworks} />
+      {/* <NetworkSelector open={openNetworks} toggle={toggleNetworks} clickAway={clickAwayNetworks} /> */}
     </Row>
   )
 }

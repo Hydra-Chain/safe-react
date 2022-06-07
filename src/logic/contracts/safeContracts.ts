@@ -64,6 +64,7 @@ const getSafeContractDeployment = ({ safeVersion }: { safeVersion: string }) => 
  */
 const getGnosisSafeContractInstance = (web3: Web3, chainId: ChainId): GnosisSafe => {
   const safeSingletonDeployment = getSafeContractDeployment({ safeVersion: LATEST_SAFE_VERSION })
+
   const contractAddress = safeSingletonDeployment?.networkAddresses[chainId]
 
   if (!contractAddress) {
@@ -180,10 +181,14 @@ export const getSignMessageLibContractInstance = (web3: Web3, chainId: ChainId):
   return new web3.eth.Contract(signMessageLibDeployment?.abi as AbiItem[], contractAddress) as unknown as SignMessageLib
 }
 
-export const getMasterCopyAddressFromProxyAddress = async (proxyAddress: string): Promise<string | undefined> => {
+export const getMasterCopyAddressFromProxyAddress = async (
+  proxyAddress: string,
+  hydraSdk: any,
+  hydraAddress: string,
+): Promise<string | undefined> => {
   let masterCopyAddress: string | undefined
   try {
-    const res = await getSafeInfo(proxyAddress)
+    const res = await getSafeInfo(proxyAddress, hydraSdk, hydraAddress)
     masterCopyAddress = res.implementation.value
     if (!masterCopyAddress) {
       console.error(`There was not possible to get masterCopy address from proxy ${proxyAddress}.`)
