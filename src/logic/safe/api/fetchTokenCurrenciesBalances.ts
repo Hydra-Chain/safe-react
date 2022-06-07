@@ -1,6 +1,6 @@
 import { getBalances, SafeBalanceResponse, TokenInfo } from '@gnosis.pm/safe-react-gateway-sdk'
 import { _getChainId } from 'src/config'
-import { checksumAddress } from 'src/utils/checksumAddress'
+// import { checksumAddress } from 'src/utils/checksumAddress'
 
 export type TokenBalance = {
   tokenInfo: TokenInfo
@@ -22,7 +22,7 @@ export const fetchTokenCurrenciesBalances = async ({
   excludeSpamTokens = true,
   trustedTokens = false,
 }: FetchTokenCurrenciesBalancesProps): Promise<SafeBalanceResponse> => {
-  const address = checksumAddress(safeAddress)
+  const address = safeAddress
   return getBalances(_getChainId(), address, selectedCurrency, {
     exclude_spam: excludeSpamTokens,
     trusted: trustedTokens,

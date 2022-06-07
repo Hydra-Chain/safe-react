@@ -31,8 +31,6 @@ let fallbackHandler: CompatibilityFallbackHandler
 let multiSend: MultiSend
 
 const getSafeContractDeployment = ({ safeVersion }: { safeVersion: string }) => {
-  console.log('getSafeContractDeployment')
-
   // We check if version is prior to v1.0.0 as they are not supported but still we want to keep a minimum compatibility
   const useOldestContractVersion = semverSatisfies(safeVersion, '<1.0.0')
   // We have to check if network is L2
@@ -65,9 +63,7 @@ const getSafeContractDeployment = ({ safeVersion }: { safeVersion: string }) => 
  * @param {ChainId} chainId
  */
 const getGnosisSafeContractInstance = (web3: Web3, chainId: ChainId): GnosisSafe => {
-  console.log('getGnosisSafeContractInstance')
   const safeSingletonDeployment = getSafeContractDeployment({ safeVersion: LATEST_SAFE_VERSION })
-  console.log('safeSingletonDeployment', safeSingletonDeployment)
 
   const contractAddress = safeSingletonDeployment?.networkAddresses[chainId]
 
@@ -84,8 +80,6 @@ const getGnosisSafeContractInstance = (web3: Web3, chainId: ChainId): GnosisSafe
  * @param {ChainId} chainId
  */
 const getProxyFactoryContractInstance = (web3: Web3, chainId: ChainId): ProxyFactory => {
-  console.log('getProxyFactoryContractInstance')
-
   const proxyFactoryDeployment =
     getProxyFactoryDeployment({
       version: LATEST_SAFE_VERSION,
@@ -109,8 +103,6 @@ const getProxyFactoryContractInstance = (web3: Web3, chainId: ChainId): ProxyFac
  * @param {ChainId} chainId
  */
 const getFallbackHandlerContractInstance = (web3: Web3, chainId: ChainId): CompatibilityFallbackHandler => {
-  console.log('getFallbackHandlerContractInstance')
-
   const fallbackHandlerDeployment =
     getFallbackHandlerDeployment({
       version: LATEST_SAFE_VERSION,
@@ -137,8 +129,6 @@ const getFallbackHandlerContractInstance = (web3: Web3, chainId: ChainId): Compa
  * @param {ChainId} chainId
  */
 const getMultiSendContractInstance = (web3: Web3, chainId: ChainId): MultiSend => {
-  console.log('getMultiSendContractInstance')
-
   const multiSendDeployment =
     getMultiSendCallOnlyDeployment({
       network: chainId.toString(),
@@ -158,8 +148,6 @@ const getMultiSendContractInstance = (web3: Web3, chainId: ChainId): MultiSend =
  * @returns {string}
  */
 export const getSignMessageLibAddress = (chainId: ChainId): string | undefined => {
-  console.log('getSignMessageLibAddress')
-
   const signMessageLibDeployment =
     getSignMessageLibDeployment({
       network: chainId.toString(),
@@ -180,8 +168,6 @@ export const getSignMessageLibAddress = (chainId: ChainId): string | undefined =
  * @returns {SignMessageLib}
  */
 export const getSignMessageLibContractInstance = (web3: Web3, chainId: ChainId): SignMessageLib => {
-  console.log('getSignMessageLibContractInstance')
-
   const signMessageLibDeployment =
     getSignMessageLibDeployment({
       network: chainId.toString(),
@@ -195,12 +181,14 @@ export const getSignMessageLibContractInstance = (web3: Web3, chainId: ChainId):
   return new web3.eth.Contract(signMessageLibDeployment?.abi as AbiItem[], contractAddress) as unknown as SignMessageLib
 }
 
-export const getMasterCopyAddressFromProxyAddress = async (proxyAddress: string): Promise<string | undefined> => {
-  console.log('getMasterCopyAddressFromProxyAddress')
-
+export const getMasterCopyAddressFromProxyAddress = async (
+  proxyAddress: string,
+  hydraSdk: any,
+  hydraAddress: string,
+): Promise<string | undefined> => {
   let masterCopyAddress: string | undefined
   try {
-    const res = await getSafeInfo(proxyAddress)
+    const res = await getSafeInfo(proxyAddress, hydraSdk, hydraAddress)
     masterCopyAddress = res.implementation.value
     if (!masterCopyAddress) {
       console.error(`There was not possible to get masterCopy address from proxy ${proxyAddress}.`)
@@ -212,8 +200,6 @@ export const getMasterCopyAddressFromProxyAddress = async (proxyAddress: string)
 }
 
 export const instantiateSafeContracts = () => {
-  console.log('instantiateSafeContracts')
-
   const web3 = getWeb3()
   const chainId = _getChainId()
 
@@ -231,33 +217,23 @@ export const instantiateSafeContracts = () => {
 }
 
 export const getSafeMasterContract = () => {
-  console.log('getSafeMasterContract')
-
   instantiateSafeContracts()
   return safeMaster
 }
 
 export const getSafeMasterContractAddress = () => {
-  console.log('getSafeMasterContractAddress')
-
   return safeMaster.options.address
 }
 
 export const getFallbackHandlerContractAddress = () => {
-  console.log('getFallbackHandlerContractAddress')
-
   return fallbackHandler.options.address
 }
 
 export const getMultisendContract = () => {
-  console.log('getMultisendContract')
-
   return multiSend
 }
 
 export const getMultisendContractAddress = () => {
-  console.log('getMultisendContractAddress')
-
   return multiSend.options.address
 }
 
@@ -266,8 +242,6 @@ export const getSafeDeploymentTransaction = (
   numConfirmations: number,
   safeCreationSalt: number,
 ) => {
-  console.log('getSafeDeploymentTransaction')
-
   const gnosisSafeData = safeMaster.methods
     .setup(
       safeAccounts,
@@ -289,8 +263,6 @@ export const estimateGasForDeployingSafe = async (
   userAccount: string,
   safeCreationSalt: number,
 ) => {
-  console.log('estimateGasForDeployingSafe')
-
   const proxyFactoryData = getSafeDeploymentTransaction(safeAccounts, numConfirmations, safeCreationSalt).encodeABI()
 
   return calculateGasOf({
@@ -301,8 +273,6 @@ export const estimateGasForDeployingSafe = async (
 }
 
 export const getGnosisSafeInstanceAt = (safeAddress: string, safeVersion: string): GnosisSafe => {
-  console.log('getGnosisSafeInstanceAt')
-
   const safeSingletonDeployment = getSafeContractDeployment({ safeVersion })
 
   const web3 = getWeb3()

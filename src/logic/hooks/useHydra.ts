@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { store } from 'src/store'
 import closeSnackbar from '../notifications/store/actions/closeSnackbar'
 import updateProviderAccount from '../wallets/store/actions/updateProviderAccount'
+import updateProviderHydraSDK from '../wallets/store/actions/updateProviderHydraSDK'
 import updateProviderNetwork from '../wallets/store/actions/updateProviderNetwork'
 import updateProviderWallet from '../wallets/store/actions/updateProviderWallet'
 // import invoke from '../hydra/mobileInvoke/browser'
@@ -25,7 +26,6 @@ export default function (): { account: any; hydraSDK: any; error: string } {
     if (window.hydrawallet) {
       return
     }
-    console.log(' in use hydra')
 
     window.addEventListener(
       'message',
@@ -54,6 +54,7 @@ export default function (): { account: any; hydraSDK: any; error: string } {
           store.dispatch(updateProviderAccount(account?.address || ''))
           store.dispatch(updateProviderNetwork(account ? '1' : ''))
           store.dispatch(closeSnackbar({ dismissAll: true }))
+          store.dispatch(updateProviderHydraSDK(hydraExtension || null))
           //   const hydraExtension = new Hydraweb3(window.ReactNativeWebView ? { rawCall } : window.hydrawallet.rpcProvider)
           setAccount(account)
           setHydraSDK(hydraExtension)

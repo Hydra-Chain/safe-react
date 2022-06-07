@@ -8,7 +8,7 @@ import { SafeInfo } from '@gnosis.pm/safe-react-gateway-sdk'
 
 import { getSafeDeploymentTransaction } from 'src/logic/contracts/safeContracts'
 import { txMonitor } from 'src/logic/safe/transactions/txMonitor'
-import { userAccountSelector } from 'src/logic/wallets/store/selectors'
+import { providerHydraSdkSelector, userAccountSelector } from 'src/logic/wallets/store/selectors'
 import { SafeDeployment } from 'src/routes/opening'
 import { loadFromStorage, removeFromStorage, saveToStorage } from 'src/utils/storage'
 import { addOrUpdateSafe } from 'src/logic/safe/store/actions/addOrUpdateSafe'
@@ -169,9 +169,9 @@ const createNewSafe = (userAddress: string, onHash: (hash: string) => void): Pro
   })
 }
 
-const pollSafeInfo = async (safeAddress: string): Promise<SafeInfo> => {
+const pollSafeInfo = async (safeAddress: string, hydraSdk: any, hydraAddress: string): Promise<SafeInfo> => {
   // exponential delay between attempts for around 4 min
-  return await backOff(() => getSafeInfo(safeAddress), {
+  return await backOff(() => getSafeInfo(safeAddress, hydraSdk, hydraAddress), {
     startingDelay: 750,
     maxDelay: 20000,
     numOfAttempts: 19,
@@ -198,6 +198,8 @@ function SafeCreationProcess(): ReactElement {
   const [modalData, setModalData] = useState<ModalDataType>({ safeAddress: '' })
   const [showCouldNotLoadModal, setShowCouldNotLoadModal] = useState(false)
   const [newSafeAddress, setNewSafeAddress] = useState<string>('')
+  const address = useSelector(userAccountSelector)
+  const hydraSdk = useSelector(providerHydraSdkSelector)
 
   useEffect(() => {
     const safeCreationFormValues = loadSavedDataOrLeave()
@@ -236,14 +238,14 @@ function SafeCreationProcess(): ReactElement {
     await sleep(5000)
 
     try {
-      await pollSafeInfo(safeAddress)
+      await pollSafeInfo(safeAddress, hydraSdk, address ?? '')
     } catch (e) {
       setNewSafeAddress(safeAddress)
       setShowCouldNotLoadModal(true)
       return
     }
 
-    const safeProps = await buildSafe(safeAddress)
+    const safeProps = await buildSafe(safeAddress, hydraSdk, address ?? '')
     dispatch(addOrUpdateSafe(safeProps))
 
     setShowModal(true)

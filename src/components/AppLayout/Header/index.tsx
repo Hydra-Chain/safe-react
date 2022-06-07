@@ -1,4 +1,4 @@
-import { lazy } from 'react'
+import { lazy, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 
 import Layout from './components/Layout'
@@ -10,7 +10,7 @@ import { currentChainId } from 'src/logic/config/store/selectors'
 import {
   availableSelector,
   loadedSelector,
-  // providerNameSelector,
+  providerNameSelector,
   userAccountSelector,
   userEnsSelector,
 } from 'src/logic/wallets/store/selectors'
@@ -18,42 +18,26 @@ import onboard from 'src/logic/wallets/onboard'
 // import { isSupportedWallet } from 'src/logic/wallets/utils/walletList'
 import { isPairingSupported } from 'src/logic/wallets/pairing/utils'
 import { wrapInSuspense } from 'src/utils/wrapInSuspense'
-import { useHydraAccount } from 'src/logic/hooks/useHydraAccAndSDK'
 
 const HidePairingModule = lazy(
   () => import('src/components/AppLayout/Header/components/ProviderDetails/HidePairingModule'),
 )
 
 const HeaderComponent = (): React.ReactElement => {
-  const [account] = useHydraAccount()
-  const provider = account ? 'HydraWallet' : ''
+  const provider = useSelector(providerNameSelector)
   const chainId = useSelector(currentChainId)
   const userAddress = useSelector(userAccountSelector)
   const ensName = useSelector(userEnsSelector)
   const loaded = useSelector(loadedSelector)
   const available = useSelector(availableSelector)
-  console.log('provider', provider)
-  console.log('chainId', chainId)
-  console.log('userAddress', userAddress)
-  console.log('ensName', ensName)
-  console.log('loaded', loaded)
-  console.log('available', available)
 
-  // const provider =
+  useEffect(() => {
+    const tryToConnectToLastUsedProvider = async () => {
+      window.postMessage({ message: { type: 'CONNECT_HYDRAWALLET' } }, '*')
+    }
 
-  // useEffect(() => {
-  //   const tryToConnectToLastUsedProvider = async () => {
-  //     const lastUsedProvider = loadLastUsedProvider()
-  //     const isProviderEnabled = lastUsedProvider && isSupportedWallet(lastUsedProvider)
-  //     if (isProviderEnabled) {
-  //       await onboard().walletSelect(lastUsedProvider)
-  //     } else if (isPairingSupported()) {
-  //       await initPairing()
-  //     }
-  //   }
-
-  //   tryToConnectToLastUsedProvider()
-  // }, [chainId])
+    tryToConnectToLastUsedProvider()
+  }, [chainId])
 
   const openDashboard = () => {
     const { wallet } = onboard().getState()
@@ -61,7 +45,7 @@ const HeaderComponent = (): React.ReactElement => {
   }
 
   const onDisconnect = () => {
-    onboard().walletReset()
+    window.postMessage({ message: { type: 'DISCONNECT_HYDRAWALLET' } }, '*')
   }
 
   const getProviderInfoBased = () => {

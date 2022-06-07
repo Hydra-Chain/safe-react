@@ -46,6 +46,11 @@ function ReviewLoadStep(): ReactElement {
 
   const isUserConnectedWalletASAfeOwner = checkIfUserAddressIsAnOwner(ownerList, userAddress)
 
+  console.log('loadSafeForm', loadSafeForm)
+  console.log('userAddress', userAddress)
+  console.log('addressBook', addressBook)
+  console.log('formValues', formValues)
+
   return (
     <Row data-testid={'load-safe-review-step'}>
       <Col layout="column" xs={4}>

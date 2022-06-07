@@ -6,7 +6,7 @@ import { SafeRecordProps } from 'src/logic/safe/store/models/safe'
 import { getLocalSafe } from 'src/logic/safe/utils'
 import { getSafeInfo } from 'src/logic/safe/utils/safeInformation'
 import { SafeInfo } from '@gnosis.pm/safe-react-gateway-sdk'
-import { checksumAddress } from 'src/utils/checksumAddress'
+// import { checksumAddress } from 'src/utils/checksumAddress'
 import { buildSafeOwners, extractRemoteSafeInfo } from './utils'
 import { AppReduxState, store } from 'src/store'
 import { currentSafeWithNames } from '../selectors'
@@ -25,13 +25,13 @@ import { fetchSafeTokens } from 'src/logic/tokens/store/actions/fetchSafeTokens'
  * @param {string} safeAddress
  * @returns Promise<SafeRecordProps>
  */
-export const buildSafe = async (safeAddress: string): Promise<SafeRecordProps> => {
-  const address = checksumAddress(safeAddress)
+export const buildSafe = async (safeAddress: string, hydraSdk: any, hydraAddress: string): Promise<SafeRecordProps> => {
+  const address = safeAddress
   // setting `loadedViaUrl` to false, as `buildSafe` is called on safe Load or Open flows
   const safeInfo: Partial<SafeRecordProps> = { address, loadedViaUrl: false }
 
   const local = getLocalSafe(safeAddress)
-  const remote = await getSafeInfo(safeAddress).catch((err) => {
+  const remote = await getSafeInfo(safeAddress, hydraSdk, hydraAddress).catch((err) => {
     err.log()
     return null
   })
@@ -56,17 +56,17 @@ export const buildSafe = async (safeAddress: string): Promise<SafeRecordProps> =
  * @param {boolean} isInitialLoad
  */
 export const fetchSafe =
-  (safeAddress: string, isInitialLoad = false) =>
+  (safeAddress: string, hydraSdk: any, hydraAddress: string, isInitialLoad = false) =>
   async (dispatch: Dispatch<any>): Promise<Action<Partial<SafeRecordProps>> | void> => {
     const dispatchPromises: ((dispatch: Dispatch, getState: () => AppReduxState) => Promise<void> | void)[] = []
 
-    const address = checksumAddress(safeAddress)
+    const address = safeAddress
 
     let safeInfo: Partial<SafeRecordProps> = {}
     let remoteSafeInfo: SafeInfo | null = null
 
     try {
-      remoteSafeInfo = await getSafeInfo(address)
+      remoteSafeInfo = await getSafeInfo(address, hydraSdk, hydraAddress)
     } catch (err) {
       err.log()
     }
