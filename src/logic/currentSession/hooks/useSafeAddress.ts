@@ -6,7 +6,6 @@ import { currentSession } from '../store/selectors'
 const useSafeAddress = (): { shortName: string; safeAddress: string } => {
   const safe = useSelector(currentSafe)
   const { currentShortName, currentSafeAddress } = useSelector(currentSession)
-
   return {
     shortName: currentShortName || getShortName(),
     safeAddress: currentSafeAddress || safe.address,

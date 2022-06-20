@@ -83,20 +83,15 @@ function Load(): ReactElement {
       name: getLoadSafeName(values, addressBook),
       chainId,
     })
-    console.log('ownerEntries', ownerEntries)
-    console.log('safeEntry', safeEntry)
 
     dispatch(addressBookSafeLoad([...ownerEntries, safeEntry]))
   }
 
   const onSubmitLoadSafe = async (values: LoadSafeFormValues): Promise<void> => {
-    console.log('onSubmitLoadSafe')
-
     const address = values[FIELD_LOAD_SAFE_ADDRESS]
     if (!isValidAddressHydra(hydraSdk.decoder.toHydraAddress(address))) {
       return
     }
-    console.log('after isValidAddressHydra')
 
     // Track number of owners
     trackEvent({
@@ -116,10 +111,8 @@ function Load(): ReactElement {
     trackEvent(LOAD_SAFE_EVENTS.GO_TO_SAFE)
 
     updateAddressBook(values)
-    console.log('before checksummedAddress', address)
 
     const checksummedAddress = address || ''
-    console.log('after checksummedAddress', checksummedAddress)
     const safeProps = await buildSafe(checksummedAddress, hydraSdk, addressHydra ?? '')
     const storedSafes = loadStoredSafes() || {}
     storedSafes[checksummedAddress] = safeProps

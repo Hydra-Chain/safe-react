@@ -1,3 +1,4 @@
 import GnosisSafe from './GnosisSafe.json'
+import GnosisSafeProxyFactory from './GnosisSafeProxyFactory.json'
 
-export default GnosisSafe
+export { GnosisSafe, GnosisSafeProxyFactory }

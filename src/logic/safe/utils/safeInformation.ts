@@ -3,7 +3,7 @@ import { AddressEx, SafeInfo } from '@gnosis.pm/safe-react-gateway-sdk'
 import { Errors, CodedException } from 'src/logic/exceptions/CodedException'
 import { _getChainId } from 'src/config'
 import { SAFE_SINGLETON_ADDRESS } from 'src/logic/hydra/contracts'
-import { getSafeInfoEmpty } from 'src/logic/hydra/utils/emptySafeInfo'
+import { getSafeInfoEmpty } from 'src/logic/hydra/utils'
 import {
   getGnosisProxyModules,
   getGnosisProxyNonce,

@@ -33,6 +33,7 @@ export const SafeDeployment = ({
   onSuccess,
   submittedPromise,
 }: Props): React.ReactElement => {
+  ;(async () => {})()
   const [loading, setLoading] = useState(true)
   const [stepIndex, setStepIndex] = useState(0)
   const [safeCreationTxHash, setSafeCreationTxHash] = useState('')

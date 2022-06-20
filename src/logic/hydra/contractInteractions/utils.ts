@@ -1,4 +1,8 @@
-import GnosisSafe from '../abis'
+import { getSafeWithNonceInitializer } from 'src/logic/contracts/safeContracts'
+import { PayableTx } from 'src/types/contracts/types'
+// import { GnosisSafe, GnosisSafeProxyFactory } from '../abis'
+import { GnosisSafe } from '../abis'
+// import { SAFE_PROXY_FACTORY_ADDRESS, SAFE_SINGLETON_ADDRESS } from '../contracts'
 import { contractCall, getContract } from './core'
 
 type Error = {
@@ -59,4 +63,32 @@ export const getGnosisProxyThreshold = async (
   const resp = await contractCall(getContract(hydraSdk, safeAddress, GnosisSafe), 'getThreshold', [], userAddress)
   const result = getCallResult(resp)
   return Number(result.value[0].toString())
+}
+
+export const deploySafeWithNonce = async (
+  sendParams: PayableTx,
+  ownerAddresses: any[],
+  confirmations: number,
+  safeCreationSalt: number,
+  hydraSdk: any,
+  userAddress: string,
+): Promise<void> => {
+  const initializer = getSafeWithNonceInitializer(ownerAddresses, confirmations)
+  console.log('sendParams', sendParams)
+  console.log('ownerAddresses', ownerAddresses)
+  console.log('confirmations', confirmations)
+  console.log('safeCreationSalt', safeCreationSalt)
+  console.log('hydraSdk', hydraSdk)
+  console.log('userAddress', userAddress)
+  console.log('initializer', initializer)
+
+  // const resp = await contractSend(
+  //   getContract(hydraSdk, SAFE_PROXY_FACTORY_ADDRESS, GnosisSafeProxyFactory),
+  //   'createProxyWithNonce',
+  //   // address _mastercopy, bytes memory initializer, uint256 saltNonce
+  //   [SAFE_SINGLETON_ADDRESS, initializer.substring(2), safeCreationSalt],
+  //   userAddress
+  // )
+  // const result = getCallResult(resp)
+  // return Number(result.value[0].toString())
 }

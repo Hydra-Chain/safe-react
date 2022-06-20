@@ -137,7 +137,6 @@ export const createSendParams = (
     gas: txParams.ethGasLimit,
     nonce: txParams.ethNonce,
   }
-
   if (isMaxFeeParam()) {
     sendParams.maxPriorityFeePerGas = txParams.ethMaxPrioFeeInGWei
     sendParams.maxFeePerGas = txParams.ethGasPriceInGWei

@@ -46,6 +46,8 @@ import { didTxRevert } from 'src/logic/safe/store/actions/transactions/utils/tra
 import { useQuery } from 'src/logic/hooks/useQuery'
 import { ADDRESSED_ROUTE } from 'src/routes/routes'
 import { SAFE_APPS_EVENTS } from 'src/utils/events/safeApps'
+import { hydraToHexAddress } from 'src/logic/hydra/utils'
+import { deploySafeWithNonce } from 'src/logic/hydra/contractInteractions/utils'
 
 export const InlinePrefixedEthHashInfo = styled(PrefixedEthHashInfo)`
   display: inline-flex;
@@ -101,7 +103,11 @@ const loadSavedDataOrLeave = (): CreateSafeFormValues | void => {
   return getSavedSafeCreation() || goToWelcomePage()
 }
 
-const createNewSafe = (userAddress: string, onHash: (hash: string) => void): Promise<TransactionReceipt> => {
+const createNewSafe = (
+  userAddress: string,
+  hydraSdk: any,
+  onHash: (hash: string) => void,
+): Promise<TransactionReceipt> => {
   if (!userAddress) {
     return Promise.reject(new Error('No user address'))
   }
@@ -120,13 +126,18 @@ const createNewSafe = (userAddress: string, onHash: (hash: string) => void): Pro
     const gasPrice = safeCreationFormValues[FIELD_NEW_SAFE_GAS_PRICE]
     const gasMaxPrioFee = safeCreationFormValues[FIELD_NEW_SAFE_GAS_MAX_PRIO_FEE]
     const safeCreationSalt = Date.now() // never retry with the same salt
+    // console.log('deploymentTx', deploymentTx);
     const deploymentTx = getSafeDeploymentTransaction(ownerAddresses, confirmations, safeCreationSalt)
 
-    const sendParams = createSendParams(userAddress, {
+    const sendParams = createSendParams(hydraToHexAddress(userAddress, true), {
       ethGasLimit: gasLimit.toString(),
       ethGasPriceInGWei: gasPrice,
       ethMaxPrioFeeInGWei: gasMaxPrioFee.toString(),
     })
+    console.log('deploymentTx', deploymentTx)
+    console.log('sendParams', sendParams)
+
+    deploySafeWithNonce(sendParams, ownerAddresses, confirmations, safeCreationSalt, hydraSdk, userAddress)
 
     deploymentTx
       .send(sendParams)
@@ -185,6 +196,8 @@ const pollSafeInfo = async (safeAddress: string, hydraSdk: any, hydraAddress: st
 const APP_URL_QUERY_PARAM = 'appUrl'
 
 function SafeCreationProcess(): ReactElement {
+  console.log('SafeCreationProcess')
+
   const [safeCreationTxHash, setSafeCreationTxHash] = useState<string | undefined>()
   const [creationTxPromise, setCreationTxPromise] = useState<Promise<TransactionReceipt>>()
 
@@ -203,6 +216,7 @@ function SafeCreationProcess(): ReactElement {
 
   useEffect(() => {
     const safeCreationFormValues = loadSavedDataOrLeave()
+    console.log('safeCreationFormValues', safeCreationFormValues)
     if (!safeCreationFormValues) {
       return
     }
@@ -211,11 +225,17 @@ function SafeCreationProcess(): ReactElement {
     if (newCreationTxHash) {
       setSafeCreationTxHash(newCreationTxHash)
     } else {
-      setCreationTxPromise(createNewSafe(userAddress, setSafeCreationTxHash))
+      console.log('setCreationTxPromise(createNewSafe(userAddress, setSafeCreationTxHash))')
+      ;(async () => {
+        const dd = await createNewSafe(userAddress, hydraSdk, setSafeCreationTxHash)
+        console.log('dd', dd)
+      })()
+      setCreationTxPromise(createNewSafe(userAddress, hydraSdk, setSafeCreationTxHash))
     }
-  }, [userAddress])
+  }, [userAddress, hydraSdk])
 
   const onSafeCreated = async (safeAddress: string): Promise<void> => {
+    console.log('onSafeCreated')
     const createSafeFormValues = loadSavedDataOrLeave()
 
     const defaultSafeValue = createSafeFormValues[FIELD_CREATE_SUGGESTED_SAFE_NAME]
@@ -257,6 +277,7 @@ function SafeCreationProcess(): ReactElement {
   }
 
   const onRetry = (): void => {
+    console.log('onRetry')
     const safeCreationFormValues = loadSavedDataOrLeave()
 
     if (!safeCreationFormValues) {
@@ -270,7 +291,7 @@ function SafeCreationProcess(): ReactElement {
       safeCreationTxHash: undefined,
     })
 
-    setCreationTxPromise(createNewSafe(userAddress, setSafeCreationTxHash))
+    setCreationTxPromise(createNewSafe(userAddress, hydraSdk, setSafeCreationTxHash))
   }
 
   const onCancel = () => {

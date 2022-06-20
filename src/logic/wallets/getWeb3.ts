@@ -17,7 +17,7 @@ import { isValidCryptoDomainName } from 'src/logic/wallets/ethAddresses'
 import { getAddressFromUnstoppableDomain } from './utils/unstoppableDomains'
 import { hasFeature } from 'src/logic/safe/utils/safeVersion'
 // import { checksumAddress } from 'src/utils/checksumAddress'
-import { isValidAddressHydraHex } from 'src/utils/isValidAddress'
+import { isValidAddressHydra } from 'src/utils/isValidAddress'
 import { Wallet } from 'bnc-onboard/dist/src/interfaces'
 
 // This providers have direct relation with name assigned in bnc-onboard configuration
@@ -115,7 +115,7 @@ export const getAddressFromDomain = (name: string): Promise<string> => {
 }
 
 export const reverseENSLookup = async (address: string): Promise<string> => {
-  if (!address || !hasFeature(FEATURES.DOMAIN_LOOKUP) || !isValidAddressHydraHex(address)) {
+  if (!address || !hasFeature(FEATURES.DOMAIN_LOOKUP) || !isValidAddressHydra(address)) {
     return ''
   }
 

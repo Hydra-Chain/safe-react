@@ -73,7 +73,6 @@ const notificationsMiddleware =
   async (action: Action<AnyAction>): Promise<any> => {
     const handledAction = next(action)
     const { dispatch } = store
-
     if (watchedActions.includes(action.type)) {
       const state = store.getState()
 
