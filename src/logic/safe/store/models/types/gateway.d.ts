@@ -102,6 +102,8 @@ export const isMultiSendTxInfo = (value: TransactionInfo): value is MultiSend =>
 }
 
 export const isCreationTxInfo = (value: TransactionInfo): value is Creation => {
+  console.log('isCreationTxInfo value', value);
+  
   return value.type === 'Creation'
 }
 

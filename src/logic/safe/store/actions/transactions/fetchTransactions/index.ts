@@ -8,14 +8,16 @@ import {
 import { loadHistoryTransactions, loadQueuedTransactions } from './loadGatewayTransactions'
 import { AppReduxState } from 'src/store'
 
-export default (chainId: string, safeAddress: string) =>
+export default (chainId: string, safeAddress: string, hydraSdk: any) =>
   async (dispatch: ThunkDispatch<AppReduxState, undefined, AnyAction>): Promise<void> => {
     const loadTxs = async (
       loadFn: typeof loadHistoryTransactions | typeof loadQueuedTransactions,
       actionFn: typeof addHistoryTransactions | typeof addQueuedTransactions,
     ) => {
       try {
-        const values = (await loadFn(safeAddress)) as any[]
+        console.log('ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd');
+        
+        const values = (await loadFn(safeAddress, hydraSdk)) as any[]
         dispatch(actionFn({ chainId, safeAddress, values }))
       } catch (e) {
         e.log()

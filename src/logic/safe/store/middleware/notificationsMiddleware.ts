@@ -82,7 +82,6 @@ const notificationsMiddleware =
         case ADD_HISTORY_TRANSACTIONS: {
           const userAddress: string = userAccountSelector(state)
           const safesMap = safesAsMap(state)
-
           const executedTxNotification = aboutToExecuteTx.getNotification(
             action.payload as unknown as HistoryPayload,
             userAddress,

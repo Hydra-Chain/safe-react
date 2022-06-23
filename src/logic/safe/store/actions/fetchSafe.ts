@@ -98,7 +98,7 @@ export const fetchSafe =
       }
 
       if (shouldUpdateTxHistory || shouldUpdateTxQueued || isInitialLoad) {
-        dispatchPromises.push(dispatch(fetchTransactions(chainId, address)))
+        dispatchPromises.push(dispatch(fetchTransactions(chainId, address, hydraSdk)))
       }
 
       if (isInitialLoad) {

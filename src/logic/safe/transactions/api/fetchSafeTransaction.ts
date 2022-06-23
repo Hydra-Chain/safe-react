@@ -12,7 +12,8 @@ const cache = {}
 export const fetchSafeTransaction = async (txId: string): Promise<TransactionDetails> => {
   const chainId = _getChainId()
   const cacheKey = `${chainId}_${txId}`
-
+  console.log('tuka sam');
+  
   const promise: Promise<TransactionDetails> = cache[cacheKey] || getTransactionDetails(chainId, txId)
 
   // Save the promise into cache

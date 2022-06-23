@@ -1,5 +1,30 @@
-import { AddressEx, SafeInfo } from '@gnosis.pm/safe-react-gateway-sdk'
+import { TokenInfo } from '@gnosis.pm/safe-apps-sdk'
+import { AddressEx, SafeInfo, TransactionListItem, TransactionListPage } from '@gnosis.pm/safe-react-gateway-sdk'
 import { Encoder, Decoder } from 'hydraweb3-js'
+import abiDecoder from 'abi-decoder'
+import { Log } from 'web3-core'
+import { ERC20, GnosisSafe, GnosisSafeProxyFactory } from './abis'
+
+// Init abiDecoder with ProxyCreation ABI
+abiDecoder.addABI(GnosisSafe)
+abiDecoder.addABI(GnosisSafeProxyFactory)
+abiDecoder.addABI(ERC20)
+
+export const getSafeLogs = (logs: Log[]): any => {
+  for (let i = 0; i < logs.length; i++) {
+    logs[i].data = '0x' + logs[i].data
+    for (let y = 0; y < logs[i].topics.length; y++) {
+      logs[i].topics[y] = '0x' + logs[i].topics[y]
+    } 
+  }
+  return abiDecoder.decodeLogs(logs)
+}
+
+export const getTransactionListPageEmpty = (): TransactionListPage => {
+  const tlp = {} as TransactionListPage
+  tlp.results = [] as TransactionListItem[]
+  return tlp
+}
 
 export const getSafeInfoEmpty = (): SafeInfo => {
   const safeInfo = {} as SafeInfo
@@ -12,6 +37,15 @@ export const getSafeInfoEmpty = (): SafeInfo => {
   return safeInfo
 }
 
+export const getItemEmpty = (): { tokenInfo: TokenInfo, balance: string, fiatBalance: string, fiatConversion: string } => {
+  return {
+    tokenInfo: {} as TokenInfo,
+    balance: '',
+    fiatBalance: '',
+    fiatConversion: '',
+  }
+}
+
 export const hydraToHexAddress = (address: string, withPrefix = false): string => {
   const addressHex = Encoder.addressToHex(address)
   const addr = addressHex.substr(addressHex.length - 40)
@@ -22,3 +56,4 @@ export const hydraFromHexAddress = (address: string): string => {
   const addressHex = Decoder.toHydraAddress(address)
   return addressHex
 }
+

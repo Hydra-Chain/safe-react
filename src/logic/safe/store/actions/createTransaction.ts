@@ -126,7 +126,7 @@ export class TxSender {
       navigateToTx(txProps.safeAddress, txDetails)
     }
 
-    dispatch(fetchTransactions(_getChainId(), txProps.safeAddress))
+    dispatch(fetchTransactions(_getChainId(), txProps.safeAddress, null))
   }
 
   async onError(err: Error & { code: number }, errorCallback?: ErrorEventHandler): Promise<void> {

@@ -3,6 +3,7 @@ import { _getChainId } from 'src/config'
 import { HistoryGatewayResponse, QueuedGatewayResponse } from 'src/logic/safe/store/models/types/gateway.d'
 // import { checksumAddress } from 'src/utils/checksumAddress'
 import { Errors, CodedException } from 'src/logic/exceptions/CodedException'
+import { fetchContractTransactions } from 'src/logic/hydra/api/explorer'
 
 /*************/
 /*  HISTORY  */
@@ -23,7 +24,12 @@ export const loadPagedHistoryTransactions = async (
   if (!historyPointers[chainId][safeAddress]?.next) {
     throw new CodedException(Errors._608)
   }
-
+  console.log('----------------------------------------loadPagedHistoryTransactions-----------------------------');
+  // const dd = (await (await fetch('https://explorer.hydrachain.org/contract/93123563bb741000e9ee66b4556c6c9574437dc3')).json())
+  // console.log('data', dd);
+  
+  https://explorer.hydrachain.org/contract/93123563bb741000e9ee66b4556c6c9574437dc3
+  
   try {
     const { results, next, previous } = await getTransactionHistory(
       chainId,
@@ -39,10 +45,13 @@ export const loadPagedHistoryTransactions = async (
   }
 }
 
-export const loadHistoryTransactions = async (safeAddress: string): Promise<HistoryGatewayResponse['results']> => {
+export const loadHistoryTransactions = async (safeAddress: string, hydraSdk: any): Promise<HistoryGatewayResponse['results']> => {
   const chainId = _getChainId()
   try {
-    const { results, next, previous } = await getTransactionHistory(chainId, safeAddress)
+    const { results, next, previous } = await fetchContractTransactions(safeAddress, hydraSdk)
+    // console.log('fetchContractTransactions', dd);
+    
+    // const { results, next, previous } = await getTransactionHistory(chainId, safeAddress)
 
     if (!historyPointers[chainId]) {
       historyPointers[chainId] = {}
@@ -93,7 +102,7 @@ export const loadPagedQueuedTransactions = async (
   }
 }
 
-export const loadQueuedTransactions = async (safeAddress: string): Promise<QueuedGatewayResponse['results']> => {
+export const loadQueuedTransactions = async (safeAddress: string, hydraSdk: any): Promise<QueuedGatewayResponse['results']> => {
   const chainId = _getChainId()
   try {
     const { results, next, previous } = await getTransactionQueue(chainId, safeAddress)
