@@ -1,5 +1,13 @@
 import { TokenInfo } from '@gnosis.pm/safe-apps-sdk'
-import { AddressEx, SafeInfo, TransactionListItem, TransactionListPage } from '@gnosis.pm/safe-react-gateway-sdk'
+import {
+  AddressEx,
+  SafeInfo,
+  Transaction,
+  TransactionListItem,
+  TransactionListPage,
+  TransactionStatus,
+  TransactionSummary,
+} from '@gnosis.pm/safe-react-gateway-sdk'
 import { Encoder, Decoder } from 'hydraweb3-js'
 import abiDecoder from 'abi-decoder'
 import { Log } from 'web3-core'
@@ -15,7 +23,7 @@ export const getSafeLogs = (logs: Log[]): any => {
     logs[i].data = '0x' + logs[i].data
     for (let y = 0; y < logs[i].topics.length; y++) {
       logs[i].topics[y] = '0x' + logs[i].topics[y]
-    } 
+    }
   }
   return abiDecoder.decodeLogs(logs)
 }
@@ -24,6 +32,23 @@ export const getTransactionListPageEmpty = (): TransactionListPage => {
   const tlp = {} as TransactionListPage
   tlp.results = [] as TransactionListItem[]
   return tlp
+}
+
+export const getTransactionItemList = async (transaction: any, callback: any): Promise<Transaction | null> => {
+  let tli: Transaction | null = null
+  transaction.outputs.forEach(async (output) => {
+    const receipt = output.receipt
+    if (!receipt) return
+    tli = {} as Transaction
+    tli.conflictType = receipt.excepted ?? 'End'
+    tli.type = 'TRANSACTION'
+    tli.transaction = {} as TransactionSummary
+    tli.transaction.id = 'hydra_' + '0x' + receipt.contractAddressHex + '_0x' + transaction.id
+    tli.transaction.timestamp = transaction.timestamp
+    tli.transaction.txStatus = receipt.excepted === 'None' ? TransactionStatus.SUCCESS : TransactionStatus.FAILED
+    tli = await callback(tli, receipt)
+  })
+  return tli
 }
 
 export const getSafeInfoEmpty = (): SafeInfo => {
@@ -37,7 +62,12 @@ export const getSafeInfoEmpty = (): SafeInfo => {
   return safeInfo
 }
 
-export const getItemEmpty = (): { tokenInfo: TokenInfo, balance: string, fiatBalance: string, fiatConversion: string } => {
+export const getItemEmpty = (): {
+  tokenInfo: TokenInfo
+  balance: string
+  fiatBalance: string
+  fiatConversion: string
+} => {
   return {
     tokenInfo: {} as TokenInfo,
     balance: '',
@@ -56,4 +86,3 @@ export const hydraFromHexAddress = (address: string): string => {
   const addressHex = Decoder.toHydraAddress(address)
   return addressHex
 }
-

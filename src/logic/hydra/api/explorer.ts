@@ -1,10 +1,22 @@
-import { Creation, Erc20Transfer, TokenType, Transfer, TransferInfo } from "@gnosis.pm/safe-apps-sdk"
-import { AddOwner, AddressEx, DataDecoded, Parameter, SafeBalanceResponse, SettingsChange, SettingsInfo, SettingsInfoType, TokenInfo, Transaction, TransactionInfo, TransactionListItem, TransactionListPage, TransactionStatus, TransactionSummary, TransferDirection } from "@gnosis.pm/safe-react-gateway-sdk"
-import { ZERO_ADDRESS } from "src/logic/wallets/ethAddresses"
-import { Log } from "web3-core"
-import { SAFE_PROXY_FACTORY_ADDRESS, SAFE_SINGLETON_ADDRESS } from "../contracts"
-import { getItemEmpty, getSafeLogs, getTransactionListPageEmpty, hydraFromHexAddress, hydraToHexAddress } from "../utils"
-
+import { TokenType } from '@gnosis.pm/safe-apps-sdk'
+import {
+  AddressEx,
+  SafeBalanceResponse,
+  Transaction,
+  TransactionData,
+  TransactionDetails,
+  TransactionListPage,
+} from '@gnosis.pm/safe-react-gateway-sdk'
+import { ZERO_ADDRESS } from 'src/logic/wallets/ethAddresses'
+import { Log } from 'web3-core'
+import { addOwner, creation, transfer } from '../transformTransaction'
+import {
+  getItemEmpty,
+  getSafeLogs,
+  getTransactionItemList,
+  getTransactionListPageEmpty,
+  hydraFromHexAddress,
+} from '../utils'
 
 export const API_BASE = 'https://explorer.hydrachain.org/api/'
 
@@ -64,12 +76,12 @@ export async function fetchContractInfo(address: string): Promise<any> {
 }
 // https://api.coingecko.com/api/v3/coins/hydra
 export async function fetchHydraPrice(): Promise<any> {
-    try {
-        const info = (await fetch('https://api.coingecko.com/api/v3/coins/hydra')).json();
-        return info;
-    } catch (e) {
-        throw e
-    }
+  try {
+    const info = (await fetch('https://api.coingecko.com/api/v3/coins/hydra')).json()
+    return info
+  } catch (e) {
+    throw e
+  }
 }
 
 const GQL_TOKEN_INFO = (addresses: string[]) => `
@@ -82,13 +94,15 @@ const GQL_TOKEN_INFO = (addresses: string[]) => `
 `
 
 const fetchTokenInfo = async (addresses: string[]) => {
-  const data = await (await fetch( 'https://info.hydradex.org/graphql', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query: GQL_TOKEN_INFO(addresses) })
-  })).json()
+  const data = await (
+    await fetch('https://info.hydradex.org/graphql', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: GQL_TOKEN_INFO(addresses) }),
+    })
+  ).json()
   return data
-} 
+}
 
 export async function fetchBalances(address: string): Promise<SafeBalanceResponse> {
   const [info, hydraInfo] = await Promise.all([fetchAddressInfo(hydraFromHexAddress(address)), fetchHydraPrice()])
@@ -101,9 +115,9 @@ export async function fetchBalances(address: string): Promise<SafeBalanceRespons
     const item = getItemEmpty()
     if (i < 0) {
       item.balance = info.balance ?? ''
-      item.fiatBalance = ((info.balance / 1e8) * priceUsd) + '' 
+      item.fiatBalance = (info.balance / 1e8) * priceUsd + ''
       balances.fiatTotal = item.fiatBalance
-      item.fiatConversion = priceUsd+''
+      item.fiatConversion = priceUsd + ''
       item.tokenInfo.type = 'NATIVE_TOKEN' as TokenType
       item.tokenInfo.address = ZERO_ADDRESS
       item.tokenInfo.decimals = 8
@@ -111,13 +125,13 @@ export async function fetchBalances(address: string): Promise<SafeBalanceRespons
       item.tokenInfo.name = 'Hydra'
       item.tokenInfo.logoUri = ''
     } else {
-      const token = info.qrc20Balances[i];
+      const token = info.qrc20Balances[i]
       addresses.push(token.addressHex)
       item.balance = token.balance
       item.fiatBalance = ''
       item.fiatConversion = ''
       item.tokenInfo.type = 'ERC20' as TokenType
-      item.tokenInfo.address = '0x'+token.addressHex
+      item.tokenInfo.address = '0x' + token.addressHex
       item.tokenInfo.decimals = token.decimals
       item.tokenInfo.symbol = token.symbol
       item.tokenInfo.name = token.name
@@ -126,104 +140,99 @@ export async function fetchBalances(address: string): Promise<SafeBalanceRespons
     balances.items.push(item)
   }
   const data = await fetchTokenInfo(addresses)
-  data.data.tokens?.forEach((token: { id: string, derivedHYDRA: string }) => {
-    balances.items.forEach(item => {
+  data.data.tokens?.forEach((token: { id: string; derivedHYDRA: string }) => {
+    balances.items.forEach((item) => {
       if (item.tokenInfo.address.substring(2) === token.id) {
-        item.fiatConversion = (Number(token.derivedHYDRA) * priceUsd)+''
-        item.fiatBalance = (Number(item.fiatConversion) * (Number(item.balance) / (10 ** item.tokenInfo.decimals)))+''
-        balances.fiatTotal = (+balances.fiatTotal + +item.fiatBalance)+''
+        item.fiatConversion = Number(token.derivedHYDRA) * priceUsd + ''
+        item.fiatBalance = Number(item.fiatConversion) * (Number(item.balance) / 10 ** item.tokenInfo.decimals) + ''
+        balances.fiatTotal = +balances.fiatTotal + +item.fiatBalance + ''
       }
     })
-  }) 
+  })
   return balances
-} 
+}
 
-export async function fetchContractTransactions(address: string, hydraSdk: any): Promise<TransactionListPage> {
+export async function fetchContractTransactions(
+  address: string,
+  hydraSdk: any,
+  userAddress: string,
+): Promise<TransactionListPage> {
   try {
     const resp = await (await fetch(API_BASE + 'contract/' + address + '/txs')).json()
     const transactions = await fetchTransactions(resp.transactions)
-    console.log('-------respt', transactions);
-    
+    console.log('-------respt', transactions)
+
     const tlp = getTransactionListPageEmpty()
     tlp.next = ''
     tlp.previous = ''
-    transactions.forEach((t,i) => {
+    transactions.forEach(async (t: any, i: number) => {
       if (i === transactions.length - 1) {
-        t.outputs.forEach(output => {
-          const receipt = output.receipt
-          if (!receipt) return
-          const tli = {} as Transaction
-          tli.conflictType = receipt.excepted ?? 'End' 
-          tli.type = 'TRANSACTION'
-          tli.transaction = {} as TransactionSummary
-          tli.transaction.id = 'hydra_' + '0x'+ receipt.contractAddressHex + '_0x' + t.id
-          tli.transaction.timestamp = t.timestamp
-          tli.transaction.txStatus = receipt.excepted === 'None' ? TransactionStatus.SUCCESS : TransactionStatus.FAILED
-          tli.transaction.txInfo = {} as Creation
-          tli.transaction.txInfo.creator = {} as AddressEx
-          tli.transaction.txInfo.factory = {} as AddressEx
-          tli.transaction.txInfo.implementation = {} as AddressEx
-          tli.transaction.txInfo.type = 'Creation'
-          tli.transaction.txInfo.creator.value = hydraToHexAddress(receipt.sender, true)
-          tli.transaction.txInfo.factory.value = SAFE_PROXY_FACTORY_ADDRESS
-          tli.transaction.txInfo.implementation.value = SAFE_SINGLETON_ADDRESS
-          tli.transaction.txInfo.transactionHash = '0x' + t.id
-          tlp.results.push(tli)
+        const _tli = await getTransactionItemList(t, (tli: Transaction, receipt: any) => {
+          return creation(t, tli, receipt)
         })
+        if (_tli) tlp.results.push(_tli)
       }
-      t.outputs.forEach(output => {
-        const receipt = output.receipt
-        if (!receipt) return
+      const _tli = await getTransactionItemList(t, async (tli: Transaction, receipt: any) => {
         const logs = getSafeLogs(receipt.logs as Log[])
-        logs.forEach(log => {
-          const tli = {} as Transaction
-          tli.conflictType = receipt.excepted ?? 'End' 
-          tli.type = 'TRANSACTION'
-          tli.transaction = {} as TransactionSummary
-          tli.transaction.id = 'hydra_' + '0x'+ receipt.contractAddressHex + '_0x' + t.id
-          tli.transaction.timestamp = t.timestamp
-          tli.transaction.txStatus = receipt.excepted === 'None' ? TransactionStatus.SUCCESS : TransactionStatus.FAILED
+        if (logs?.length <= 0) return null
+        logs.forEach(async (log: any) => {
           // tli.transaction.txInfo = {} as TransactionInfo
-          switch(log.name) {
+          switch (log.name) {
             case 'Transfer':
-                tli.transaction.txInfo = {} as Transfer
-                tli.transaction.txInfo.type = 'Transfer'
-                const recipient = log.events.find(e => e.name === 'from').value
-                tli.transaction.txInfo.sender = recipient
-                tli.transaction.txInfo.recipient = log.events.find(e => e.name === 'to').value
-                tli.transaction.txInfo.direction = recipient.substring(2) === address ? TransferDirection.INCOMING : TransferDirection.INCOMING
-                tli.transaction.txInfo.transferInfo = {} as Erc20Transfer
-                const token = t.qrc20TokenTransfers.find(transfer => transfer.addressHex === receipt.contractAddressHex)
-                tli.transaction.txInfo.transferInfo.decimals = token.decimals
-                tli.transaction.txInfo.transferInfo.tokenAddress = '0x' + token.addressHex
-                tli.transaction.txInfo.transferInfo.tokenName = token.name
-                tli.transaction.txInfo.transferInfo.tokenSymbol = token.symbol
-                tli.transaction.txInfo.transferInfo.value = log.events.find(e => e.name === 'value').value
-                tli.transaction.txInfo.transferInfo.logoUri = ''
+              tli = transfer(t, tli, log, address, receipt)
               break
             case 'AddedOwner':
-                tli.transaction.txInfo = {} as SettingsChange
-                tli.transaction.txInfo.type = 'SettingsChange'
-                tli.transaction.txInfo.settingsInfo = {} as AddOwner
-                tli.transaction.txInfo.settingsInfo.type = SettingsInfoType.ADD_OWNER
-                tli.transaction.txInfo.settingsInfo.owner = {} as AddressEx
-                tli.transaction.txInfo.settingsInfo.owner.value = log.events[0].value
-                tli.transaction.txInfo.settingsInfo.threshold = 1
-                tli.transaction.txInfo.dataDecoded = {} as DataDecoded
-                tli.transaction.txInfo.dataDecoded.method = 'addOwnerWithThreshold'
-                tli.transaction.txInfo.dataDecoded.parameters = [] as Parameter[]
-                tli.transaction.txInfo.dataDecoded.parameters[0] = log 
+              tli = await addOwner(tli, log, hydraSdk, address, userAddress)
               break
           }
-          tlp.results.push(tli)
-        })        
+        })
+        return tli
       })
+      if (_tli?.transaction.txInfo) tlp.results.push(_tli)
     })
-    
+
     // const txlog = await hydraSdk.getTransactionReceipt(transactions[0].id)
     // console.log('--------------------- txLOG', txlog);
     return tlp
   } catch (e) {
     throw e
   }
+}
+
+export const fetchSafeTransactionDetails = async (
+  transactionId: string,
+  transaction: any,
+): Promise<TransactionDetails> => {
+  const td = {} as TransactionDetails
+  if (!transaction) return td
+  const txHash = transactionId.split('_')[2]
+  const tx = await fetchTransaction(txHash.substring(2))
+  switch (transaction.txInfo.type) {
+    case 'SettingsChange':
+      td.txId = transactionId
+      td.executedAt = transaction.timestamp
+      td.txStatus = transaction.txStatus
+      td.txInfo = transaction.txInfo
+      td.txHash = txHash
+      td.txData = {} as TransactionData
+      td.txData.hexData = tx.outputs
+        .map((output) => {
+          if (!output.receipt) return undefined
+          return '0x' + output.scriptPubKey.hex
+        })
+        .filter((o) => o)[0]
+      td.txData.dataDecoded = transaction.txInfo.dataDecoded
+      td.txData.to = {} as AddressEx
+      td.txData.to.value = tx.outputs
+        .map((output) => {
+          if (!output.receipt) return undefined
+          return '0x' + output.addressHex
+        })
+        .filter((o) => o)[0]
+      break
+    default:
+      throw new Error('No case')
+  }
+
+  return td
 }

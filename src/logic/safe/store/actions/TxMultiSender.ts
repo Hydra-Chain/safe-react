@@ -64,7 +64,7 @@ export class TxMultiSender {
   onComplete(): void {
     const { dispatch, safeAddress } = this
 
-    dispatch(fetchTransactions(_getChainId(), safeAddress, null))
+    dispatch(fetchTransactions(_getChainId(), safeAddress, null, ''))
   }
 
   onError(err: Error & { code: number }): void {
