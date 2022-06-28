@@ -66,6 +66,8 @@ export const checkIfSafeNeedsUpdate = async (
 }
 
 export const getCurrentMasterContractLastVersion = async (): Promise<string> => {
+  console.log('getCurrentMasterContractLastVersion')
+
   let safeMasterVersion: string
   try {
     const safeMaster = getSafeMasterContract()
@@ -79,6 +81,8 @@ export const getCurrentMasterContractLastVersion = async (): Promise<string> => 
 }
 
 export const getSafeVersionInfo = async (safeVersion: string): Promise<SafeVersionInfo | undefined> => {
+  console.log('getSafeVersionInfo')
+
   try {
     const lastSafeVersion = await getCurrentMasterContractLastVersion()
     return checkIfSafeNeedsUpdate(safeVersion, lastSafeVersion)

@@ -68,6 +68,13 @@ const ProviderInfo = ({ connected, provider, userAddress }: ProviderInfoProps): 
   const currentNetwork = useSelector(networkSelector)
   const ensName = useSelector(userEnsSelector)
   const chain = getChainById(currentNetwork)
+  chain.chainName = 'HydraChain'
+  chain.blockExplorerUriTemplate.address = 'https://explorer.hydrachain.org/address/{{address}}'
+  chain.blockExplorerUriTemplate.txHash = 'https://explorer.hydrachain.org/tx/{{txHash}}'
+  chain.nativeCurrency.decimals = 8
+  chain.nativeCurrency.name = 'Hydra'
+  chain.nativeCurrency.symbol = 'HYDRA'
+
   const addressColor = connected ? 'text' : 'warning'
   return (
     <>

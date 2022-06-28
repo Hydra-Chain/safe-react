@@ -5,7 +5,7 @@ import { REMOVE_SAFE } from 'src/logic/safe/store/actions/removeSafe'
 import { SET_LATEST_MASTER_CONTRACT_VERSION } from 'src/logic/safe/store/actions/setLatestMasterContractVersion'
 import { UPDATE_SAFE } from 'src/logic/safe/store/actions/updateSafe'
 import makeSafe, { SafeRecord, SafeRecordProps } from 'src/logic/safe/store/models/safe'
-import { checksumAddress } from 'src/utils/checksumAddress'
+// import { checksumAddress } from 'src/utils/checksumAddress'
 import { ADD_OR_UPDATE_SAFE } from 'src/logic/safe/store/actions/addOrUpdateSafe'
 import { CLEAR_SAFE_LIST } from 'src/logic/safe/store/actions/clearSafeList'
 import { shouldSafeStoreBeUpdated } from 'src/logic/safe/utils/shouldSafeStoreBeUpdated'
@@ -14,7 +14,7 @@ import { SafeReducerMap } from './types/safe'
 export const SAFE_REDUCER_ID = 'safes'
 
 export const buildSafe = (storedSafe: SafeRecordProps): SafeRecordProps => {
-  const owners = storedSafe.owners.map(checksumAddress)
+  const owners = storedSafe.owners
 
   return {
     ...storedSafe,
@@ -71,6 +71,7 @@ const safeReducer = handleActions<SafeReducerMap, Payloads>(
   {
     [UPDATE_SAFE]: (state, action: Action<SafeRecord>) => {
       const safe = action.payload
+      console.log('safeReducer UPDATE_SAFE', safe)
       const safeAddress = safe.address
 
       mergeNewTagsInSafe(state, safe, safeAddress)
@@ -85,6 +86,7 @@ const safeReducer = handleActions<SafeReducerMap, Payloads>(
     },
     [ADD_OR_UPDATE_SAFE]: (state, action: Action<SafeRecord>) => {
       const safe = action.payload
+      console.log('safeReducer ADD_OR_UPDATE_SAFE', safe)
       const safeAddress = safe.address
 
       if (!state.hasIn(['safes', safeAddress])) {

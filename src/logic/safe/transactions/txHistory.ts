@@ -3,7 +3,7 @@ import { MultisigTransactionRequest, proposeTransaction, TransactionDetails } fr
 import { GnosisSafe } from 'src/types/contracts/gnosis_safe.d'
 import { _getChainId } from 'src/config'
 
-import { checksumAddress } from 'src/utils/checksumAddress'
+// import { checksumAddress } from 'src/utils/checksumAddress'
 import { TxArgs } from '../store/models/types/transaction'
 
 type ProposeTxBody = Omit<MultisigTransactionRequest, 'safeTxHash'> & {
@@ -32,7 +32,7 @@ const calculateBodyFrom = async ({
     .call()
 
   return {
-    to: checksumAddress(to),
+    to: to,
     value,
     data,
     operation,
@@ -43,7 +43,7 @@ const calculateBodyFrom = async ({
     gasToken,
     refundReceiver,
     safeTxHash,
-    sender: checksumAddress(sender),
+    sender: sender,
     origin,
     signature,
   }
@@ -67,7 +67,7 @@ export const saveTxToHistory = async ({
   to,
   valueInWei,
 }: SaveTxToHistoryTypes): Promise<TransactionDetails> => {
-  const address = checksumAddress(safeInstance.options.address)
+  const address = safeInstance.options.address
   const body = await calculateBodyFrom({
     safeInstance,
     to,

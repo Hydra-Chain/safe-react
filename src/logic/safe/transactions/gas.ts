@@ -6,7 +6,7 @@ import { calculateGasOf } from 'src/logic/wallets/ethTransactions'
 import { generateSignaturesFromTxConfirmations } from 'src/logic/safe/safeTxSigner'
 import { fetchSafeTxGasEstimation } from 'src/logic/safe/api/fetchSafeTxGasEstimation'
 import { Confirmation } from 'src/logic/safe/store/models/types/confirmation'
-import { checksumAddress } from 'src/utils/checksumAddress'
+// import { checksumAddress } from 'src/utils/checksumAddress'
 import { hasFeature } from '../utils/safeVersion'
 import { PayableTx } from 'src/types/contracts/types'
 import { TxParameters } from 'src/routes/safe/container/hooks/useTransactionParameters'
@@ -30,7 +30,7 @@ export const estimateSafeTxGas = async (
   try {
     const { safeTxGas } = await fetchSafeTxGasEstimation({
       safeAddress,
-      to: checksumAddress(txRecipient),
+      to: txRecipient,
       value: txAmount,
       data: txData,
       operation,
@@ -137,7 +137,6 @@ export const createSendParams = (
     gas: txParams.ethGasLimit,
     nonce: txParams.ethNonce,
   }
-
   if (isMaxFeeParam()) {
     sendParams.maxPriorityFeePerGas = txParams.ethMaxPrioFeeInGWei
     sendParams.maxFeePerGas = txParams.ethGasPriceInGWei

@@ -25,7 +25,7 @@ import Paragraph from 'src/components/layout/Paragraph'
 import Row from 'src/components/layout/Row'
 import { currentNetworkAddressBookAsMap } from 'src/logic/addressBook/store/selectors'
 import { currentSafe } from 'src/logic/safe/store/selectors'
-import { isValidAddress } from 'src/utils/isValidAddress'
+import { isValidAddressHydraHex } from 'src/utils/isValidAddress'
 
 import { OwnerValues } from '../..'
 import { Modal } from 'src/components/Modal'
@@ -110,7 +110,7 @@ export const OwnerForm = ({ onClose, onSubmit, initialValues }: OwnerFormProps):
                     />
                     <OnChange name="ownerAddress">
                       {async (address: string) => {
-                        if (isValidAddress(address)) {
+                        if (isValidAddressHydraHex(address)) {
                           const ownerName = addressBookMap[address]?.name
                           if (ownerName) {
                             mutators.setOwnerName(ownerName)
