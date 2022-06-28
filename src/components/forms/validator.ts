@@ -3,7 +3,7 @@ import memoize from 'lodash/memoize'
 import { sameAddress } from 'src/logic/wallets/ethAddresses'
 import { getWeb3 } from 'src/logic/wallets/getWeb3'
 import { getShortName } from 'src/config'
-import { isValidAddress } from 'src/utils/isValidAddress'
+import { isValidAddressHydraHex } from 'src/utils/isValidAddress'
 import { ADDRESS_BOOK_INVALID_NAMES, isValidAddressBookName } from 'src/logic/addressBook/utils'
 import { FEATURES } from '@gnosis.pm/safe-react-gateway-sdk'
 import { isValidPrefix, parsePrefixedAddress } from 'src/utils/prefixedAddress'
@@ -70,7 +70,7 @@ export const mustBeHexData = (data: string): ValidatorReturnType => {
 
 export const mustBeAddressHash = memoize((address: string): ValidatorReturnType => {
   const errorMessage = 'Must be a valid address'
-  return isValidAddress(address) ? undefined : errorMessage
+  return isValidAddressHydraHex(address) ? undefined : errorMessage
 })
 
 const mustHaveValidPrefix = (prefix: string): ValidatorReturnType => {

@@ -14,7 +14,7 @@ import { LATEST_SAFE_VERSION } from 'src/utils/constants'
 import { getChainById, _getChainId } from 'src/config'
 import { ChainId } from 'src/config/chain.d'
 import { ZERO_ADDRESS } from 'src/logic/wallets/ethAddresses'
-import { calculateGasOf, EMPTY_DATA } from 'src/logic/wallets/ethTransactions'
+import { EMPTY_DATA } from 'src/logic/wallets/ethTransactions'
 import { getWeb3 } from 'src/logic/wallets/getWeb3'
 import { GnosisSafe } from 'src/types/contracts/gnosis_safe.d'
 import { ProxyFactory } from 'src/types/contracts/proxy_factory.d'
@@ -22,6 +22,7 @@ import { CompatibilityFallbackHandler } from 'src/types/contracts/compatibility_
 import { SignMessageLib } from 'src/types/contracts/sign_message_lib.d'
 import { MultiSend } from 'src/types/contracts/multi_send.d'
 import { getSafeInfo } from 'src/logic/safe/utils/safeInformation'
+import { SAFE_PROXY_FACTORY_ADDRESS, SAFE_SINGLETON_ADDRESS } from '../hydra/contracts'
 
 export const SENTINEL_ADDRESS = '0x0000000000000000000000000000000000000001'
 
@@ -64,7 +65,9 @@ const getSafeContractDeployment = ({ safeVersion }: { safeVersion: string }) => 
  */
 const getGnosisSafeContractInstance = (web3: Web3, chainId: ChainId): GnosisSafe => {
   const safeSingletonDeployment = getSafeContractDeployment({ safeVersion: LATEST_SAFE_VERSION })
-  const contractAddress = safeSingletonDeployment?.networkAddresses[chainId]
+
+  // const contractAddress = safeSingletonDeployment?.networkAddresses[chainId]
+  const contractAddress = SAFE_SINGLETON_ADDRESS
 
   if (!contractAddress) {
     throw new Error(`GnosisSafe contract not found for chainId: ${chainId}`)
@@ -87,7 +90,7 @@ const getProxyFactoryContractInstance = (web3: Web3, chainId: ChainId): ProxyFac
     getProxyFactoryDeployment({
       version: LATEST_SAFE_VERSION,
     })
-  const contractAddress = proxyFactoryDeployment?.networkAddresses[chainId]
+  const contractAddress = SAFE_PROXY_FACTORY_ADDRESS
 
   if (!contractAddress) {
     throw new Error(`GnosisSafeProxyFactory contract not found for chainId: ${chainId}`)
@@ -110,7 +113,8 @@ const getFallbackHandlerContractInstance = (web3: Web3, chainId: ChainId): Compa
     getFallbackHandlerDeployment({
       version: LATEST_SAFE_VERSION,
     })
-  const contractAddress = fallbackHandlerDeployment?.networkAddresses[chainId]
+  // const contractAddress = fallbackHandlerDeployment?.networkAddresses[chainId]
+  const contractAddress = ZERO_ADDRESS
 
   if (!contractAddress) {
     throw new Error(`FallbackHandler contract not found for chainId: ${chainId}`)
@@ -180,10 +184,14 @@ export const getSignMessageLibContractInstance = (web3: Web3, chainId: ChainId):
   return new web3.eth.Contract(signMessageLibDeployment?.abi as AbiItem[], contractAddress) as unknown as SignMessageLib
 }
 
-export const getMasterCopyAddressFromProxyAddress = async (proxyAddress: string): Promise<string | undefined> => {
+export const getMasterCopyAddressFromProxyAddress = async (
+  proxyAddress: string,
+  hydraSdk: any,
+  hydraAddress: string,
+): Promise<string | undefined> => {
   let masterCopyAddress: string | undefined
   try {
-    const res = await getSafeInfo(proxyAddress)
+    const res = await getSafeInfo(proxyAddress, hydraSdk, hydraAddress)
     masterCopyAddress = res.implementation.value
     if (!masterCopyAddress) {
       console.error(`There was not possible to get masterCopy address from proxy ${proxyAddress}.`)
@@ -197,7 +205,6 @@ export const getMasterCopyAddressFromProxyAddress = async (proxyAddress: string)
 export const instantiateSafeContracts = () => {
   const web3 = getWeb3()
   const chainId = _getChainId()
-
   // Create ProxyFactory Master Copy
   proxyFactoryMaster = getProxyFactoryContractInstance(web3, chainId)
 
@@ -232,6 +239,21 @@ export const getMultisendContractAddress = () => {
   return multiSend.options.address
 }
 
+export const getSafeWithNonceInitializer = (safeAccounts: string[], numConfirmations: number) => {
+  return safeMaster.methods
+    .setup(
+      safeAccounts,
+      numConfirmations,
+      ZERO_ADDRESS,
+      EMPTY_DATA,
+      fallbackHandler.options.address,
+      ZERO_ADDRESS,
+      0,
+      ZERO_ADDRESS,
+    )
+    .encodeABI()
+}
+
 export const getSafeDeploymentTransaction = (
   safeAccounts: string[],
   numConfirmations: number,
@@ -249,6 +271,7 @@ export const getSafeDeploymentTransaction = (
       ZERO_ADDRESS,
     )
     .encodeABI()
+
   return proxyFactoryMaster.methods.createProxyWithNonce(safeMaster.options.address, gnosisSafeData, safeCreationSalt)
 }
 
@@ -258,13 +281,9 @@ export const estimateGasForDeployingSafe = async (
   userAccount: string,
   safeCreationSalt: number,
 ) => {
-  const proxyFactoryData = getSafeDeploymentTransaction(safeAccounts, numConfirmations, safeCreationSalt).encodeABI()
+  console.log(safeAccounts, numConfirmations, userAccount, safeCreationSalt)
 
-  return calculateGasOf({
-    data: proxyFactoryData,
-    from: userAccount,
-    to: proxyFactoryMaster.options.address,
-  }).then((value) => value * 2)
+  return 250000
 }
 
 export const getGnosisSafeInstanceAt = (safeAddress: string, safeVersion: string): GnosisSafe => {

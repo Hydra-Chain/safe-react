@@ -14,9 +14,9 @@ import {
   userAccountSelector,
   userEnsSelector,
 } from 'src/logic/wallets/store/selectors'
-import onboard, { loadLastUsedProvider } from 'src/logic/wallets/onboard'
-import { isSupportedWallet } from 'src/logic/wallets/utils/walletList'
-import { initPairing, isPairingSupported } from 'src/logic/wallets/pairing/utils'
+import onboard from 'src/logic/wallets/onboard'
+// import { isSupportedWallet } from 'src/logic/wallets/utils/walletList'
+import { isPairingSupported } from 'src/logic/wallets/pairing/utils'
 import { wrapInSuspense } from 'src/utils/wrapInSuspense'
 
 const HidePairingModule = lazy(
@@ -33,13 +33,7 @@ const HeaderComponent = (): React.ReactElement => {
 
   useEffect(() => {
     const tryToConnectToLastUsedProvider = async () => {
-      const lastUsedProvider = loadLastUsedProvider()
-      const isProviderEnabled = lastUsedProvider && isSupportedWallet(lastUsedProvider)
-      if (isProviderEnabled) {
-        await onboard().walletSelect(lastUsedProvider)
-      } else if (isPairingSupported()) {
-        await initPairing()
-      }
+      window.postMessage({ message: { type: 'CONNECT_HYDRAWALLET' } }, '*')
     }
 
     tryToConnectToLastUsedProvider()
@@ -51,7 +45,7 @@ const HeaderComponent = (): React.ReactElement => {
   }
 
   const onDisconnect = () => {
-    onboard().walletReset()
+    window.postMessage({ message: { type: 'DISCONNECT_HYDRAWALLET' } }, '*')
   }
 
   const getProviderInfoBased = () => {

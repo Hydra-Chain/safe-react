@@ -10,7 +10,7 @@ import NoTransactionsImage from './assets/no-transactions.svg'
 
 export const HistoryTransactions = (): ReactElement => {
   const { count, hasMore, next, transactions, isLoading } = usePagedHistoryTransactions()
-
+  
   if (count === 0 && isLoading) {
     return (
       <Centered>

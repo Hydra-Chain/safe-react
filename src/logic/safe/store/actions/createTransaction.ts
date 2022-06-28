@@ -95,6 +95,7 @@ export class TxSender {
   // On transaction completion (either confirming or executing)
   async onComplete(signature?: string, confirmCallback?: ConfirmEventHandler): Promise<void> {
     const { txArgs, safeTxHash, txProps, dispatch, notifications, isFinalization } = this
+    console.log('this', this)
 
     // Propose the tx to the backend
     // 1) If signing
@@ -126,7 +127,7 @@ export class TxSender {
       navigateToTx(txProps.safeAddress, txDetails)
     }
 
-    dispatch(fetchTransactions(_getChainId(), txProps.safeAddress))
+    dispatch(fetchTransactions(_getChainId(), txProps.safeAddress, null, 'null'))
   }
 
   async onError(err: Error & { code: number }, errorCallback?: ErrorEventHandler): Promise<void> {

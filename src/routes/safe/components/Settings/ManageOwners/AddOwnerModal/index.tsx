@@ -6,7 +6,7 @@ import { userAccountSelector } from 'src/logic/wallets/store/selectors'
 import { addressBookAddOrUpdate } from 'src/logic/addressBook/store/actions'
 import { TX_NOTIFICATION_TYPES } from 'src/logic/safe/transactions'
 import { createTransaction } from 'src/logic/safe/store/actions/createTransaction'
-import { checksumAddress } from 'src/utils/checksumAddress'
+// import { checksumAddress } from 'src/utils/checksumAddress'
 import { makeAddressBookEntry } from 'src/logic/addressBook/model/addressBook'
 import { Dispatch } from 'src/logic/safe/store/actions/types.d'
 import { TxParameters } from 'src/routes/safe/container/hooks/useTransactionParameters'
@@ -97,7 +97,7 @@ export const AddOwnerModal = ({ isOpen, onClose }: Props): React.ReactElement =>
     setValues((stateValues) => ({
       ...stateValues,
       ownerName: newValues.ownerName,
-      ownerAddress: checksumAddress(newValues.ownerAddress),
+      ownerAddress: newValues.ownerAddress,
     }))
     setActiveScreen('selectThreshold')
   }

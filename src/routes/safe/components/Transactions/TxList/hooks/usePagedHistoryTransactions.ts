@@ -18,15 +18,21 @@ type PagedTransactions = {
 }
 
 export const usePagedHistoryTransactions = (): PagedTransactions => {
+  console.log('----------------------------------------usePagedHistoryTransactions');
+  
   const { count, transactions } = useHistoryTransactions()
+  console.log('----------------------------------------count', count);
   const chainId = useSelector(currentChainId)
 
   const dispatch = useDispatch()
   const { safeAddress } = useSafeAddress()
   const [hasMore, setHasMore] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
+  console.log('chainId, safeAddress', chainId, safeAddress);
+  
 
   const next = useCallback(async () => {
+    console.log('----------next--------------next---------------next');
     setIsLoading(true)
 
     let results: Await<ReturnType<typeof loadPagedHistoryTransactions>>

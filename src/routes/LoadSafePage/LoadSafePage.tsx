@@ -19,10 +19,9 @@ import LoadSafeOwnersStep, { loadSafeOwnersStepLabel } from './steps/LoadSafeOwn
 import ReviewLoadStep, { reviewLoadStepLabel } from './steps/ReviewLoadStep'
 import { useMnemonicSafeName } from 'src/logic/hooks/useMnemonicName'
 import StepperForm, { StepFormElement } from 'src/components/StepperForm/StepperForm'
-import { isValidAddress } from 'src/utils/isValidAddress'
+import { isValidAddressHydra } from 'src/utils/isValidAddress'
 import { AddressBookEntry, makeAddressBookEntry } from 'src/logic/addressBook/model/addressBook'
 import { addressBookSafeLoad } from 'src/logic/addressBook/store/actions'
-import { checksumAddress } from 'src/utils/checksumAddress'
 import { buildSafe } from 'src/logic/safe/store/actions/fetchSafe'
 import { loadStoredSafes, saveSafes } from 'src/logic/safe/utils'
 import { addOrUpdateSafe } from 'src/logic/safe/store/actions/addOrUpdateSafe'
@@ -42,6 +41,7 @@ import { getLoadSafeName, getOwnerName } from './fields/utils'
 import { currentChainId } from 'src/logic/config/store/selectors'
 import { LOAD_SAFE_CATEGORY, LOAD_SAFE_EVENTS } from 'src/utils/events/createLoadSafe'
 import { trackEvent } from 'src/utils/googleTagManager'
+import { providerHydraSdkSelector, userAccountSelector } from 'src/logic/wallets/store/selectors'
 
 function Load(): ReactElement {
   const dispatch = useDispatch()
@@ -51,6 +51,8 @@ function Load(): ReactElement {
   const [initialFormValues, setInitialFormValues] = useState<LoadSafeFormValues>()
   const addressBook = useSelector(currentNetworkAddressBookAsMap)
   const chainId = useSelector(currentChainId)
+  const addressHydra = useSelector(userAccountSelector)
+  const hydraSdk = useSelector(providerHydraSdkSelector)
 
   useEffect(() => {
     const initialValues: LoadSafeFormValues = {
@@ -77,7 +79,7 @@ function Load(): ReactElement {
       .filter((owner) => !!owner.name)
 
     const safeEntry = makeAddressBookEntry({
-      address: checksumAddress(values[FIELD_LOAD_SAFE_ADDRESS] || ''),
+      address: values[FIELD_LOAD_SAFE_ADDRESS] || '',
       name: getLoadSafeName(values, addressBook),
       chainId,
     })
@@ -87,7 +89,7 @@ function Load(): ReactElement {
 
   const onSubmitLoadSafe = async (values: LoadSafeFormValues): Promise<void> => {
     const address = values[FIELD_LOAD_SAFE_ADDRESS]
-    if (!isValidAddress(address)) {
+    if (!isValidAddressHydra(hydraSdk.decoder.toHydraAddress(address))) {
       return
     }
 
@@ -110,8 +112,8 @@ function Load(): ReactElement {
 
     updateAddressBook(values)
 
-    const checksummedAddress = checksumAddress(address || '')
-    const safeProps = await buildSafe(checksummedAddress)
+    const checksummedAddress = address || ''
+    const safeProps = await buildSafe(checksummedAddress, hydraSdk, addressHydra ?? '')
     const storedSafes = loadStoredSafes() || {}
     storedSafes[checksummedAddress] = safeProps
 
