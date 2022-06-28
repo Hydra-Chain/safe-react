@@ -7,7 +7,7 @@ import { SafeRecordProps } from 'src/logic/safe/store/models/safe'
 import { getSpendingLimits } from 'src/logic/safe/utils/spendingLimits'
 import { buildModulesLinkedList } from 'src/logic/safe/utils/modules'
 import { enabledFeatures, safeNeedsUpdate } from 'src/logic/safe/utils/safeVersion'
-import { checksumAddress } from 'src/utils/checksumAddress'
+// import { checksumAddress } from 'src/utils/checksumAddress'
 import { ChainId } from 'src/config/chain.d'
 
 import {
@@ -16,7 +16,7 @@ import {
   LocalTransactionStatus,
   isMultiSigExecutionDetails,
 } from 'src/logic/safe/store/models/types/gateway.d'
-import { getGnosisSafeInstanceAt } from 'src/logic/contracts/safeContracts'
+// import { getGnosisSafeInstanceAt } from 'src/logic/contracts/safeContracts'
 import { logError, Errors } from 'src/logic/exceptions/CodedException'
 import { getRecommendedNonce } from '../../api/fetchSafeTxGasEstimation'
 import {
@@ -117,7 +117,7 @@ export const buildSafeOwners = (
   if (remoteSafeOwners) {
     // ToDo: review if checksums addresses is necessary,
     //  as they must be provided already in the checksum form from the services
-    return remoteSafeOwners.map(({ value }) => checksumAddress(value))
+    return remoteSafeOwners.map(({ value }) => value)
   }
 
   // nothing to do without remote owners, so we return the stored list
@@ -130,8 +130,11 @@ export const getNonce = async (safeAddress: string, safeVersion: string): Promis
     nextNonce = (await getRecommendedNonce(safeAddress)).toString()
   } catch (e) {
     logError(Errors._616, e.message)
-    const safeInstance = getGnosisSafeInstanceAt(safeAddress, safeVersion)
-    nextNonce = await safeInstance.methods.nonce().call()
+    console.log(safeVersion)
+
+    // const safeInstance = getGnosisSafeInstanceAt(safeAddress, safeVersion)
+    // nextNonce = await safeInstance.methods.nonce().call()
+    nextNonce = '0'
   }
   return nextNonce
 }

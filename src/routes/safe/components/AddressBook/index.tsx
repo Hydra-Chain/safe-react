@@ -42,10 +42,10 @@ import {
 } from 'src/routes/safe/components/AddressBook/columns'
 import SendModal from 'src/routes/safe/components/Balances/SendModal'
 import { safesAsList } from 'src/logic/safe/store/selectors'
-import { checksumAddress } from 'src/utils/checksumAddress'
+// import { checksumAddress } from 'src/utils/checksumAddress'
 import { grantedSelector } from 'src/routes/safe/container/selector'
 import ImportEntriesModal from './ImportEntriesModal'
-import { isValidAddress } from 'src/utils/isValidAddress'
+import { isValidAddressHydraHex } from 'src/utils/isValidAddress'
 import { useHistory } from 'react-router'
 import { currentChainId } from 'src/logic/config/store/selectors'
 import { ADDRESS_BOOK_EVENTS } from 'src/utils/events/addressBook'
@@ -104,8 +104,8 @@ const AddressBookTable = (): ReactElement => {
   }, [entryAddressToEditOrCreateNew])
 
   useEffect(() => {
-    if (isValidAddress(entryAddressToEditOrCreateNew)) {
-      const address = checksumAddress(entryAddressToEditOrCreateNew as string)
+    if (isValidAddressHydraHex(entryAddressToEditOrCreateNew)) {
+      const address = entryAddressToEditOrCreateNew as string
       const oldEntryIndex = addressBook.findIndex((entry) => sameAddress(entry.address, address))
 
       if (oldEntryIndex >= 0) {
@@ -129,9 +129,7 @@ const AddressBookTable = (): ReactElement => {
     // close the modal
     setEditCreateEntryModalOpen(false)
     // update the store
-    dispatch(
-      addressBookAddOrUpdate(makeAddressBookEntry({ ...entry, address: checksumAddress(entry.address), chainId })),
-    )
+    dispatch(addressBookAddOrUpdate(makeAddressBookEntry({ ...entry, address: entry.address, chainId })))
   }
 
   const editEntryModalHandler = (entry: AddressBookEntry) => {
@@ -140,9 +138,7 @@ const AddressBookTable = (): ReactElement => {
     // close the modal
     setEditCreateEntryModalOpen(false)
     // update the store
-    dispatch(
-      addressBookAddOrUpdate(makeAddressBookEntry({ ...entry, address: checksumAddress(entry.address), chainId })),
-    )
+    dispatch(addressBookAddOrUpdate(makeAddressBookEntry({ ...entry, address: entry.address, chainId })))
   }
 
   const deleteEntryModalHandler = () => {

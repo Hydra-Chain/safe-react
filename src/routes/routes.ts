@@ -3,7 +3,7 @@ import { generatePath, matchPath } from 'react-router-dom'
 
 import { getChains } from 'src/config/cache/chains'
 import { ChainId, ShortName } from 'src/config/chain.d'
-import { checksumAddress } from 'src/utils/checksumAddress'
+// import { checksumAddress } from 'src/utils/checksumAddress'
 import { DEMO_SAFE_MAINNET, PUBLIC_URL } from 'src/utils/constants'
 import { parsePrefixedAddress } from 'src/utils/prefixedAddress'
 
@@ -12,7 +12,7 @@ export const history = createBrowserHistory({
 })
 
 // Safe specific routes
-const hashRegExp = '0x[0-9A-Fa-f]'
+const hashRegExp = '[0-9A-Fa-f]'
 
 const chainSpecificSafeAddressPathRegExp = `[a-z0-9-]{2,}:${hashRegExp}{40}`
 
@@ -68,12 +68,13 @@ export const SAFE_ROUTES = {
   SETTINGS_ADVANCED: `${ADDRESSED_ROUTE}/settings/advanced`,
 }
 
-export const getNetworkRootRoutes = (): Array<{ chainId: ChainId; route: string; shortName: string }> =>
-  getChains().map(({ chainId, chainName, shortName }) => ({
+export const getNetworkRootRoutes = (): Array<{ chainId: ChainId; route: string; shortName: string }> => {
+  return getChains().map(({ chainId, chainName, shortName }) => ({
     chainId,
     route: `/${chainName.replace(/\s+/g, '-').toLowerCase()}`,
     shortName,
   }))
+}
 
 export type SafeRouteParams = { shortName: ShortName; safeAddress: string }
 
@@ -95,7 +96,7 @@ export const extractPrefixedSafeAddress = (
 
   return {
     shortName: prefix,
-    safeAddress: checksumAddress(address),
+    safeAddress: address,
   }
 }
 
@@ -111,10 +112,12 @@ export const getPrefixedSafeAddressSlug = ({
 export const generateSafeRoute = (
   path: typeof SAFE_ROUTES[keyof typeof SAFE_ROUTES],
   params: SafeRouteParams,
-): string =>
-  generatePath(path, {
+): string => {
+  const safePath = generatePath(path, {
     [SAFE_ADDRESS_SLUG]: getPrefixedSafeAddressSlug(params),
   })
+  return safePath
+}
 
 // Singular tx route is excluded as it has a required safeTxHash slug
 // This is to give stricter routing, instead of making the slug optional
@@ -137,6 +140,5 @@ export const demoSafeRoute = generateSafeRoute(SAFE_ROUTES.APPS, {
 
 export const getShareSafeAppUrl = (appUrl: string, chainId: string): string => {
   const baseUrl = `${window.location.origin}${PUBLIC_URL}`
-
   return `${baseUrl}${SAFE_APP_LANDING_PAGE_ROUTE}?appUrl=${encodeURI(appUrl)}&chainId=${chainId}`
 }

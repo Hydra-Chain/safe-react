@@ -6,7 +6,7 @@ import { Modal } from 'src/components/Modal'
 import { CSVReader } from 'react-papaparse'
 import { ParseResult } from 'papaparse'
 import { AddressBookEntry } from 'src/logic/addressBook/model/addressBook'
-import { checksumAddress } from 'src/utils/checksumAddress'
+// import { checksumAddress } from 'src/utils/checksumAddress'
 import HelpInfo from 'src/routes/safe/components/AddressBook/HelpInfo'
 import { validateCsvData, validateFile } from 'src/routes/safe/components/AddressBook/utils'
 import { ChainId } from 'src/config/chain.d'
@@ -73,7 +73,7 @@ const ImportEntriesModal = ({ importEntryModalHandler, isOpen, onClose }: Import
 
     const formattedList = trimmedData.map(({ data }) => {
       return {
-        address: checksumAddress(data[0].trim()),
+        address: data[0].trim(),
         name: data[1].trim(),
         chainId: data[2].trim() as ChainId,
       }

@@ -19,9 +19,20 @@ export const providerNameSelector = createSelector(providerSelector, ({ name }: 
   return name
 })
 
+export const providerHydraSdkSelector = createSelector(providerSelector, ({ hydraSDK }: ProvidersState): any => {
+  return hydraSDK
+})
+
 export const networkSelector = createSelector(providerSelector, ({ network }: ProvidersState): ChainId => {
   return network ?? CHAIN_ID.UNKNOWN
 })
+
+export const providerHydraAccountSelector = createSelector(
+  providerSelector,
+  ({ hydraAccount }: ProvidersState): any => {
+    return hydraAccount
+  },
+)
 
 export const shouldSwitchWalletChain = createSelector(
   providerSelector,

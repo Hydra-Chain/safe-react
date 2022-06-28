@@ -8,7 +8,7 @@ import { Dispatch } from 'src/logic/safe/store/actions/types'
 import { CONFIG_ACTIONS } from '../actions'
 import { store as reduxStore } from 'src/store'
 import { ChainId } from 'src/config/chain'
-import onboard from 'src/logic/wallets/onboard'
+// import onboard from 'src/logic/wallets/onboard'
 
 export const configMiddleware =
   ({ dispatch }: typeof reduxStore) =>

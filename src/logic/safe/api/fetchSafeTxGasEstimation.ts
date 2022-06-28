@@ -1,12 +1,11 @@
 import {
-  postSafeGasEstimation,
   SafeTransactionEstimationRequest,
   SafeTransactionEstimation,
   Operation,
 } from '@gnosis.pm/safe-react-gateway-sdk'
 
-import { _getChainId } from 'src/config'
-import { checksumAddress } from 'src/utils/checksumAddress'
+// import { _getChainId } from 'src/config'
+// import { checksumAddress } from 'src/utils/checksumAddress'
 
 type FetchSafeTxGasEstimationProps = {
   safeAddress: string
@@ -16,7 +15,14 @@ export const fetchSafeTxGasEstimation = async ({
   safeAddress,
   ...body
 }: FetchSafeTxGasEstimationProps): Promise<SafeTransactionEstimation> => {
-  return postSafeGasEstimation(_getChainId(), checksumAddress(safeAddress), body)
+  // return postSafeGasEstimation(_getChainId(), safeAddress, body)
+  console.log(body)
+
+  return {
+    currentNonce: 0,
+    recommendedNonce: 0,
+    safeTxGas: '250000',
+  } as unknown as Promise<SafeTransactionEstimation>
 }
 
 export const getRecommendedNonce = async (safeAddress: string): Promise<number> => {

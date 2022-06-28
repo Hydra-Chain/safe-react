@@ -1,5 +1,5 @@
 import { AddressBookMap } from 'src/logic/addressBook/store/selectors'
-import { checksumAddress } from 'src/utils/checksumAddress'
+// import { checksumAddress } from 'src/utils/checksumAddress'
 import {
   FIELD_LOAD_CUSTOM_SAFE_NAME,
   FIELD_LOAD_SAFE_ADDRESS,
@@ -10,7 +10,7 @@ import {
 
 export function getLoadSafeName(formValues: LoadSafeFormValues, addressBook: AddressBookMap): string {
   let safeAddress = formValues[FIELD_LOAD_SAFE_ADDRESS] || ''
-  safeAddress = safeAddress && checksumAddress(safeAddress)
+  safeAddress = safeAddress
 
   return (
     formValues[FIELD_LOAD_CUSTOM_SAFE_NAME] ||

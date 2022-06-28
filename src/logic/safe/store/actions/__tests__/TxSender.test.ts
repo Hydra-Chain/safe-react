@@ -118,14 +118,14 @@ describe('TxSender', () => {
     jest.restoreAllMocks()
     jest.spyOn(utils, 'getNonce')
     jest.spyOn(safeSelectors, 'currentSafeCurrentVersion')
-    jest.spyOn(walletSelectors, 'providerSelector').mockImplementation(() => ({
-      name: 'MetaMask',
-      account: '0x123',
-      network: '4',
-      available: true,
-      loaded: true,
-      ensDomain: '',
-    }))
+    // jest.spyOn(walletSelectors, 'providerSelector').mockImplementation(() => ({
+    //   name: 'MetaMask',
+    //   account: '0x123',
+    //   network: '4',
+    //   available: true,
+    //   loaded: true,
+    //   ensDomain: '',
+    // }))
     jest.spyOn(safeContracts, 'getGnosisSafeInstanceAt')
     jest.spyOn(notificationBuilder, 'createTxNotifications')
     jest.spyOn(getWeb3, 'isSmartContractWallet')
