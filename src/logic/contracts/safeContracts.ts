@@ -281,7 +281,10 @@ export const estimateGasForDeployingSafe = async (
   userAccount: string,
   safeCreationSalt: number,
 ) => {
-  console.log(safeAccounts, numConfirmations, userAccount, safeCreationSalt)
+  console.log(safeAccounts)
+  console.log(numConfirmations)
+  console.log(userAccount)
+  console.log(safeCreationSalt)
 
   return 250000
 }

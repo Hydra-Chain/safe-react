@@ -100,7 +100,6 @@ const AddApp = ({ appList, closeModal, onAddApp }: AddAppProps): ReactElement =>
   const [fetchError, setFetchError] = useState<string | undefined>()
   const history = useHistory()
   const [isLoading, setIsLoading] = useState(false)
-  console.log('in AddApp')
 
   const handleSubmit = useCallback(async () => {
     trackEvent(SAFE_APPS_EVENTS.ADD_CUSTOM_APP)

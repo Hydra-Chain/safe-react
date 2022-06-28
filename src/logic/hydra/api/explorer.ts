@@ -160,7 +160,6 @@ export async function fetchContractTransactions(
   try {
     const resp = await (await fetch(API_BASE + 'contract/' + address + '/txs')).json()
     const transactions = await fetchTransactions(resp.transactions)
-    console.log('-------respt', transactions)
 
     const tlp = getTransactionListPageEmpty()
     tlp.next = ''
@@ -191,8 +190,6 @@ export async function fetchContractTransactions(
       if (_tli?.transaction.txInfo) tlp.results.push(_tli)
     })
 
-    // const txlog = await hydraSdk.getTransactionReceipt(transactions[0].id)
-    // console.log('--------------------- txLOG', txlog);
     return tlp
   } catch (e) {
     throw e
@@ -231,7 +228,7 @@ export const fetchSafeTransactionDetails = async (
         .filter((o) => o)[0]
       break
     default:
-      throw new Error('No case')
+      throw new Error(`No case - ${transaction.txInfo.type}`)
   }
 
   return td

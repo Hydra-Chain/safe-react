@@ -23,7 +23,7 @@ export const getSafeInfo = async (safeAddress: string, hydraSdk: any, hydraAddre
       getGnosisProxyNonce(hydraSdk, safeAddress, hydraAddress),
       getGnosisProxyVersion(hydraSdk, safeAddress, hydraAddress),
       getGnosisProxyOwners(hydraSdk, safeAddress, hydraAddress),
-      getGnosisProxyThreshold(hydraSdk, safeAddress, hydraAddress)
+      getGnosisProxyThreshold(hydraSdk, safeAddress, hydraAddress),
     ])
     const safeInfo = getSafeInfoEmpty()
     safeInfo.address = {} as AddressEx
@@ -48,9 +48,6 @@ export const getSafeInfo = async (safeAddress: string, hydraSdk: any, hydraAddre
       addrEx.value = m
       return addrEx
     })
-
-    console.log('safeinfo', safeInfo);
-    
 
     return safeInfo
   } catch (e) {

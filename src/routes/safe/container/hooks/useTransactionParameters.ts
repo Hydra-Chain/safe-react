@@ -42,7 +42,6 @@ type Props = {
 export const useTransactionParameters = (props?: Props): TxParameters => {
   const connectedWalletAddress = useSelector(userAccountSelector)
   const { safeAddress } = useSafeAddress()
-  console.log('useTransactionParameters', safeAddress)
   // Safe Params
   const [safeNonce, setSafeNonce] = useState<string | undefined>(props?.initialSafeNonce)
   // SafeTxGas: for a new Tx call requiredTxGas, for an existing tx get it from the backend.

@@ -1,9 +1,9 @@
 import { getSafeWithNonceInitializer } from 'src/logic/contracts/safeContracts'
 import { PayableTx } from 'src/types/contracts/types'
 // import { GnosisSafe, GnosisSafeProxyFactory } from '../abis'
-import { GnosisSafe } from '../abis'
+import { GnosisSafe, SnapshotOracle } from '../abis'
 // import { SAFE_PROXY_FACTORY_ADDRESS, SAFE_SINGLETON_ADDRESS } from '../contracts'
-import { contractCall, getContract } from './core'
+import { contractCall, contractSend, getContract } from './core'
 
 type Error = {
   message: string
@@ -91,4 +91,25 @@ export const deploySafeWithNonce = async (
   // )
   // const result = getCallResult(resp)
   // return Number(result.value[0].toString())
+}
+
+export const sendAddNewOwner = async (
+  hydraSdk: any,
+  safeAddress: string,
+  userAddress: string,
+  ownerAddress: string,
+  threshold: number,
+): Promise<number> => {
+  const oracleAddress: HydraResult = getCallResult(
+    await contractCall(getContract(hydraSdk, safeAddress, GnosisSafe), 'oracle', [], userAddress),
+  )
+
+  const oracleTx = await contractSend(
+    getContract(hydraSdk, oracleAddress.value[0], SnapshotOracle),
+    'addAdminWithTreshhold',
+    [ownerAddress, threshold, safeAddress],
+    userAddress,
+  )
+
+  return oracleTx
 }

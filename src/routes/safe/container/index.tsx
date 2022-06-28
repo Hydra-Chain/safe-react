@@ -35,7 +35,6 @@ const Container = (): React.ReactElement => {
   const { safeAddress } = useSafeAddress()
   const isSafeLoaded = owners.length > 0
   const [hasLoadFailed, setHasLoadFailed] = useState<boolean>(false)
-  console.log('Container React.ReactElement')
 
   useLoadSafe(safeAddress) // load initially
   useSafeScheduledUpdates(safeAddress, hasLoadFailed) // load every X seconds

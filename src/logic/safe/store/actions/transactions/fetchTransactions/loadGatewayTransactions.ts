@@ -24,11 +24,6 @@ export const loadPagedHistoryTransactions = async (
   if (!historyPointers[chainId][safeAddress]?.next) {
     throw new CodedException(Errors._608)
   }
-  console.log('----------------------------------------loadPagedHistoryTransactions-----------------------------')
-  // const dd = (await (await fetch('https://explorer.hydrachain.org/contract/93123563bb741000e9ee66b4556c6c9574437dc3')).json())
-  // console.log('data', dd);
-
-  //explorer.hydrachain.org/contract/93123563bb741000e9ee66b4556c6c9574437dc3
 
   https: try {
     const { results, next, previous } = await getTransactionHistory(
@@ -53,7 +48,6 @@ export const loadHistoryTransactions = async (
   const chainId = _getChainId()
   try {
     const { results, next, previous } = await fetchContractTransactions(safeAddress, hydraSdk, userAddress)
-    // console.log('fetchContractTransactions', dd);
 
     // const { results, next, previous } = await getTransactionHistory(chainId, safeAddress)
 

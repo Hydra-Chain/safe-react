@@ -95,7 +95,6 @@ export class TxSender {
   // On transaction completion (either confirming or executing)
   async onComplete(signature?: string, confirmCallback?: ConfirmEventHandler): Promise<void> {
     const { txArgs, safeTxHash, txProps, dispatch, notifications, isFinalization } = this
-    console.log('this', this)
 
     // Propose the tx to the backend
     // 1) If signing
@@ -242,12 +241,12 @@ export class TxSender {
     }
 
     // On-chain signature or execution
-    try {
-      await this.sendTx(confirmCallback)
-    } catch (err) {
-      logError(Errors._803, err.message)
-      this.onError(err, errorCallback)
-    }
+    // try {
+    //   await this.sendTx(confirmCallback)
+    // } catch (err) {
+    //   logError(Errors._803, err.message)
+    //   this.onError(err, errorCallback)
+    // }
 
     // Return txHash to check if transaction was successful
     return this.txHash

@@ -71,7 +71,6 @@ const safeReducer = handleActions<SafeReducerMap, Payloads>(
   {
     [UPDATE_SAFE]: (state, action: Action<SafeRecord>) => {
       const safe = action.payload
-      console.log('safeReducer UPDATE_SAFE', safe)
       const safeAddress = safe.address
 
       mergeNewTagsInSafe(state, safe, safeAddress)
@@ -86,7 +85,6 @@ const safeReducer = handleActions<SafeReducerMap, Payloads>(
     },
     [ADD_OR_UPDATE_SAFE]: (state, action: Action<SafeRecord>) => {
       const safe = action.payload
-      console.log('safeReducer ADD_OR_UPDATE_SAFE', safe)
       const safeAddress = safe.address
 
       if (!state.hasIn(['safes', safeAddress])) {

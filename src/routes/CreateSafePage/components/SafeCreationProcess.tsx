@@ -126,7 +126,6 @@ const createNewSafe = (
     const gasPrice = safeCreationFormValues[FIELD_NEW_SAFE_GAS_PRICE]
     const gasMaxPrioFee = safeCreationFormValues[FIELD_NEW_SAFE_GAS_MAX_PRIO_FEE]
     const safeCreationSalt = Date.now() // never retry with the same salt
-    // console.log('deploymentTx', deploymentTx);
     const deploymentTx = getSafeDeploymentTransaction(ownerAddresses, confirmations, safeCreationSalt)
 
     const sendParams = createSendParams(hydraToHexAddress(userAddress, true), {
@@ -134,8 +133,6 @@ const createNewSafe = (
       ethGasPriceInGWei: gasPrice,
       ethMaxPrioFeeInGWei: gasMaxPrioFee.toString(),
     })
-    console.log('deploymentTx', deploymentTx)
-    console.log('sendParams', sendParams)
 
     deploySafeWithNonce(sendParams, ownerAddresses, confirmations, safeCreationSalt, hydraSdk, userAddress)
 
@@ -216,7 +213,6 @@ function SafeCreationProcess(): ReactElement {
 
   useEffect(() => {
     const safeCreationFormValues = loadSavedDataOrLeave()
-    console.log('safeCreationFormValues', safeCreationFormValues)
     if (!safeCreationFormValues) {
       return
     }
@@ -225,7 +221,6 @@ function SafeCreationProcess(): ReactElement {
     if (newCreationTxHash) {
       setSafeCreationTxHash(newCreationTxHash)
     } else {
-      console.log('setCreationTxPromise(createNewSafe(userAddress, setSafeCreationTxHash))')
       ;(async () => {
         const dd = await createNewSafe(userAddress, hydraSdk, setSafeCreationTxHash)
         console.log('dd', dd)
@@ -235,7 +230,6 @@ function SafeCreationProcess(): ReactElement {
   }, [userAddress, hydraSdk])
 
   const onSafeCreated = async (safeAddress: string): Promise<void> => {
-    console.log('onSafeCreated')
     const createSafeFormValues = loadSavedDataOrLeave()
 
     const defaultSafeValue = createSafeFormValues[FIELD_CREATE_SUGGESTED_SAFE_NAME]

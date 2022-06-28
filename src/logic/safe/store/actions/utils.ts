@@ -16,7 +16,7 @@ import {
   LocalTransactionStatus,
   isMultiSigExecutionDetails,
 } from 'src/logic/safe/store/models/types/gateway.d'
-import { getGnosisSafeInstanceAt } from 'src/logic/contracts/safeContracts'
+// import { getGnosisSafeInstanceAt } from 'src/logic/contracts/safeContracts'
 import { logError, Errors } from 'src/logic/exceptions/CodedException'
 import { getRecommendedNonce } from '../../api/fetchSafeTxGasEstimation'
 import {
@@ -130,8 +130,11 @@ export const getNonce = async (safeAddress: string, safeVersion: string): Promis
     nextNonce = (await getRecommendedNonce(safeAddress)).toString()
   } catch (e) {
     logError(Errors._616, e.message)
-    const safeInstance = getGnosisSafeInstanceAt(safeAddress, safeVersion)
-    nextNonce = await safeInstance.methods.nonce().call()
+    console.log(safeVersion)
+
+    // const safeInstance = getGnosisSafeInstanceAt(safeAddress, safeVersion)
+    // nextNonce = await safeInstance.methods.nonce().call()
+    nextNonce = '0'
   }
   return nextNonce
 }

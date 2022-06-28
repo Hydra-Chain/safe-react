@@ -52,14 +52,11 @@ export const fetchSafeTokens =
   async (dispatch: Dispatch, getState: () => AppReduxState): Promise<void> => {
     const state = getState()
     const safe = currentSafe(state)
-    console.log('fetchSafeTokens')
 
     if (!safe) {
       return
     }
     const selectedCurrency = currency ?? currentCurrencySelector(state)
-    console.log('currency', currency)
-    console.log('selectedCurrency', selectedCurrency)
 
     let tokenCurrenciesBalances: SafeBalanceResponse
     try {

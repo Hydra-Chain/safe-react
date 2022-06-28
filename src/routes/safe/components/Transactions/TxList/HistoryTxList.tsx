@@ -17,15 +17,13 @@ export const HistoryTxList = ({ transactions }: { transactions: TransactionDetai
   if (!sameString(lastItemId, lastTransaction.id)) {
     setLastItemId(lastTransaction.id)
   }
-  console.log('transactions', transactions);
-  
+
   return (
     <TxLocationContext.Provider value={{ txLocation: 'history' }}>
       {transactions?.map(([timestamp, txs]) => (
         <StyledTransactionsGroup key={timestamp}>
           <SubTitle size="lg">{formatWithSchema(Number(timestamp), 'MMM d, yyyy')}</SubTitle>
           <StyledTransactions>
-            {console.log('txs', txs)}
             {txs.map((transaction) => (
               <TxHistoryRow key={transaction.id} transaction={transaction} />
             ))}
