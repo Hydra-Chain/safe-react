@@ -5,8 +5,8 @@ import { BigNumber } from 'bignumber.js'
 // import { FeeHistoryResult } from 'web3-eth'
 // import { hexToNumber } from 'web3-utils'
 
-import { getSDKWeb3ReadOnly, getWeb3ReadOnly } from 'src/logic/wallets/getWeb3'
-import { getFixedGasPrice, getGasPriceOracles } from 'src/config'
+import { getSDKWeb3ReadOnly } from 'src/logic/wallets/getWeb3'
+import { getGasPriceOracles } from 'src/config'
 // import { CodedException, Errors, logError } from 'src/logic/exceptions/CodedException'
 import { CodedException, Errors } from 'src/logic/exceptions/CodedException'
 import { fetchGeneralInfo } from '../hydra/api/explorer'
@@ -44,25 +44,25 @@ export const getFeesPerGas = async (): Promise<{
 
 export const calculateGasPrice = async (): Promise<string> => {
   const gasPriceOracles = getGasPriceOracles()
+  return await fetchGasPrice(gasPriceOracles?.[0])
+  // for (const gasPriceOracle of gasPriceOracles) {
+  //   try {
+  //     const fetchedGasPrice = await fetchGasPrice(gasPriceOracle)
+  //     return fetchedGasPrice
+  //   } catch (err) {
+  //     // Keep iterating price oracles
+  //   }
+  // }
 
-  for (const gasPriceOracle of gasPriceOracles) {
-    try {
-      const fetchedGasPrice = await fetchGasPrice(gasPriceOracle)
-      return fetchedGasPrice
-    } catch (err) {
-      // Keep iterating price oracles
-    }
-  }
+  // // A fallback to fixed gas price from the chain config
+  // const fixedGasPrice = getFixedGasPrice()
+  // if (fixedGasPrice) {
+  //   return fixedGasPrice.weiValue
+  // }
 
-  // A fallback to fixed gas price from the chain config
-  const fixedGasPrice = getFixedGasPrice()
-  if (fixedGasPrice) {
-    return fixedGasPrice.weiValue
-  }
-
-  // A fallback based on the median of a few last blocks
-  const web3ReadOnly = getWeb3ReadOnly()
-  return await web3ReadOnly.eth.getGasPrice()
+  // // A fallback based on the median of a few last blocks
+  // const web3ReadOnly = getWeb3ReadOnly()
+  // return await web3ReadOnly.eth.getGasPrice()
 }
 
 export const calculateGasOf = async (txConfig: EthAdapterTransaction): Promise<number> => {

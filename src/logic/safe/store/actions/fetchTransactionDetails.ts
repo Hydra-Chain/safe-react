@@ -21,7 +21,6 @@ export const fetchTransactionDetails =
       attributeValue: transactionId,
       attributeName: 'id',
     })
-
     const safeAddress = currentSafeAddress(state)
     const chainId = currentChainId(state)
 
@@ -35,7 +34,7 @@ export const fetchTransactionDetails =
     }
 
     try {
-      const transactionDetails = await fetchSafeTransactionDetails(transactionId, transaction)
+      const transactionDetails = await fetchSafeTransactionDetails(transactionId, dispatch, safeAddress)
 
       // const transactionDetails = await fetchSafeTransaction(transactionId)
 

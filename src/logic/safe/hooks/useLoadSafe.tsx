@@ -19,7 +19,7 @@ export const useLoadSafe = (safeAddress?: string): void => {
 
     const load = async () => {
       dispatch(fetchLatestMasterContractVersion())
-      dispatch(fetchSafe(safeAddress, hydraSdk, addressHydra ?? '', true))
+      dispatch(fetchSafe(safeAddress, true))
       dispatch(updateAvailableCurrencies())
     }
 

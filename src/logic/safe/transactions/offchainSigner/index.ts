@@ -45,8 +45,11 @@ export const tryOffChainSigning = async (
   safeVersion: string,
 ): Promise<string | undefined> => {
   let signature
+  console.log('safeTxHash', safeTxHash)
+  console.log('txArgs', txArgs)
 
   const signerByWallet = getSupportedSigners(isHW, safeVersion)
+  console.log('signerByWallet', signerByWallet)
   for (const signingFunc of signerByWallet) {
     try {
       signature = await signingFunc({ ...txArgs, safeTxHash, safeVersion })
@@ -60,6 +63,7 @@ export const tryOffChainSigning = async (
       // continue to the next signing method
     }
   }
+  console.log('signature', signature)
 
   return signature
 }

@@ -38,7 +38,6 @@ import ChainIndicator from 'src/components/ChainIndicator'
 import { currentChainId } from 'src/logic/config/store/selectors'
 import { trackEvent } from 'src/utils/googleTagManager'
 import { SETTINGS_EVENTS } from 'src/utils/events/settings'
-import { providerHydraSdkSelector, userAccountSelector } from 'src/logic/wallets/store/selectors'
 
 export const SAFE_NAME_INPUT_TEST_ID = 'safe-name-input'
 export const SAFE_NAME_SUBMIT_BTN_TEST_ID = 'change-safe-name-btn'
@@ -76,8 +75,6 @@ const SafeDetails = (): ReactElement => {
 
   const [isModalOpen, setModalOpen] = useState(false)
   const [safeInfo, setSafeInfo] = useState<MasterCopy | undefined>()
-  const addressHydra = useSelector(userAccountSelector)
-  const hydraSdk = useSelector(providerHydraSdkSelector)
 
   const toggleModal = () => {
     setModalOpen((prevOpen) => !prevOpen)
@@ -123,7 +120,7 @@ const SafeDetails = (): ReactElement => {
   useEffect(() => {
     const getMasterCopyInfo = async () => {
       const masterCopies = await fetchMasterCopies()
-      const masterCopyAddress = await getMasterCopyAddressFromProxyAddress(safeAddress, hydraSdk, addressHydra ?? '')
+      const masterCopyAddress = await getMasterCopyAddressFromProxyAddress(safeAddress, dispatch)
       const masterCopy = masterCopies?.find((mc) => sameAddress(mc.address, masterCopyAddress))
       setSafeInfo(masterCopy)
     }
@@ -131,7 +128,7 @@ const SafeDetails = (): ReactElement => {
     if (safeAddress) {
       getMasterCopyInfo()
     }
-  }, [safeAddress, hydraSdk, addressHydra])
+  }, [safeAddress, dispatch])
 
   return (
     <GnoForm onSubmit={handleSubmit}>

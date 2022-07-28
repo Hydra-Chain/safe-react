@@ -63,6 +63,7 @@ export const SAFE_ROUTES = {
   SETTINGS_APPEARANCE: `${ADDRESSED_ROUTE}/settings/appearance`,
   SETTINGS_DETAILS: `${ADDRESSED_ROUTE}/settings/details`,
   SETTINGS_OWNERS: `${ADDRESSED_ROUTE}/settings/owners`,
+  SETTINGS_ORACLE: `${ADDRESSED_ROUTE}/settings/oracle`,
   SETTINGS_POLICIES: `${ADDRESSED_ROUTE}/settings/policies`,
   SETTINGS_SPENDING_LIMIT: `${ADDRESSED_ROUTE}/settings/spending-limit`,
   SETTINGS_ADVANCED: `${ADDRESSED_ROUTE}/settings/advanced`,

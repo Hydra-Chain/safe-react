@@ -27,16 +27,21 @@ import {
   SAFE_ROUTES,
   TRANSACTION_ID_SLUG,
 } from 'src/routes/routes'
+import { Dispatch } from './types'
+import { getGnosisProxyNonce, getGnosisProxyThreshold, sendWithState } from 'src/logic/hydra/contractInteractions/utils'
 
 export const canExecuteCreatedTx = async (
   safeInstance: GnosisSafe,
   nonce: string,
   lastTx: Transaction | null,
+  dispatch: Dispatch,
 ): Promise<boolean> => {
-  const safeNonce = (await safeInstance.methods.nonce().call()).toString()
-  const thresholdAsString = await safeInstance.methods.getThreshold().call()
+  console.log('canExecuteCreatedTx', safeInstance.options.address)
+  const safeAddress = safeInstance.options.address.toLocaleLowerCase()
+  const safeNonce = await dispatch(sendWithState(getGnosisProxyNonce, { safeAddress }))
+  const thresholdAsString = await dispatch(sendWithState(getGnosisProxyThreshold, { safeAddress }))
   const threshold = Number(thresholdAsString)
-
+  console.log('after dipaches')
   // Needs to collect owners signatures
   if (threshold > 1) {
     return false
@@ -124,10 +129,24 @@ export const buildSafeOwners = (
   return localSafeOwners
 }
 
-export const getNonce = async (safeAddress: string, safeVersion: string): Promise<string> => {
+export const buildSafeOracle = (
+  remoteSafeOracle?: SafeInfo['oracle'],
+  localSafeOracle?: SafeRecordProps['oracle'],
+): SafeRecordProps['oracle'] | undefined => {
+  if (remoteSafeOracle) {
+    // ToDo: review if checksums addresses is necessary,
+    //  as they must be provided already in the checksum form from the services
+    return remoteSafeOracle.map(({ value }) => value)
+  }
+
+  // nothing to do without remote owners, so we return the stored list
+  return localSafeOracle
+}
+
+export const getNonce = async (safeAddress: string, safeVersion: string, dispatch: Dispatch): Promise<string> => {
   let nextNonce: string
   try {
-    nextNonce = (await getRecommendedNonce(safeAddress)).toString()
+    nextNonce = (await getRecommendedNonce(safeAddress, dispatch)).toString()
   } catch (e) {
     logError(Errors._616, e.message)
     console.log(safeVersion)
@@ -144,7 +163,12 @@ export const navigateToTx = (safeAddress: string, txDetails: TransactionDetails)
     return
   }
   const { shortName } = extractPrefixedSafeAddress()
-  const prefixedSafeAddress = getPrefixedSafeAddressSlug({ shortName, safeAddress })
+
+  const prefixedSafeAddress = getPrefixedSafeAddressSlug({
+    shortName,
+    safeAddress: safeAddress.substring(safeAddress.length - 40),
+  })
+
   const txRoute = generatePath(SAFE_ROUTES.TRANSACTIONS_SINGULAR, {
     [SAFE_ADDRESS_SLUG]: prefixedSafeAddress,
     [TRANSACTION_ID_SLUG]: txDetails.txId,

@@ -108,6 +108,7 @@
     "framer-motion": "^4.1.17",
     "fuse.js": "^6.4.6",
     "history": "4.10.1",
+    "hydra-ethjs-abi": "^0.0.1",
     "hydraweb3-js": "^0.0.4",
     "immutable": "4.0.0-rc.12",
     "js-cookie": "^3.0.0",

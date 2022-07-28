@@ -15,6 +15,8 @@ export const useTransactionDetails = (
   transactionId: string,
   transactionDetails?: ExpandedTxDetails,
 ): LoadTransactionDetails => {
+  // console.log('useTransactionDetails useTransactionDetails useTransactionDetails', transactionId, transactionDetails);
+
   const dispatch = useRef(useDispatch())
   const [txDetails, setTxDetails] = useState<LoadTransactionDetails>({
     loading: transactionDetails ? false : true,
@@ -32,7 +34,7 @@ export const useTransactionDetails = (
       // lookup tx details
       dispatch.current(fetchTransactionDetails({ transactionId }))
     }
-  }, [data?.txDetails, transactionId])
+  }, [data?.txDetails, transactionId, transactionDetails])
 
   return txDetails
 }

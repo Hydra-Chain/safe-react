@@ -5357,7 +5357,7 @@ buffer@^4.3.0:
     ieee754 "^1.1.4"
     isarray "^1.0.0"
 
-buffer@^5.0.5, buffer@^5.1.0, buffer@^5.4.2, buffer@^5.4.3, buffer@^5.5.0, buffer@^5.6.0:
+buffer@^5.0.5, buffer@^5.0.8, buffer@^5.1.0, buffer@^5.4.2, buffer@^5.4.3, buffer@^5.5.0, buffer@^5.6.0:
   version "5.7.1"
   resolved "https://registry.yarnpkg.com/buffer/-/buffer-5.7.1.tgz#ba62e7c13133053582197160851a8f648e99eed0"
   integrity sha512-EHcyIPBQ4BSGlvjB16k5KgAJ27CIsHY/2JBmCRReo48y9rQ3MaUzWX3KVlBa4U7MyX02HdVj0K7C3WaB3ju7FQ==
@@ -9881,6 +9881,16 @@ husky@^7.0.0:
   version "7.0.4"
   resolved "https://registry.yarnpkg.com/husky/-/husky-7.0.4.tgz#242048245dc49c8fb1bf0cc7cfb98dd722531535"
   integrity sha512-vbaCKN2QLtP/vD4yvs6iz6hBEo6wkSzs8HpRah1Z6aGmF2KW5PdYuAd7uX5a+OyBZHBhd+TFLqgjUgytQr4RvQ==
+
+hydra-ethjs-abi@^0.0.1:
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/hydra-ethjs-abi/-/hydra-ethjs-abi-0.0.1.tgz#100bb358f3654e574b5eb880fb1db512af27e795"
+  integrity sha512-qWK1j2uiFyHDuuTMLV++uYQ9j/Q0NDIPo3vklcNXDTKr08e17gok/mJtHGGeDKC7n/4OC6siWrPFRUuAj+YFPA==
+  dependencies:
+    bn.js "4.11.6"
+    buffer "^5.0.8"
+    js-sha3 "0.5.5"
+    number-to-bn "1.7.0"
 
 hydraweb3-js@^0.0.4:
   version "0.0.4"

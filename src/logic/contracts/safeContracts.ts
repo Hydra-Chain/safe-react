@@ -23,6 +23,7 @@ import { SignMessageLib } from 'src/types/contracts/sign_message_lib.d'
 import { MultiSend } from 'src/types/contracts/multi_send.d'
 import { getSafeInfo } from 'src/logic/safe/utils/safeInformation'
 import { SAFE_PROXY_FACTORY_ADDRESS, SAFE_SINGLETON_ADDRESS } from '../hydra/contracts'
+import { Dispatch } from '../safe/store/actions/types'
 
 export const SENTINEL_ADDRESS = '0x0000000000000000000000000000000000000001'
 
@@ -38,7 +39,7 @@ const getSafeContractDeployment = ({ safeVersion }: { safeVersion: string }) => 
   const networkId = _getChainId()
   const chainConfig = getChainById(networkId)
   // We had L1 contracts in three L2 networks, xDai, EWC and Volta so even if network is L2 we have to check that safe version is after v1.3.0
-  const useL2ContractVersion = chainConfig.l2 && semverSatisfies(safeVersion, '>=1.3.0')
+  const useL2ContractVersion = chainConfig.l2 && semverSatisfies(safeVersion, '>=1.1.1')
   const getDeployment = useL2ContractVersion ? getSafeL2SingletonDeployment : getSafeSingletonDeployment
 
   return (
@@ -132,11 +133,9 @@ const getFallbackHandlerContractInstance = (web3: Web3, chainId: ChainId): Compa
  * @param {ChainId} chainId
  */
 const getMultiSendContractInstance = (web3: Web3, chainId: ChainId): MultiSend => {
-  const multiSendDeployment =
-    getMultiSendCallOnlyDeployment({
-      network: chainId.toString(),
-    }) || getMultiSendCallOnlyDeployment()
-  const contractAddress = multiSendDeployment?.networkAddresses[chainId]
+  const multiSendDeployment = getMultiSendCallOnlyDeployment()
+
+  const contractAddress = multiSendDeployment?.networkAddresses[1]
 
   if (!contractAddress) {
     throw new Error(`MultiSend contract not found for chainId: ${chainId}`)
@@ -186,12 +185,11 @@ export const getSignMessageLibContractInstance = (web3: Web3, chainId: ChainId):
 
 export const getMasterCopyAddressFromProxyAddress = async (
   proxyAddress: string,
-  hydraSdk: any,
-  hydraAddress: string,
+  dispatch: Dispatch,
 ): Promise<string | undefined> => {
   let masterCopyAddress: string | undefined
   try {
-    const res = await getSafeInfo(proxyAddress, hydraSdk, hydraAddress)
+    const res = await getSafeInfo(proxyAddress, dispatch)
     masterCopyAddress = res.implementation.value
     if (!masterCopyAddress) {
       console.error(`There was not possible to get masterCopy address from proxy ${proxyAddress}.`)

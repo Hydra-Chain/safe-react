@@ -17,13 +17,13 @@ export const SAFE_APPS_RPC_TOKEN = process.env.REACT_APP_SAFE_APPS_RPC_INFURA_TO
 export const LATEST_SAFE_VERSION = process.env.REACT_APP_LATEST_SAFE_VERSION || '1.1.1'
 export const APP_VERSION = process.env.REACT_APP_APP_VERSION || 'not-defined'
 export const COLLECTIBLES_SOURCE = process.env.REACT_APP_COLLECTIBLES_SOURCE || 'Gnosis'
-export const SAFE_POLLING_INTERVAL = process.env.NODE_ENV === 'test' ? 4500 : 15000
+export const SAFE_POLLING_INTERVAL = process.env.NODE_ENV === 'test' ? 30000 : 30000
 export const ETHERSCAN_API_KEY = process.env.REACT_APP_ETHERSCAN_API_KEY || ''
 export const ETHGASSTATION_API_KEY = process.env.REACT_APP_ETHGASSTATION_API_KEY
 export const IPFS_GATEWAY = process.env.REACT_APP_IPFS_GATEWAY
 export const WC_BRIDGE = process.env.REACT_APP_WC_BRIDGE || 'https://safe-walletconnect.gnosis.io/'
 
-export const DEMO_SAFE_MAINNET = '93123563bb741000e9ee66b4556c6c9574437dc3'
+export const DEMO_SAFE_MAINNET = 'e8879490a4eb49313471d07b3bc64953785fca38'
 
 // Google Tag Manager
 export const GOOGLE_TAG_MANAGER_ID = process.env.REACT_APP_GOOGLE_TAG_MANAGER_ID || ''

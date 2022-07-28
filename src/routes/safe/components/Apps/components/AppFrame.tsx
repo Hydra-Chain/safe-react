@@ -187,6 +187,8 @@ const AppFrame = ({ appUrl }: Props): ReactElement => {
   const communicator = useAppCommunicator(iframeRef, safeApp)
 
   useEffect(() => {
+    console.log('useEffect(() => {')
+
     /**
      * @deprecated: getEnvInfo is a legacy method. Should not be used
      */
@@ -264,6 +266,8 @@ const AppFrame = ({ appUrl }: Props): ReactElement => {
     })
 
     communicator?.on(Methods.signMessage, async (msg) => {
+      console.log('communicator?.on(Methods.signMessage,')
+
       const { message } = msg.data.params as SignMessageParams
 
       openSignMessageModal(message, msg.data.id)

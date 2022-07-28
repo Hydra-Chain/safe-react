@@ -14,6 +14,8 @@ type TxExpandedActionsProps = {
 }
 
 export const TxExpandedActions = ({ transaction }: TxExpandedActionsProps): ReactElement => {
+  console.log('----------------------------TxExpandedActions')
+
   const {
     canCancel,
     handleConfirmButtonClick,
@@ -25,6 +27,7 @@ export const TxExpandedActions = ({ transaction }: TxExpandedActionsProps): Reac
   } = useActionButtonsHandlers(transaction)
   const nonce = useSelector(currentSafeNonce)
   const txStatus = useTxStatus(transaction)
+
   const isAwaitingEx = isAwaitingExecution(txStatus)
 
   const onExecuteOrConfirm = (event) => {

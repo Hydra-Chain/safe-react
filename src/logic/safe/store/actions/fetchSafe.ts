@@ -7,7 +7,7 @@ import { getLocalSafe } from 'src/logic/safe/utils'
 import { getSafeInfo } from 'src/logic/safe/utils/safeInformation'
 import { SafeInfo } from '@gnosis.pm/safe-react-gateway-sdk'
 // import { checksumAddress } from 'src/utils/checksumAddress'
-import { buildSafeOwners, extractRemoteSafeInfo } from './utils'
+import { buildSafeOracle, buildSafeOwners, extractRemoteSafeInfo } from './utils'
 import { AppReduxState, store } from 'src/store'
 import { currentSafeWithNames } from '../selectors'
 import fetchTransactions from './transactions/fetchTransactions'
@@ -25,13 +25,13 @@ import { fetchSafeTokens } from 'src/logic/tokens/store/actions/fetchSafeTokens'
  * @param {string} safeAddress
  * @returns Promise<SafeRecordProps>
  */
-export const buildSafe = async (safeAddress: string, hydraSdk: any, hydraAddress: string): Promise<SafeRecordProps> => {
+export const buildSafe = async (safeAddress: string, dispatch: Dispatch): Promise<SafeRecordProps> => {
   const address = safeAddress
   // setting `loadedViaUrl` to false, as `buildSafe` is called on safe Load or Open flows
   const safeInfo: Partial<SafeRecordProps> = { address, loadedViaUrl: false }
 
   const local = getLocalSafe(safeAddress)
-  const remote = await getSafeInfo(safeAddress, hydraSdk, hydraAddress).catch((err) => {
+  const remote = await getSafeInfo(safeAddress, dispatch).catch((err) => {
     err.log()
     return null
   })
@@ -43,8 +43,9 @@ export const buildSafe = async (safeAddress: string, hydraSdk: any, hydraAddress
 
   // update owner's information
   const owners = buildSafeOwners(remote?.owners, localSafeInfo.owners)
+  const oracle = buildSafeOracle(remote?.oracle, localSafeInfo.oracle)
 
-  return { ...localSafeInfo, ...safeInfo, ...remoteSafeInfo, owners } as SafeRecordProps
+  return { ...localSafeInfo, ...safeInfo, ...remoteSafeInfo, owners, oracle } as SafeRecordProps
 }
 
 /**
@@ -56,8 +57,8 @@ export const buildSafe = async (safeAddress: string, hydraSdk: any, hydraAddress
  * @param {boolean} isInitialLoad
  */
 export const fetchSafe =
-  (safeAddress: string, hydraSdk: any, hydraAddress: string, isInitialLoad = false) =>
-  async (dispatch: Dispatch<any>): Promise<Action<Partial<SafeRecordProps>> | void> => {
+  (safeAddress: string, isInitialLoad = false) =>
+  async (dispatch: Dispatch<any>, getState: () => AppReduxState): Promise<Action<Partial<SafeRecordProps>> | void> => {
     const dispatchPromises: ((dispatch: Dispatch, getState: () => AppReduxState) => Promise<void> | void)[] = []
 
     const address = safeAddress
@@ -66,7 +67,7 @@ export const fetchSafe =
     let remoteSafeInfo: SafeInfo | null = null
 
     try {
-      remoteSafeInfo = await getSafeInfo(address, hydraSdk, hydraAddress)
+      remoteSafeInfo = await getSafeInfo(address, dispatch, getState())
     } catch (err) {
       err.log()
     }
@@ -83,7 +84,6 @@ export const fetchSafe =
       }
 
       safeInfo = await extractRemoteSafeInfo(remoteSafeInfo)
-
       // If these polling timestamps have changed, fetch again
       const { collectiblesTag, txQueuedTag, txHistoryTag } = currentSafeWithNames(state)
 
@@ -96,9 +96,12 @@ export const fetchSafe =
       if (shouldUpdateCollectibles || isInitialLoad) {
         dispatch(fetchCollectibles(address))
       }
+      console.log('shouldUpdateTxHistory', shouldUpdateTxHistory)
+      console.log('shouldUpdateTxQueued', shouldUpdateTxQueued)
+      console.log('isInitialLoad', isInitialLoad)
 
       if (shouldUpdateTxHistory || shouldUpdateTxQueued || isInitialLoad) {
-        dispatchPromises.push(dispatch(fetchTransactions(chainId, address, hydraSdk, hydraAddress)))
+        dispatchPromises.push(dispatch(fetchTransactions(chainId, address)))
       }
 
       if (isInitialLoad) {
@@ -107,8 +110,9 @@ export const fetchSafe =
     }
 
     const owners = buildSafeOwners(remoteSafeInfo?.owners || [])
+    const oracle = buildSafeOracle(remoteSafeInfo?.oracle || [])
 
     await Promise.all(dispatchPromises)
 
-    return dispatch(updateSafe({ address, ...safeInfo, owners, loaded: true }))
+    return dispatch(updateSafe({ address, ...safeInfo, owners, oracle, loaded: true }))
   }

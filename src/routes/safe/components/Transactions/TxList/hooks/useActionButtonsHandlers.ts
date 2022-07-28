@@ -18,6 +18,7 @@ import { NOTIFICATIONS } from 'src/logic/notifications'
 import useTxStatus from 'src/logic/hooks/useTxStatus'
 import { trackEvent } from 'src/utils/googleTagManager'
 import { TX_LIST_EVENTS } from 'src/utils/events/txList'
+import { getLocalStorageApprovedTransactionSchema } from 'src/logic/hydra/api/explorer'
 
 type ActionButtonsHandlers = {
   canCancel: boolean
@@ -36,6 +37,20 @@ export const useActionButtonsHandlers = (transaction: Transaction): ActionButton
   const locationContext = useContext(TxLocationContext)
   const dispatch = useDispatch()
   const { canCancel, canConfirmThenExecute, canExecute } = useTransactionActions(transaction)
+  const safeTxHash = (transaction.txDetails?.detailedExecutionInfo as any)?.safeTxHash
+  const approvedTransactionSchema = getLocalStorageApprovedTransactionSchema()
+  console.log('approvedTransactionSchema[safeTxHash]', approvedTransactionSchema[safeTxHash])
+  if (safeTxHash && approvedTransactionSchema[safeTxHash]) {
+    for (const txHash in approvedTransactionSchema[safeTxHash]) {
+      console.log('approvedTransactionSchema[safeTxHash][txHash]', approvedTransactionSchema[safeTxHash][txHash])
+      if (approvedTransactionSchema[safeTxHash][txHash] === 0) {
+        transaction.txStatus = LocalTransactionStatus.PENDING
+        // txStatus = LocalTransactionStatus.PENDING
+      }
+    }
+  }
+  // transaction.txStatus = TransactionStatus.PENDING
+  // console.log('useActionButtonsHandlers', transaction);
   const txStatus = useTxStatus(transaction)
   const isPending = txStatus === LocalTransactionStatus.PENDING
 
@@ -55,6 +70,8 @@ export const useActionButtonsHandlers = (transaction: Transaction): ActionButton
       const actionSelected = canExecute || canConfirmThenExecute ? 'execute' : 'confirm'
 
       trackEvent(TX_LIST_EVENTS[actionSelected.toUpperCase()])
+      console.log('actionSelected', actionSelected)
+      console.log('actionContext', actionContext)
 
       actionContext.current.selectAction({
         actionSelected,
@@ -91,6 +108,10 @@ export const useActionButtonsHandlers = (transaction: Transaction): ActionButton
   const signaturePending = addressInList(
     (transaction.executionInfo as MultisigExecutionInfo)?.missingSigners ?? undefined,
   )
+
+  console.log('currentUser', currentUser)
+  console.log('isPending', isPending)
+  console.log('txStatus', txStatus)
 
   const disabledActions =
     !currentUser ||

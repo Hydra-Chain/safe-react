@@ -1,5 +1,5 @@
 import { ReactElement, useState, useEffect } from 'react'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { useField, useForm } from 'react-final-form'
 import styled from 'styled-components'
 import CheckCircle from '@material-ui/icons/CheckCircle'
@@ -31,6 +31,7 @@ import { currentChainId } from 'src/logic/config/store/selectors'
 import { trackEvent } from 'src/utils/googleTagManager'
 import { LOAD_SAFE_EVENTS } from 'src/utils/events/createLoadSafe'
 import { providerHydraSdkSelector, userAccountSelector } from 'src/logic/wallets/store/selectors'
+import { Dispatch } from 'src/logic/safe/store/actions/types'
 
 export const loadSafeAddressStepLabel = 'Name and address'
 
@@ -46,6 +47,7 @@ function LoadSafeAddressStep(): ReactElement {
   const addressBook = useSelector(currentNetworkAddressBookAsMap)
   const addressHydra = useSelector(userAccountSelector)
   const hydraSdk = useSelector(providerHydraSdkSelector)
+  const dispatch = useDispatch<Dispatch>()
 
   const {
     input: { value: safeAddress },
@@ -67,7 +69,7 @@ function LoadSafeAddressStep(): ReactElement {
       }
       setIsSafeInfoLoading(true)
       try {
-        const { owners, threshold } = await getSafeInfo(safeAddress, hydraSdk, addressHydra ?? '')
+        const { owners, threshold } = await getSafeInfo(safeAddress, dispatch)
         setIsSafeInfoLoading(false)
         const ownersWithName = owners.map(({ value: address }) => {
           return makeAddressBookEntry(addressBook[address] || { address, name: '', chainId })
@@ -99,7 +101,7 @@ function LoadSafeAddressStep(): ReactElement {
     }
 
     checkSafeAddress()
-  }, [safeAddress, addressBook, chainId, hydraSdk, addressHydra])
+  }, [safeAddress, addressBook, chainId, hydraSdk, addressHydra, dispatch])
 
   useEffect(() => {
     if (threshold) {

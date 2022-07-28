@@ -2,11 +2,10 @@ import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 
 import Modal from 'src/components/Modal'
-import { providerHydraSdkSelector, userAccountSelector } from 'src/logic/wallets/store/selectors'
+import { userAccountSelector } from 'src/logic/wallets/store/selectors'
 import { addressBookAddOrUpdate } from 'src/logic/addressBook/store/actions'
 import { TX_NOTIFICATION_TYPES } from 'src/logic/safe/transactions'
 import { createTransaction } from 'src/logic/safe/store/actions/createTransaction'
-// import { checksumAddress } from 'src/utils/checksumAddress'
 import { makeAddressBookEntry } from 'src/logic/addressBook/model/addressBook'
 import { Dispatch } from 'src/logic/safe/store/actions/types.d'
 import { TxParameters } from 'src/routes/safe/container/hooks/useTransactionParameters'
@@ -14,7 +13,6 @@ import { TxParameters } from 'src/routes/safe/container/hooks/useTransactionPara
 import { OwnerForm } from './screens/OwnerForm'
 import { ReviewAddOwner } from './screens/Review'
 import { ThresholdForm } from './screens/ThresholdForm'
-// import { getSafeSDK } from 'src/logic/wallets/getWeb3'
 import { Errors, logError } from 'src/logic/exceptions/CodedException'
 import { currentSafe, currentSafeCurrentVersion } from 'src/logic/safe/store/selectors'
 import { currentChainId } from 'src/logic/config/store/selectors'
@@ -22,7 +20,7 @@ import { trackEvent } from 'src/utils/googleTagManager'
 import { SETTINGS_EVENTS } from 'src/utils/events/settings'
 import { store } from 'src/store'
 import useSafeAddress from 'src/logic/currentSession/hooks/useSafeAddress'
-import { sendAddNewOwner } from 'src/logic/hydra/contractInteractions/utils'
+import { sendAddNewOwner, sendWithState } from 'src/logic/hydra/contractInteractions/utils'
 
 export type OwnerValues = {
   ownerAddress: string
@@ -31,41 +29,47 @@ export type OwnerValues = {
 }
 
 export const sendAddOwner = async (
-  values: OwnerValues,
+  { ownerAddress, threshold }: OwnerValues,
   safeAddress: string,
   safeVersion: string,
   txParameters: TxParameters,
   dispatch: Dispatch,
   connectedWalletAddress: string,
   delayExecution: boolean,
-  hydraSdk: any,
-  userAddress: string,
 ): Promise<void> => {
-  const result = await sendAddNewOwner(hydraSdk, safeAddress, userAddress, values.ownerAddress, +values.threshold)
+  const result = await dispatch(
+    sendWithState(sendAddNewOwner, { safeAddress, ownerAddress, threshold, gasLimit: txParameters.ethGasLimit }),
+  )
   console.log(result)
 
   // const sdk = await getSafeSDK(connectedWalletAddress, safeAddress, safeVersion)
   // const safeTx = await sdk.getAddOwnerTx(
-  //   { ownerAddress: values.ownerAddress, threshold: +values.threshold },
+  //   { ownerAddress, threshold: +threshold },
   //   { safeTxGas: 0 },
   // )
   // const txData = safeTx.data.data
 
   await dispatch(
-    createTransaction({
-      safeAddress,
-      to: safeAddress,
-      valueInWei: '0',
-      txData: undefined,
-      txNonce: txParameters.safeNonce,
-      safeTxGas: txParameters.safeTxGas,
-      ethParameters: txParameters,
-      notifiedTransaction: TX_NOTIFICATION_TYPES.SETTINGS_CHANGE_TX,
-      delayExecution,
-    }),
+    createTransaction(
+      {
+        safeAddress,
+        to: safeAddress,
+        valueInWei: '0',
+        txData: '0x',
+        txNonce: txParameters.safeNonce,
+        safeTxGas: txParameters.safeTxGas,
+        ethParameters: txParameters,
+        notifiedTransaction: TX_NOTIFICATION_TYPES.SETTINGS_CHANGE_TX,
+        delayExecution,
+      },
+      undefined,
+      undefined,
+      undefined,
+      result,
+    ),
   )
 
-  trackEvent({ ...SETTINGS_EVENTS.THRESHOLD.THRESHOLD, label: values.threshold })
+  trackEvent({ ...SETTINGS_EVENTS.THRESHOLD.THRESHOLD, label: threshold })
   trackEvent({ ...SETTINGS_EVENTS.THRESHOLD.OWNERS, label: currentSafe(store.getState()).owners.length })
 }
 
@@ -82,8 +86,6 @@ export const AddOwnerModal = ({ isOpen, onClose }: Props): React.ReactElement =>
   const safeVersion = useSelector(currentSafeCurrentVersion)
   const connectedWalletAddress = useSelector(userAccountSelector)
   const chainId = useSelector(currentChainId)
-  const hydraSdk = useSelector(providerHydraSdkSelector)
-  const userAddress = useSelector(userAccountSelector)
 
   useEffect(
     () => () => {
@@ -130,8 +132,6 @@ export const AddOwnerModal = ({ isOpen, onClose }: Props): React.ReactElement =>
         dispatch,
         connectedWalletAddress,
         delayExecution,
-        hydraSdk,
-        userAddress ?? '',
       )
       dispatch(
         addressBookAddOrUpdate(makeAddressBookEntry({ name: values.ownerName, address: values.ownerAddress, chainId })),

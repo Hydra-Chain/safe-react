@@ -41,7 +41,7 @@ import { getLoadSafeName, getOwnerName } from './fields/utils'
 import { currentChainId } from 'src/logic/config/store/selectors'
 import { LOAD_SAFE_CATEGORY, LOAD_SAFE_EVENTS } from 'src/utils/events/createLoadSafe'
 import { trackEvent } from 'src/utils/googleTagManager'
-import { providerHydraSdkSelector, userAccountSelector } from 'src/logic/wallets/store/selectors'
+import { providerHydraSdkSelector } from 'src/logic/wallets/store/selectors'
 
 function Load(): ReactElement {
   const dispatch = useDispatch()
@@ -51,7 +51,6 @@ function Load(): ReactElement {
   const [initialFormValues, setInitialFormValues] = useState<LoadSafeFormValues>()
   const addressBook = useSelector(currentNetworkAddressBookAsMap)
   const chainId = useSelector(currentChainId)
-  const addressHydra = useSelector(userAccountSelector)
   const hydraSdk = useSelector(providerHydraSdkSelector)
 
   useEffect(() => {
@@ -113,7 +112,7 @@ function Load(): ReactElement {
     updateAddressBook(values)
 
     const checksummedAddress = address || ''
-    const safeProps = await buildSafe(checksummedAddress, hydraSdk, addressHydra ?? '')
+    const safeProps = await buildSafe(checksummedAddress, dispatch)
     const storedSafes = loadStoredSafes() || {}
     storedSafes[checksummedAddress] = safeProps
 

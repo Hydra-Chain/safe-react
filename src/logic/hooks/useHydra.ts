@@ -1,6 +1,7 @@
 import { Hydraweb3 } from 'hydraweb3-js'
 import { useState, useEffect } from 'react'
 import { store } from 'src/store'
+import { hydraToHexAddress } from '../hydra/utils'
 import closeSnackbar from '../notifications/store/actions/closeSnackbar'
 import updateProviderAccount from '../wallets/store/actions/updateProviderAccount'
 import updateProviderHydraAccount from '../wallets/store/actions/updateProviderHydraAccount'
@@ -52,7 +53,7 @@ export default function (): { account: any; hydraSDK: any; error: string } {
           const account = event.data.message.payload.account
           const hydraExtension = new Hydraweb3(window.hydrawallet.rpcProvider)
           store.dispatch(updateProviderWallet(account?.name || ''))
-          store.dispatch(updateProviderAccount(account?.address || ''))
+          store.dispatch(updateProviderAccount(hydraToHexAddress(account?.address, true)))
           store.dispatch(updateProviderNetwork(account ? '1' : ''))
           store.dispatch(closeSnackbar({ dismissAll: true }))
           store.dispatch(updateProviderHydraSDK(hydraExtension))

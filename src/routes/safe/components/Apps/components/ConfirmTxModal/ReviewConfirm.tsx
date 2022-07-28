@@ -71,6 +71,11 @@ export const ReviewConfirm = ({
   requestId,
   appId,
 }: Props): ReactElement => {
+  console.log('app', app)
+  console.log('txs', txs)
+  console.log('safeAddress', safeAddress)
+  console.log('ethBalance', ethBalance)
+
   const isMultiSend = txs.length > 1
   const [decodedData, setDecodedData] = useState<DecodedTxDetailType>()
   const dispatch = useDispatch()
@@ -114,6 +119,8 @@ export const ReviewConfirm = ({
   }
 
   const confirmTransactions = (txParameters: TxParameters, delayExecution: boolean) => {
+    console.log('ReviewConfirm confirmTransactions')
+
     trackSafeAppTxCount(appId)
     dispatch(
       createTransaction(

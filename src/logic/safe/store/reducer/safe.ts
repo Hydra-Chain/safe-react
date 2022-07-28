@@ -15,11 +15,13 @@ export const SAFE_REDUCER_ID = 'safes'
 
 export const buildSafe = (storedSafe: SafeRecordProps): SafeRecordProps => {
   const owners = storedSafe.owners
+  const oracle = storedSafe.oracle
 
   return {
     ...storedSafe,
     loaded: false,
     owners,
+    oracle,
     modules: null,
   }
 }

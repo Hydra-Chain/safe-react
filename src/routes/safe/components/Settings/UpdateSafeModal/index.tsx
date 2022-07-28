@@ -35,6 +35,8 @@ export const UpdateSafeModal = ({ onClose, safeAddress, safeCurrentVersion }: Pr
 
   const handleSubmit = (txParameters: TxParameters, delayExecution: boolean) => {
     // Call the update safe method
+    console.log('UpdateSafeModal handleSubmit')
+
     dispatch(
       createTransaction({
         safeAddress,

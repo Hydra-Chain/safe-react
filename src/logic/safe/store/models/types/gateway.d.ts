@@ -70,39 +70,39 @@ export type TransactionDetails = {
  */
 
 export const isDateLabel = (value: HistoryGatewayResult): value is DateLabel => {
-  return value.type === 'DATE_LABEL'
+  return value?.type === 'DATE_LABEL'
 }
 
 export const isLabel = (value: QueuedGatewayResult): value is Label => {
-  return value.type === 'LABEL'
+  return value?.type === 'LABEL'
 }
 
 export const isConflictHeader = (value: QueuedGatewayResult): value is ConflictHeader => {
-  return value.type === 'CONFLICT_HEADER'
+  return value?.type === 'CONFLICT_HEADER'
 }
 
 export const isTransactionSummary = (value: HistoryGatewayResult | QueuedGatewayResult): value is GWTransaction => {
-  return value.type === 'TRANSACTION'
+  return value?.type === 'TRANSACTION'
 }
 
 export const isTransferTxInfo = (value: TransactionInfo): value is Transfer => {
-  return value.type === 'Transfer'
+  return value?.type === 'Transfer'
 }
 
 export const isSettingsChangeTxInfo = (value: TransactionInfo): value is SettingsChange => {
-  return value.type === 'SettingsChange'
+  return value?.type === 'SettingsChange'
 }
 
 export const isCustomTxInfo = (value: TransactionInfo): value is Custom => {
-  return value.type === 'Custom'
+  return value?.type === 'Custom'
 }
 
 export const isMultiSendTxInfo = (value: TransactionInfo): value is MultiSend => {
-  return isCustomTxInfo(value) && value.methodName === 'multiSend'
+  return isCustomTxInfo(value) && value?.methodName === 'multiSend'
 }
 
 export const isCreationTxInfo = (value: TransactionInfo): value is Creation => {
-  return value.type === 'Creation'
+  return value?.type === 'Creation'
 }
 
 export const isMultiSigExecutionDetails = (

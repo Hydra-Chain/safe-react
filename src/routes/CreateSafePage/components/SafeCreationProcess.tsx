@@ -7,8 +7,7 @@ import styled from 'styled-components'
 import { SafeInfo } from '@gnosis.pm/safe-react-gateway-sdk'
 
 import { getSafeDeploymentTransaction } from 'src/logic/contracts/safeContracts'
-import { txMonitor } from 'src/logic/safe/transactions/txMonitor'
-import { providerHydraSdkSelector, userAccountSelector } from 'src/logic/wallets/store/selectors'
+import { userAccountSelector } from 'src/logic/wallets/store/selectors'
 import { SafeDeployment } from 'src/routes/opening'
 import { loadFromStorage, removeFromStorage, saveToStorage } from 'src/utils/storage'
 import { addOrUpdateSafe } from 'src/logic/safe/store/actions/addOrUpdateSafe'
@@ -17,14 +16,11 @@ import {
   CreateSafeFormValues,
   FIELD_NEW_SAFE_THRESHOLD,
   FIELD_SAFE_OWNERS_LIST,
-  FIELD_NEW_SAFE_GAS_LIMIT,
   FIELD_NEW_SAFE_CREATION_TX_HASH,
   FIELD_CREATE_SUGGESTED_SAFE_NAME,
   FIELD_CREATE_CUSTOM_SAFE_NAME,
   FIELD_NEW_SAFE_PROXY_SALT,
-  FIELD_NEW_SAFE_GAS_PRICE,
   FIELD_SAFE_OWNER_ENS_LIST,
-  FIELD_NEW_SAFE_GAS_MAX_PRIO_FEE,
 } from '../fields/createSafeFields'
 import { getSafeInfo } from 'src/logic/safe/utils/safeInformation'
 import { buildSafe } from 'src/logic/safe/store/actions/fetchSafe'
@@ -36,18 +32,17 @@ import Button from 'src/components/layout/Button'
 import { boldFont } from 'src/theme/variables'
 import { WELCOME_ROUTE, history, generateSafeRoute, SAFE_ROUTES } from 'src/routes/routes'
 import { getExplorerInfo, getShortName } from 'src/config'
-import { createSendParams } from 'src/logic/safe/transactions/gas'
 import { currentChainId } from 'src/logic/config/store/selectors'
 import PrefixedEthHashInfo from 'src/components/PrefixedEthHashInfo'
 import { trackEvent } from 'src/utils/googleTagManager'
 import { CREATE_SAFE_EVENTS } from 'src/utils/events/createLoadSafe'
 import Track from 'src/components/Track'
-import { didTxRevert } from 'src/logic/safe/store/actions/transactions/utils/transactionHelpers'
 import { useQuery } from 'src/logic/hooks/useQuery'
 import { ADDRESSED_ROUTE } from 'src/routes/routes'
 import { SAFE_APPS_EVENTS } from 'src/utils/events/safeApps'
-import { hydraToHexAddress } from 'src/logic/hydra/utils'
-import { deploySafeWithNonce } from 'src/logic/hydra/contractInteractions/utils'
+import { deploySafeWithNonce, sendWithState } from 'src/logic/hydra/contractInteractions/utils'
+import { Dispatch } from 'src/logic/safe/store/actions/types'
+import { fetchTransaction } from 'src/logic/hydra/api/explorer'
 
 export const InlinePrefixedEthHashInfo = styled(PrefixedEthHashInfo)`
   display: inline-flex;
@@ -79,21 +74,21 @@ const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout
  *
  * `[ethjs-query] while formatting outputs from RPC '{"value":{"code":-32000,"message":"intrinsic gas too low"}}'`
  */
-const parseError = (err: Error): Error => {
-  const prefix = '[ethjs-query] while formatting outputs from RPC '
+// const parseError = (err: Error): Error => {
+//   const prefix = '[ethjs-query] while formatting outputs from RPC '
 
-  if (!err.message.startsWith(prefix)) return err
+//   if (!err.message.startsWith(prefix)) return err
 
-  const json = err.message.split(prefix).pop() || ''
-  let actualMessage = ''
-  try {
-    actualMessage = JSON.parse(json.slice(1, -1)).value.message
-  } catch (e) {
-    actualMessage = ''
-  }
+//   const json = err.message.split(prefix).pop() || ''
+//   let actualMessage = ''
+//   try {
+//     actualMessage = JSON.parse(json.slice(1, -1)).value.message
+//   } catch (e) {
+//     actualMessage = ''
+//   }
 
-  return actualMessage ? new Error(actualMessage) : err
-}
+//   return actualMessage ? new Error(actualMessage) : err
+// }
 
 const getSavedSafeCreation = (): CreateSafeFormValues | void => {
   return loadFromStorage<CreateSafeFormValues>(SAFE_PENDING_CREATION_STORAGE_KEY)
@@ -105,8 +100,9 @@ const loadSavedDataOrLeave = (): CreateSafeFormValues | void => {
 
 const createNewSafe = (
   userAddress: string,
-  hydraSdk: any,
+  dispatch: Dispatch,
   onHash: (hash: string) => void,
+  setInterval0: React.Dispatch<React.SetStateAction<NodeJS.Timer | undefined>>,
 ): Promise<TransactionReceipt> => {
   if (!userAddress) {
     return Promise.reject(new Error('No user address'))
@@ -118,68 +114,102 @@ const createNewSafe = (
     return Promise.reject(new Error('No saved Safe creation'))
   }
 
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve) => {
     const confirmations = safeCreationFormValues[FIELD_NEW_SAFE_THRESHOLD]
     const ownerFields = safeCreationFormValues[FIELD_SAFE_OWNERS_LIST]
     const ownerAddresses = ownerFields.map(({ addressFieldName }) => safeCreationFormValues[addressFieldName])
-    const gasLimit = safeCreationFormValues[FIELD_NEW_SAFE_GAS_LIMIT]
-    const gasPrice = safeCreationFormValues[FIELD_NEW_SAFE_GAS_PRICE]
-    const gasMaxPrioFee = safeCreationFormValues[FIELD_NEW_SAFE_GAS_MAX_PRIO_FEE]
+    // const gasLimit = safeCreationFormValues[FIELD_NEW_SAFE_GAS_LIMIT]
+    // const gasPrice = safeCreationFormValues[FIELD_NEW_SAFE_GAS_PRICE]
+    // const gasMaxPrioFee = safeCreationFormValues[FIELD_NEW_SAFE_GAS_MAX_PRIO_FEE]
     const safeCreationSalt = Date.now() // never retry with the same salt
     const deploymentTx = getSafeDeploymentTransaction(ownerAddresses, confirmations, safeCreationSalt)
 
-    const sendParams = createSendParams(hydraToHexAddress(userAddress, true), {
-      ethGasLimit: gasLimit.toString(),
-      ethGasPriceInGWei: gasPrice,
-      ethMaxPrioFeeInGWei: gasMaxPrioFee.toString(),
+    // const sendParams = createSendParams(hydraToHexAddress(userAddress, true), {
+    //   ethGasLimit: gasLimit.toString(),
+    //   ethGasPriceInGWei: gasPrice,
+    //   ethMaxPrioFeeInGWei: gasMaxPrioFee.toString(),
+    // })
+    // console.log('deploymentTx', deploymentTx.encodeABI());
+
+    const tx = await dispatch(sendWithState(deploySafeWithNonce, { deploymentTx }))
+    console.log('tx', tx)
+    onHash('0x' + tx.id)
+    saveToStorage(SAFE_PENDING_CREATION_STORAGE_KEY, {
+      ...safeCreationFormValues,
+      [FIELD_NEW_SAFE_PROXY_SALT]: safeCreationSalt,
+      [FIELD_NEW_SAFE_CREATION_TX_HASH]: '0x' + tx.id,
     })
+    // let isReceipt = false
+    setInterval0(
+      setInterval(async () => {
+        console.log('in furst interval')
+        let receipt
+        try {
+          const txConfirmed = await fetchTransaction(tx.id)
+          console.log(' setInterval txConfirmed', txConfirmed)
 
-    deploySafeWithNonce(sendParams, ownerAddresses, confirmations, safeCreationSalt, hydraSdk, userAddress)
+          if (!txConfirmed.confirmations || txConfirmed.confirmations === 0) {
+            return
+          }
 
-    deploymentTx
-      .send(sendParams)
-      .once('transactionHash', (txHash) => {
-        onHash(txHash)
+          receipt = txConfirmed.outputs.find((output) => output.receipt)
+          console.log('Original tx mined:', receipt)
+          // isReceipt = true
+          trackEvent(CREATE_SAFE_EVENTS.CREATED_SAFE)
+          resolve(receipt)
+          // clearInterval(interval)
+        } catch (e) {
+          receipt = undefined
+          console.log(e)
+          return
+        }
+      }, 10000),
+    )
 
-        saveToStorage(SAFE_PENDING_CREATION_STORAGE_KEY, {
-          ...safeCreationFormValues,
-          [FIELD_NEW_SAFE_PROXY_SALT]: safeCreationSalt,
-          [FIELD_NEW_SAFE_CREATION_TX_HASH]: txHash,
-        })
+    // deploymentTx
+    //   .send(sendParams)
+    //   .once('transactionHash', (txHash) => {
+    //     onHash(txHash)
 
-        // Monitor the latest block to find a potential speed-up tx
-        txMonitor({ sender: userAddress, hash: txHash, data: deploymentTx.encodeABI() })
-          .then((txReceipt) => {
-            // txMonitor returns the txReceipt from `getTransactionReceipt` which doesn't throw
-            // if it was reverted. We must check the status of the receipt manually.
-            if (didTxRevert(txReceipt)) {
-              reject(new Error('Sped-up tx reverted'))
-              return
-            }
+    //     saveToStorage(SAFE_PENDING_CREATION_STORAGE_KEY, {
+    //       ...safeCreationFormValues,
+    //       [FIELD_NEW_SAFE_PROXY_SALT]: safeCreationSalt,
+    //       [FIELD_NEW_SAFE_CREATION_TX_HASH]: txHash,
+    //     })
 
-            console.log('Sped-up tx mined:', txReceipt)
-            trackEvent(CREATE_SAFE_EVENTS.CREATED_SAFE)
-            resolve(txReceipt)
-          })
-          .catch((error) => {
-            reject(parseError(error))
-          })
-      })
-      .then((txReceipt) => {
-        console.log('Original tx mined:', txReceipt)
-        trackEvent(CREATE_SAFE_EVENTS.CREATED_SAFE)
-        resolve(txReceipt)
-      })
-      .catch((error) => {
-        // `deploymentTx` will throw if the transaction was reverted
-        reject(parseError(error))
-      })
+    //     // Monitor the latest block to find a potential speed-up tx
+    //     txMonitor({ sender: userAddress, hash: txHash, data: deploymentTx.encodeABI() })
+    //       .then((txReceipt) => {
+    //         // txMonitor returns the txReceipt from `getTransactionReceipt` which doesn't throw
+    //         // if it was reverted. We must check the status of the receipt manually.
+    //         if (didTxRevert(txReceipt)) {
+    //           reject(new Error('Sped-up tx reverted'))
+    //           return
+    //         }
+
+    //         console.log('Sped-up tx mined:', txReceipt)
+    //         trackEvent(CREATE_SAFE_EVENTS.CREATED_SAFE)
+    //         resolve(txReceipt)
+    //       })
+    //       .catch((error) => {
+    //         reject(parseError(error))
+    //       })
+    //   })
+    //   .then((txReceipt) => {
+    //     console.log('Original tx mined:', txReceipt)
+    //     trackEvent(CREATE_SAFE_EVENTS.CREATED_SAFE)
+    //     resolve(txReceipt)
+    //   })
+    //   .catch((error) => {
+    //     // `deploymentTx` will throw if the transaction was reverted
+    //     reject(parseError(error))
+    //   })
   })
 }
 
-const pollSafeInfo = async (safeAddress: string, hydraSdk: any, hydraAddress: string): Promise<SafeInfo> => {
+const pollSafeInfo = async (safeAddress: string, dispatch: Dispatch): Promise<SafeInfo> => {
   // exponential delay between attempts for around 4 min
-  return await backOff(() => getSafeInfo(safeAddress, hydraSdk, hydraAddress), {
+  return await backOff(() => getSafeInfo(safeAddress, dispatch), {
     startingDelay: 750,
     maxDelay: 20000,
     numOfAttempts: 19,
@@ -208,26 +238,24 @@ function SafeCreationProcess(): ReactElement {
   const [modalData, setModalData] = useState<ModalDataType>({ safeAddress: '' })
   const [showCouldNotLoadModal, setShowCouldNotLoadModal] = useState(false)
   const [newSafeAddress, setNewSafeAddress] = useState<string>('')
-  const address = useSelector(userAccountSelector)
-  const hydraSdk = useSelector(providerHydraSdkSelector)
+  const [interval0, setInterval0] = useState<NodeJS.Timer>()
+  // const hydraSdk = useSelector(providerHydraSdkSelector)
 
   useEffect(() => {
     const safeCreationFormValues = loadSavedDataOrLeave()
     if (!safeCreationFormValues) {
       return
     }
-
     const newCreationTxHash = safeCreationFormValues[FIELD_NEW_SAFE_CREATION_TX_HASH]
     if (newCreationTxHash) {
       setSafeCreationTxHash(newCreationTxHash)
+      if (interval0) {
+        clearInterval(interval0)
+      }
     } else {
-      ;(async () => {
-        const dd = await createNewSafe(userAddress, hydraSdk, setSafeCreationTxHash)
-        console.log('dd', dd)
-      })()
-      setCreationTxPromise(createNewSafe(userAddress, hydraSdk, setSafeCreationTxHash))
+      setCreationTxPromise(createNewSafe(userAddress, dispatch, setSafeCreationTxHash, setInterval0))
     }
-  }, [userAddress, hydraSdk])
+  }, [userAddress, dispatch, interval0])
 
   const onSafeCreated = async (safeAddress: string): Promise<void> => {
     const createSafeFormValues = loadSavedDataOrLeave()
@@ -248,18 +276,18 @@ function SafeCreationProcess(): ReactElement {
     const safeAddressBookEntry = makeAddressBookEntry({ address: safeAddress, name: safeName, chainId })
     dispatch(addressBookSafeLoad([...ownersAddressBookEntry, safeAddressBookEntry]))
 
-    // a default 5s wait before starting to request safe information
-    await sleep(5000)
+    // a default 8s wait before starting to request safe information
+    await sleep(8000)
 
     try {
-      await pollSafeInfo(safeAddress, hydraSdk, address ?? '')
+      await pollSafeInfo(safeAddress, dispatch)
     } catch (e) {
       setNewSafeAddress(safeAddress)
       setShowCouldNotLoadModal(true)
       return
     }
 
-    const safeProps = await buildSafe(safeAddress, hydraSdk, address ?? '')
+    const safeProps = await buildSafe(safeAddress, dispatch)
     dispatch(addOrUpdateSafe(safeProps))
 
     setShowModal(true)
@@ -285,7 +313,7 @@ function SafeCreationProcess(): ReactElement {
       safeCreationTxHash: undefined,
     })
 
-    setCreationTxPromise(createNewSafe(userAddress, hydraSdk, setSafeCreationTxHash))
+    setCreationTxPromise(createNewSafe(userAddress, dispatch, setSafeCreationTxHash, setInterval0))
   }
 
   const onCancel = () => {
