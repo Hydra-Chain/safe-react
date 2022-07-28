@@ -39,6 +39,7 @@ export const TxInfoTransfer = ({
   useEffect(() => {
     if (isTransferAssetInfo(assetInfo)) {
       const txDirection = txInfo?.direction?.toUpperCase()
+      makeTitle(txDirection, assetInfo.amountWithSymbol, txStatus)
       setDetails({
         title: makeTitle(txDirection, assetInfo.amountWithSymbol, txStatus) ?? 'Waiting tx...',
         address:
@@ -47,7 +48,7 @@ export const TxInfoTransfer = ({
         name:
           ((txDirection === TransferDirection.INCOMING ? txInfo?.sender?.name : txInfo?.recipient?.name) ||
             undefined) ??
-          'Waiting tx...',
+          '',
       })
     }
   }, [assetInfo, txInfo.direction, txInfo.recipient, txInfo.sender, txStatus])

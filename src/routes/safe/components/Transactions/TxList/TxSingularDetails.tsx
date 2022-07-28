@@ -92,9 +92,9 @@ const TxSingularDetails = (): ReactElement => {
   const detailedTx = storedTx?.transaction || (fetchedTx?.txId ? makeTxFromDetails(fetchedTx) : null)
   console.log('detailedTx', detailedTx)
 
-  if (detailedTx?.txDetails) {
-    detailedTx.timestamp = detailedTx.txDetails.executedAt ?? 0
-  }
+  // if (detailedTx?.txDetails) {
+  //   detailedTx.timestamp = detailedTx.txDetails.executedAt ?? 0
+  // }
 
   if (!detailedTx) {
     return (
@@ -110,7 +110,7 @@ const TxSingularDetails = (): ReactElement => {
 
   return (
     <TxLocationContext.Provider value={{ txLocation: storedTx?.txLocation || fallbackLocation }}>
-      <TxList transactions={[[detailedTx.timestamp.toString(), [detailedTx]]]} />
+      <TxList transactions={[[detailedTx.timestamp?.toString() ?? Date.now().toString(), [detailedTx]]]} />
     </TxLocationContext.Provider>
   )
 }

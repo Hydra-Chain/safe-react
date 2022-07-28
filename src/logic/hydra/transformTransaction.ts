@@ -20,6 +20,7 @@ import {
 import { Log } from 'web3-core'
 import { Dispatch } from '../safe/store/actions/types'
 import { EMPTY_DATA } from '../wallets/ethTransactions'
+import { ERC20 } from './abis'
 import { getLocalStorageApprovedTransactionSchema, setLocalStorageApprovedTransactionSchema } from './api/explorer'
 import {
   getGnosisProxyOwners,
@@ -27,6 +28,10 @@ import {
   sendWithState,
   getGnosisProxyApprovedHash,
   getGnosisProxyNonce,
+  decodeMethodWithParams,
+  getERC20Decimals,
+  getERC20Name,
+  getERC20Symbol,
 } from './contractInteractions/utils'
 import { SAFE_PROXY_FACTORY_ADDRESS, SAFE_SINGLETON_ADDRESS } from './contracts'
 import { getSafeLogs, hydraToHexAddress, isHashConsumed } from './utils'
@@ -148,18 +153,37 @@ export const approvedHash = async (safeAddress: string, transaction: any, dispat
       }
       executionInfo[e.name] = e.value
     })
+    const isNativeTransfer = executionInfo.hydraExecution.data === '0x'
+    let decoded
+    if (!isNativeTransfer) {
+      const data = executionInfo.hydraExecution.data.slice(0, 2) + executionInfo.hydraExecution.data.slice(10)
+      decoded = decodeMethodWithParams(ERC20, 'transfer', data)
+      const [name, symbol, decimals] = await Promise.all([
+        dispatch(sendWithState(getERC20Name, { erc20Address: executionInfo.hydraExecution.to })),
+        dispatch(sendWithState(getERC20Symbol, { erc20Address: executionInfo.hydraExecution.to })),
+        dispatch(sendWithState(getERC20Decimals, { erc20Address: executionInfo.hydraExecution.to })),
+      ])
+      decoded.decimals = Number(decimals)
+      decoded.name = name
+      decoded.symbol = symbol
+    }
 
     tli.transaction.executionInfo = executionInfo as MultisigExecutionInfo
     tli.transaction.txInfo = {} as Transfer
     tli.transaction.txInfo.type = 'Transfer'
     tli.transaction.txInfo.direction = TransferDirection.OUTGOING
     tli.transaction.txInfo.sender = { value: ownerApproved } as AddressEx
-    tli.transaction.txInfo.recipient = { value: executionInfo.hydraExecution.to } as AddressEx
+    tli.transaction.txInfo.recipient = { value: decoded ? decoded.to : executionInfo.hydraExecution.to } as AddressEx
     // console.log('-------------approvedHash before', executionInfo.hydraExecution.data);
     // decodeMethodWithParams(GnosisSafe, '')
     const transferInfo = {} as any
-    const isNativeTransfer = executionInfo.hydraExecution.data === '0x'
+    transferInfo.value = decoded
+      ? decoded.value.toString()
+      : logExecutionParams.events.find((e) => e.name === 'value').value
     transferInfo.tokenAddress = !isNativeTransfer ? executionInfo.to : undefined
+    transferInfo.decimals = decoded ? decoded.decimals : undefined
+    transferInfo.tokenName = decoded ? decoded.name : undefined
+    transferInfo.tokenSymbol = decoded ? decoded.symbol : undefined
     transferInfo.type =
       executionInfo.hydraExecution.data === '0x' ? TransactionTokenType.NATIVE_COIN : TransactionTokenType.ERC20
     tli.transaction.txInfo.transferInfo = transferInfo as Erc20Transfer | NativeCoinTransfer

@@ -2,7 +2,7 @@ import { Dispatch } from 'redux'
 import { ProposeTxBody } from 'src/logic/safe/transactions'
 import { AppReduxState } from 'src/store'
 import { NonPayableTransactionObject, PayableTx } from 'src/types/contracts/types'
-import { GnosisSafe, SnapshotOracle } from '../abis'
+import { ERC20, GnosisSafe, SnapshotOracle } from '../abis'
 import { SAFE_PROXY_FACTORY_ADDRESS } from '../contracts'
 import { contractCall, contractSend, getContract } from './core'
 import { Decoder } from 'hydraweb3-js'
@@ -27,7 +27,7 @@ export const encodeMethodWithParams = (_abi: any, methodName: string, params: an
 }
 
 export const decodeMethodWithParams = (_abi: any, methodName: string, datahex: string) => {
-  return abi.decodeMethod(
+  return abi.decodeEvent(
     _abi.find((method) => method.name === methodName),
     datahex,
   )
@@ -132,6 +132,36 @@ export const getGnosisProxyOracle = async (
   // console.log('oracle', result);
 
   return result.value[0].toString()
+}
+
+export const getERC20Decimals = async (
+  state: AppReduxState,
+  { erc20Address }: { erc20Address: string },
+): Promise<number> => {
+  const { sdk, address } = _getSdkAccount(state)
+  const resp = await contractCall(getContract(sdk, erc20Address.substring(2), ERC20), 'decimals', [], address)
+  const result = getCallResult(resp)
+  return result.value[0]
+}
+
+export const getERC20Name = async (
+  state: AppReduxState,
+  { erc20Address }: { erc20Address: string },
+): Promise<string> => {
+  const { sdk, address } = _getSdkAccount(state)
+  const resp = await contractCall(getContract(sdk, erc20Address.substring(2), ERC20), 'name', [], address)
+  const result = getCallResult(resp)
+  return result.value[0]
+}
+
+export const getERC20Symbol = async (
+  state: AppReduxState,
+  { erc20Address }: { erc20Address: string },
+): Promise<string> => {
+  const { sdk, address } = _getSdkAccount(state)
+  const resp = await contractCall(getContract(sdk, erc20Address.substring(2), ERC20), 'symbol', [], address)
+  const result = getCallResult(resp)
+  return result.value[0]
 }
 
 export const getGnosisProxyApprovedHash = async (
