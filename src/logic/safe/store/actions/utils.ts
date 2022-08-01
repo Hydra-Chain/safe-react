@@ -29,6 +29,7 @@ import {
 } from 'src/routes/routes'
 import { Dispatch } from './types'
 import { getGnosisProxyNonce, getGnosisProxyThreshold, sendWithState } from 'src/logic/hydra/contractInteractions/utils'
+import { SafeInfoHydra } from 'src/logic/hydra/utils'
 
 export const canExecuteCreatedTx = async (
   safeInstance: GnosisSafe,
@@ -130,7 +131,7 @@ export const buildSafeOwners = (
 }
 
 export const buildSafeOracle = (
-  remoteSafeOracle?: SafeInfo['oracle'],
+  remoteSafeOracle?: SafeInfoHydra['oracle'],
   localSafeOracle?: SafeRecordProps['oracle'],
 ): SafeRecordProps['oracle'] | undefined => {
   if (remoteSafeOracle) {

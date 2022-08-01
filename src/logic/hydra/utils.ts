@@ -13,6 +13,10 @@ import { ERC20, GnosisSafe, GnosisSafeProxyFactory } from './abis'
 import { Dispatch } from '../safe/store/actions/types'
 import { sendWithState, getGnosisProxyApprovedHash } from './contractInteractions/utils'
 
+export interface SafeInfoHydra extends SafeInfo {
+  oracle: AddressEx[]
+}
+
 // Init abiDecoder with ProxyCreation ABI
 abiDecoder.addABI(GnosisSafe)
 abiDecoder.addABI(GnosisSafeProxyFactory)
@@ -43,8 +47,8 @@ export const getTransactionListPageEmpty = (): TransactionListPage => {
   return tlp
 }
 
-export const getSafeInfoEmpty = (): SafeInfo => {
-  const safeInfo = {} as SafeInfo
+export const getSafeInfoEmpty = (): SafeInfoHydra => {
+  const safeInfo = {} as SafeInfoHydra
   safeInfo.address = {} as AddressEx
   safeInfo.fallbackHandler = {} as AddressEx
   safeInfo.guard = {} as AddressEx

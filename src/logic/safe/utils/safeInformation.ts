@@ -1,9 +1,9 @@
-import { AddressEx, SafeInfo } from '@gnosis.pm/safe-react-gateway-sdk'
+import { AddressEx } from '@gnosis.pm/safe-react-gateway-sdk'
 
 import { Errors, CodedException } from 'src/logic/exceptions/CodedException'
 import { _getChainId } from 'src/config'
 import { SAFE_SINGLETON_ADDRESS } from 'src/logic/hydra/contracts'
-import { getSafeInfoEmpty } from 'src/logic/hydra/utils'
+import { getSafeInfoEmpty, SafeInfoHydra } from 'src/logic/hydra/utils'
 import {
   getGnosisProxyModules,
   getGnosisProxyNonce,
@@ -25,7 +25,7 @@ export const getSafeInfo = async (
   safeAddress: string,
   dispatch: Dispatch,
   state?: AppReduxState,
-): Promise<SafeInfo> => {
+): Promise<SafeInfoHydra> => {
   try {
     console.log('getSafeInfo safeAddress', safeAddress)
     if (state) {
