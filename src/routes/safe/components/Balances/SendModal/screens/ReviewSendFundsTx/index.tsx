@@ -89,8 +89,6 @@ const useTxData = (
 }
 
 const ReviewSendFundsTx = ({ onClose, onPrev, tx }: ReviewTxProps): React.ReactElement => {
-  console.log('ReviewSendFundsTx', tx)
-
   const classes = useStyles()
   const dispatch = useDispatch()
   const { safeAddress } = useSafeAddress()
@@ -135,11 +133,8 @@ const ReviewSendFundsTx = ({ onClose, onPrev, tx }: ReviewTxProps): React.ReactE
             dispatch(enqueueSnackbar(enhanceSnackbarForAction(notification.afterExecution.noMoreConfirmationsNeeded)))
           })
         } catch (err) {
-          console.log('in Catch')
-
           logError(Errors._801, err.message)
           dispatch(enqueueSnackbar(enhanceSnackbarForAction(notification.afterRejection)))
-          console.log('in Catch end')
         }
         onClose()
       }
@@ -160,7 +155,6 @@ const ReviewSendFundsTx = ({ onClose, onPrev, tx }: ReviewTxProps): React.ReactE
 
   const submitTx = useCallback(
     async (txParameters: TxParameters, delayExecution: boolean) => {
-      console.log('ReviewSendFundsTx submitTx')
       dispatch(
         createTransaction({
           safeAddress: '0x' + safeAddress,

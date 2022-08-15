@@ -64,7 +64,6 @@ const providerMiddleware =
     }
 
     // const { wallet, address } = onboard().getState()
-    // console.log('wallet, address', wallet, address);
     // if (name === wallet.name) {
     //   saveLastUsedProvider(name)
     // }

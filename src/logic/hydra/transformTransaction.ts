@@ -2,6 +2,7 @@ import { NativeCoinTransfer } from '@gnosis.pm/safe-apps-sdk'
 import {
   AddOwner,
   AddressEx,
+  ChangeThreshold,
   Creation,
   DataDecoded,
   Erc20Transfer,
@@ -63,15 +64,12 @@ const getPreValidatedSignatures = (from: string, initialString: string = EMPTY_D
 
 export const approvedHash = async (safeAddress: string, transaction: any, dispatch: Dispatch): Promise<Transaction> => {
   const tli = {} as Transaction
-  // console.log(' getTransactionItemListQueed', transaction);
-
   for (const output of transaction.outputs) {
     const receipt = output.receipt
     if (!receipt) continue
     const logs = getSafeLogs(receipt.logs as Log[])
     const logApprovedHash = logs.find((log) => log.name === 'ApproveHash')
     const logExecutionParams = logs.find((log) => log.name === 'ExecutionParams')
-    // console.log(logs);
     if (!logApprovedHash) continue
     const _isHashConsumed = await isHashConsumed(safeAddress, logApprovedHash, dispatch)
     if (_isHashConsumed) {
@@ -89,8 +87,6 @@ export const approvedHash = async (safeAddress: string, transaction: any, dispat
       dispatch(sendWithState(getGnosisProxyNonce, { safeAddress })),
       dispatch(sendWithState(getGnosisProxyOwners, { safeAddress })),
     ])
-    console.log('in APPROVE ', nonce, logExecutionParams.events.find((e) => e.name === '_nonce').value)
-
     if (Number(nonce) > logExecutionParams.events.find((e) => e.name === '_nonce').value) {
       continue
     }
@@ -174,8 +170,6 @@ export const approvedHash = async (safeAddress: string, transaction: any, dispat
     tli.transaction.txInfo.direction = TransferDirection.OUTGOING
     tli.transaction.txInfo.sender = { value: ownerApproved } as AddressEx
     tli.transaction.txInfo.recipient = { value: decoded ? decoded.to : executionInfo.hydraExecution.to } as AddressEx
-    // console.log('-------------approvedHash before', executionInfo.hydraExecution.data);
-    // decodeMethodWithParams(GnosisSafe, '')
     const transferInfo = {} as any
     transferInfo.value = decoded
       ? decoded.value.toString()
@@ -187,7 +181,6 @@ export const approvedHash = async (safeAddress: string, transaction: any, dispat
     transferInfo.type =
       executionInfo.hydraExecution.data === '0x' ? TransactionTokenType.NATIVE_COIN : TransactionTokenType.ERC20
     tli.transaction.txInfo.transferInfo = transferInfo as Erc20Transfer | NativeCoinTransfer
-    // console.log('approveHash', tli);
   }
 
   return tli
@@ -234,6 +227,20 @@ export const removeOwner = (tli: Transaction, logs: any): Transaction => {
   tli.transaction.txInfo.settingsInfo.threshold = threshold
   tli.transaction.txInfo.dataDecoded = (tli.transaction.txInfo.dataDecoded ?? {}) as DataDecoded
   tli.transaction.txInfo.dataDecoded.method = 'removeOwner'
+  tli.transaction.txInfo.dataDecoded.parameters = (tli.transaction.txInfo.dataDecoded.parameters ?? []) as Parameter[]
+  tli.transaction.txInfo.dataDecoded.parameters = logs.events
+  return tli
+}
+
+export const changeThreshold = (tli: Transaction, logs: any): Transaction => {
+  const threshold = logs.find((e) => e.name === 'ChangedThreshold')?.events?.[0].value
+  tli.transaction.txInfo = (tli.transaction.txInfo ?? {}) as SettingsChange
+  tli.transaction.txInfo.type = 'SettingsChange'
+  tli.transaction.txInfo.settingsInfo = (tli.transaction.txInfo.settingsInfo ?? {}) as ChangeThreshold
+  tli.transaction.txInfo.settingsInfo.type = SettingsInfoType.CHANGE_THRESHOLD
+  tli.transaction.txInfo.settingsInfo.threshold = threshold
+  tli.transaction.txInfo.dataDecoded = (tli.transaction.txInfo.dataDecoded ?? {}) as DataDecoded
+  tli.transaction.txInfo.dataDecoded.method = 'changeThreshold'
   tli.transaction.txInfo.dataDecoded.parameters = (tli.transaction.txInfo.dataDecoded.parameters ?? []) as Parameter[]
   tli.transaction.txInfo.dataDecoded.parameters = logs.events
   return tli

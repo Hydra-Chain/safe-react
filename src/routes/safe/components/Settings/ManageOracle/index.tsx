@@ -34,7 +34,6 @@ type Props = {
 
 const ManageOracle = ({ granted, oracle }: Props): ReactElement => {
   const classes = useStyles()
-  console.log('oracle', oracle)
 
   const [modalsStatus, setModalStatus] = useState({
     showAddOracle: false,

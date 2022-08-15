@@ -86,8 +86,6 @@ const DecodedTransactions = ({
 async function getTxDetails(transactions: Transaction[], dispatch: Dispatch) {
   return Promise.all(
     transactions.map(async (transaction) => {
-      console.log('getTxDetails getTxDetails getTxDetails', transactions)
-
       if (transaction.txDetails) return transaction
 
       const txDetails = await dispatch(fetchTransactionDetails({ transactionId: transaction.id }))

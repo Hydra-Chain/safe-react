@@ -90,7 +90,6 @@ export const ReviewMessage = ({
   }
 
   const confirmTransactions = (txParameters: TxParameters, delayExecution: boolean) => {
-    console.log('ReviewMessage confirmTransactions')
     dispatch(
       createTransaction(
         {

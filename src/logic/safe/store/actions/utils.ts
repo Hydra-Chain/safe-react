@@ -37,12 +37,10 @@ export const canExecuteCreatedTx = async (
   lastTx: Transaction | null,
   dispatch: Dispatch,
 ): Promise<boolean> => {
-  console.log('canExecuteCreatedTx', safeInstance.options.address)
   const safeAddress = safeInstance.options.address.toLocaleLowerCase()
   const safeNonce = await dispatch(sendWithState(getGnosisProxyNonce, { safeAddress }))
   const thresholdAsString = await dispatch(sendWithState(getGnosisProxyThreshold, { safeAddress }))
   const threshold = Number(thresholdAsString)
-  console.log('after dipaches')
   // Needs to collect owners signatures
   if (threshold > 1) {
     return false
@@ -150,8 +148,6 @@ export const getNonce = async (safeAddress: string, safeVersion: string, dispatc
     nextNonce = (await getRecommendedNonce(safeAddress, dispatch)).toString()
   } catch (e) {
     logError(Errors._616, e.message)
-    console.log(safeVersion)
-
     // const safeInstance = getGnosisSafeInstanceAt(safeAddress, safeVersion)
     // nextNonce = await safeInstance.methods.nonce().call()
     nextNonce = '0'

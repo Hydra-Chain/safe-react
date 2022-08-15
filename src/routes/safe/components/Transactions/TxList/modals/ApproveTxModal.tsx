@@ -60,8 +60,6 @@ const getModalTitleAndDescription = (thresholdReached: boolean): { title: string
 const useTxInfo = (transaction: Props['transaction']) => {
   const t = useRef(transaction)
   const { safeAddress } = useSafeAddress()
-  console.log('useTxInfo transaction', transaction)
-  console.log('useTxInfo t', t)
 
   const confirmations = useMemo(
     () =>
@@ -202,8 +200,6 @@ export const ApproveTxModal = ({ onClose, isOpen, transaction }: Props): React.R
   const classes = useStyles()
   const { safeAddress } = useSafeAddress()
   const txInfo = useTxInfo(transaction)
-  console.log('ApproveTxModal transaction', transaction)
-  console.log('ApproveTxModal txInfo', txInfo)
 
   const submitDisabled = useSelector(sameAddressAsSafeSelector)
 

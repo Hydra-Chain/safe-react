@@ -97,9 +97,6 @@ export const fetchSafe =
       if (shouldUpdateCollectibles || isInitialLoad) {
         dispatch(fetchCollectibles(address))
       }
-      console.log('shouldUpdateTxHistory', shouldUpdateTxHistory)
-      console.log('shouldUpdateTxQueued', shouldUpdateTxQueued)
-      console.log('isInitialLoad', isInitialLoad)
 
       if (shouldUpdateTxHistory || shouldUpdateTxQueued || isInitialLoad) {
         dispatchPromises.push(dispatch(fetchTransactions(chainId, address)))

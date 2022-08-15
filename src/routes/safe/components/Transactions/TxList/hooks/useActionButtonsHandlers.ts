@@ -39,18 +39,13 @@ export const useActionButtonsHandlers = (transaction: Transaction): ActionButton
   const { canCancel, canConfirmThenExecute, canExecute } = useTransactionActions(transaction)
   const safeTxHash = (transaction.txDetails?.detailedExecutionInfo as any)?.safeTxHash
   const approvedTransactionSchema = getLocalStorageApprovedTransactionSchema()
-  console.log('approvedTransactionSchema[safeTxHash]', approvedTransactionSchema[safeTxHash])
   if (safeTxHash && approvedTransactionSchema[safeTxHash]) {
     for (const txHash in approvedTransactionSchema[safeTxHash]) {
-      console.log('approvedTransactionSchema[safeTxHash][txHash]', approvedTransactionSchema[safeTxHash][txHash])
       if (approvedTransactionSchema[safeTxHash][txHash] === 0) {
         transaction.txStatus = LocalTransactionStatus.PENDING
-        // txStatus = LocalTransactionStatus.PENDING
       }
     }
   }
-  // transaction.txStatus = TransactionStatus.PENDING
-  // console.log('useActionButtonsHandlers', transaction);
   const txStatus = useTxStatus(transaction)
   const isPending = txStatus === LocalTransactionStatus.PENDING
 
@@ -70,9 +65,6 @@ export const useActionButtonsHandlers = (transaction: Transaction): ActionButton
       const actionSelected = canExecute || canConfirmThenExecute ? 'execute' : 'confirm'
 
       trackEvent(TX_LIST_EVENTS[actionSelected.toUpperCase()])
-      console.log('actionSelected', actionSelected)
-      console.log('actionContext', actionContext)
-
       actionContext.current.selectAction({
         actionSelected,
         transactionId: transaction.id,
@@ -108,10 +100,6 @@ export const useActionButtonsHandlers = (transaction: Transaction): ActionButton
   const signaturePending = addressInList(
     (transaction.executionInfo as MultisigExecutionInfo)?.missingSigners ?? undefined,
   )
-
-  console.log('currentUser', currentUser)
-  console.log('isPending', isPending)
-  console.log('txStatus', txStatus)
 
   const disabledActions =
     !currentUser ||

@@ -40,15 +40,6 @@ export const sendAddOwner = async (
   const result = await dispatch(
     sendWithState(sendAddNewOwner, { safeAddress, ownerAddress, threshold, gasLimit: txParameters.ethGasLimit }),
   )
-  console.log(result)
-
-  // const sdk = await getSafeSDK(connectedWalletAddress, safeAddress, safeVersion)
-  // const safeTx = await sdk.getAddOwnerTx(
-  //   { ownerAddress, threshold: +threshold },
-  //   { safeTxGas: 0 },
-  // )
-  // const txData = safeTx.data.data
-
   await dispatch(
     createTransaction(
       {

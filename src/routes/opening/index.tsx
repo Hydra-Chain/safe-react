@@ -34,7 +34,6 @@ export const SafeDeployment = ({
   submittedPromise,
 }: Props): React.ReactElement => {
   ;(async () => {})()
-  console.log('SafeDeployment txcreation', creationTxHash)
 
   const [loading, setLoading] = useState(true)
   const [stepIndex, setStepIndex] = useState(0)
@@ -117,14 +116,11 @@ export const SafeDeployment = ({
     const handlePromise = async () => {
       setStepIndex(0)
       try {
-        console.log('useEff handlePromise')
-
         const receipt = await submittedPromise
         setSafeCreationTxHash(receipt.transactionHash)
         setStepIndex(1)
         setIntervalStarted(true)
       } catch (err) {
-        console.log('useEff handlePromise error')
         onError(err)
       }
     }
@@ -153,7 +149,6 @@ export const SafeDeployment = ({
       // const txResult = await web3.eth.getTransaction(txHash)
       try {
         const txResult = await fetchTransaction(txHash.substring(2))
-        console.log('isTxMined', txResult)
 
         if (!txResult?.blockHeight) {
           return false
@@ -188,9 +183,7 @@ export const SafeDeployment = ({
       // safe pending creation recovered from storage
       if (creationTxHash !== undefined) {
         try {
-          console.log('setInterval creationTxHash !== undefined', creationTxHash)
           const res = await isTxMined(creationTxHash)
-          console.log('res', res)
 
           if (res) {
             setStepIndex(4)
@@ -198,7 +191,6 @@ export const SafeDeployment = ({
             setIntervalStarted(false)
           }
         } catch (error) {
-          console.log('setInterval creationTxHash !== undefined error')
           onError(error)
         }
       }
@@ -214,7 +206,6 @@ export const SafeDeployment = ({
 
     const awaitUntilSafeIsDeployed = async (safeCreationTxHash: string) => {
       try {
-        console.log('awaitUntilSafeIsDeployed')
         // const web3 = getWeb3ReadOnly()
         // const receipt = await web3.eth.getTransactionReceipt(safeCreationTxHash)
 
@@ -237,7 +228,6 @@ export const SafeDeployment = ({
           setError(false)
         }, 5000)
       } catch (error) {
-        console.log('awaitUntilSafeIsDeployed error')
         onError(error)
       }
     }
@@ -247,8 +237,6 @@ export const SafeDeployment = ({
     }
 
     if (typeof safeCreationTxHash === 'string') {
-      console.log('safeCreationTxHash', safeCreationTxHash)
-
       awaitUntilSafeIsDeployed(safeCreationTxHash)
     }
 

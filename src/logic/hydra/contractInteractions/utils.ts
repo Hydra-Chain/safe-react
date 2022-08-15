@@ -56,7 +56,6 @@ export const getCallResult = (resp: any): HydraResult => {
     result.error.exceptedMessage = resp.executionResult.exceptedMessage
     return result
   }
-  // console.log('resp', resp);
 
   result.value = resp.executionResult.formattedOutput
   return result
@@ -69,7 +68,6 @@ export const getGnosisProxyNonce = async (
   const { sdk, address } = _getSdkAccount(state)
   const resp = await contractCall(getContract(sdk, safeAddress, GnosisSafe), 'nonce', [], address)
   const result = getCallResult(resp)
-  // console.log('nonce', result);
 
   return result.value[0].toString()
 }
@@ -81,7 +79,6 @@ export const getGnosisProxyModules = async (
   const { sdk, address } = _getSdkAccount(state)
   const resp = await contractCall(getContract(sdk, safeAddress, GnosisSafe), 'getModules', [], address)
   const result = getCallResult(resp)
-  console.log('modules', result)
 
   return result.value
 }
@@ -93,7 +90,6 @@ export const getGnosisProxyVersion = async (
   const { sdk, address } = _getSdkAccount(state)
   const resp = await contractCall(getContract(sdk, safeAddress, GnosisSafe), 'VERSION', [], address)
   const result = getCallResult(resp)
-  // console.log('version', result);
 
   return result.value[0]
 }
@@ -105,7 +101,6 @@ export const getGnosisProxyOwners = async (
   const { sdk, address } = _getSdkAccount(state)
   const resp = await contractCall(getContract(sdk, safeAddress, GnosisSafe), 'getOwners', [], address)
   const result = getCallResult(resp)
-  // console.log('owners', result);
 
   return result.value
 }
@@ -117,7 +112,6 @@ export const getGnosisProxyThreshold = async (
   const { sdk, address } = _getSdkAccount(state)
   const resp = await contractCall(getContract(sdk, safeAddress, GnosisSafe), 'getThreshold', [], address)
   const result = getCallResult(resp)
-  // console.log('threshold', result);
 
   return Number(result.value[0].toString())
 }
@@ -129,7 +123,6 @@ export const getGnosisProxyOracle = async (
   const { sdk, address } = _getSdkAccount(state)
   const resp = await contractCall(getContract(sdk, safeAddress, GnosisSafe), 'getOracle', [], address)
   const result = getCallResult(resp)
-  // console.log('oracle', result);
 
   return result.value[0].toString()
 }
@@ -231,8 +224,6 @@ export const getGnosisProxyTransactionHash = async (
       )
       .encodeABI()
 
-    console.log('safeAddress', safeAddress)
-
     const resp = await sdk.provider.rawCall('callcontract', [
       safeAddress.substring(2).toLowerCase(),
       safeTxHashEnchodedABI.substring(2),
@@ -254,12 +245,6 @@ export const deploySafeWithNonce = async (
 ): Promise<any> => {
   const { sdk, address } = _getSdkAccount(state)
   try {
-    // const setInputBytecode = abi.encodeMethod(
-    //   GnosisSafeProxyFactory[0],
-    //   [SAFE_SINGLETON_ADDRESS, initializer, safeCreationSalt]
-    // );
-    console.log('deploymentTx', deploymentTx)
-
     const result = await sdk.provider.rawCall('sendtocontract', [
       SAFE_PROXY_FACTORY_ADDRESS.substring(2),
       deploymentTx.encodeABI().substring(2),
@@ -267,9 +252,6 @@ export const deploySafeWithNonce = async (
       300000,
       address,
     ])
-    console.log('result', result)
-
-    // const result = {hash: '505a1561c6fc810f1bbf44b2196021ebe1bb793c5b4bcf40bcb25b23d9b6703a'}
     return result
   } catch (e) {
     throw new Error(e)
@@ -305,6 +287,33 @@ export const sendAddNewOwner = async (
 
   return oracleTx
 }
+export const sendChangeThreshold = async (
+  state: AppReduxState,
+  {
+    threshold,
+    safeAddress,
+    gasLimit,
+  }: {
+    threshold: string
+    safeAddress: string
+    gasLimit: string
+  },
+): Promise<number> => {
+  const { sdk, address } = _getSdkAccount(state)
+  const oracleAddress: HydraResult = getCallResult(
+    await contractCall(getContract(sdk, safeAddress, GnosisSafe), 'getOracle', [], address),
+  )
+
+  const oracleTx = await contractSend(
+    getContract(sdk, oracleAddress.value[0], SnapshotOracle),
+    'changeThreshold',
+    [+threshold, safeAddress],
+    address,
+    Number(gasLimit),
+  )
+
+  return oracleTx
+}
 
 export const sendRemoveExistingOwner = async (
   state: AppReduxState,
@@ -322,14 +331,6 @@ export const sendRemoveExistingOwner = async (
   const oracleAddress: HydraResult = getCallResult(
     await contractCall(getContract(sdk, safeAddress, GnosisSafe), 'oracle', [], address),
   )
-  console.log(
-    'hydraToHexAddress(address), ownerAddress, +threshold, safeAddress',
-    hydraToHexAddress(address),
-    ownerAddress,
-    +threshold,
-    safeAddress,
-  )
-
   const oracleTx = await contractSend(
     getContract(sdk, oracleAddress.value[0], SnapshotOracle),
     'removeAdmin',
@@ -339,48 +340,6 @@ export const sendRemoveExistingOwner = async (
 
   return oracleTx
 }
-
-// export const sendExecTransaction =
-//   ({safeAddress,
-//     safeVersion,
-//     txRecipient,
-//     txConfirmations,
-//     txAmount,
-//     txData,
-//     operation,
-//     from,
-//     gasPrice,
-//     gasToken,
-//     gasLimit,
-//     refundReceiver,
-//     safeTxGas,
-//     approvalAndExecution}: TransactionExecutionEstimationProps,
-//     sigs: string) =>
-//   async (dispatch: Dispatch, getState: () => AppReduxState): Promise<Boolean> => {
-//     // console.log('sendExecTransaction');
-//     if (safeVersion && txConfirmations && approvalAndExecution) {}
-//     const state = getState()
-//     const sdk = state.providers.hydraSDK
-//     // console.log('after sdk');
-//     // console.log('txRecipient, txAmount, txData, operation, safeTxGas, 0, gasPrice, gasToken, refundReceiver, sigs',
-//     // txRecipient, txAmount, txData, operation, safeTxGas, 0, gasPrice, gasToken, refundReceiver, sigs);
-
-//     try {
-//       const tx = await contractSend(
-//         getContract(sdk, safeAddress, GnosisSafe),
-//         'execTransaction',
-//         [txRecipient, txAmount, txData, operation, safeTxGas, 0, gasPrice, gasToken, refundReceiver, sigs],
-//         from,
-//         gasLimit ? Number(gasLimit) : 250000
-//       )
-//       // console.log('sendExecTransaction tx ', tx);
-//       return true
-//     } catch (e) {
-//       console.log('sendExecTransaction err', e);
-
-//       return false
-//     }
-//   }
 
 export const safeGnosisSendAsset = async (
   state: AppReduxState,
@@ -395,9 +354,6 @@ export const safeGnosisSendAsset = async (
   },
 ): Promise<any> => {
   const { sdk, address } = _getSdkAccount(state)
-  console.log('safeGnosisSendAsset tx', tx)
-  // console.log('safeGnosisSendAsset txArgs', sendParams);
-  // console.log('safeGnosisSendAsset safeAddress', safeAddress);
   const txEncoded = (typeof tx === 'string' ? tx : (tx as any).encodeABI()).substring(2)
   try {
     const result = await sdk.provider.rawCall('sendtocontract', [
@@ -407,8 +363,6 @@ export const safeGnosisSendAsset = async (
       sendParams.gas,
       address,
     ])
-
-    // console.log('safeGnosisSendAsset result', result);
 
     return result
   } catch (e) {

@@ -11,15 +11,10 @@ export type EthSignerArgs = {
 }
 
 export const ethSigner = async ({ safeTxHash, sender }: EthSignerArgs): Promise<string> => {
-  console.log('---------------------------in ethSigner')
-  console.log('--------------------------- safeTxHash', safeTxHash)
-  console.log('--------------------------- sender', sender)
-
   const web3 = getWeb3()
 
   return new Promise(function (resolve, reject) {
     const provider = web3.currentProvider as AbstractProvider
-    console.log('provider', provider)
 
     provider.sendAsync(
       {
@@ -29,8 +24,6 @@ export const ethSigner = async ({ safeTxHash, sender }: EthSignerArgs): Promise<
         id: new Date().getTime(),
       },
       async function (err, signature) {
-        console.log('------------in err', err, signature)
-
         if (err) {
           return reject(err)
         }

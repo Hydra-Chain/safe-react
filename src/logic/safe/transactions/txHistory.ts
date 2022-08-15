@@ -17,63 +17,6 @@ export type ProposeTxBody = Omit<MultisigTransactionRequest, 'safeTxHash'> & {
   data: string | number[]
 }
 
-// const calculateBodyFrom = async ({
-//   safeInstance,
-//   to,
-//   value,
-//   data,
-//   operation,
-//   nonce,
-//   safeTxGas,
-//   baseGas,
-//   gasPrice,
-//   gasToken,
-//   refundReceiver,
-//   sender,
-//   origin,
-//   signature,
-// }: ProposeTxBody,
-// dispatch: Dispatch
-// ): Promise<MultisigTransactionRequest> => {
-//   console.log('calculateBodyFrom');
-
-//   const safeTxHash = await dispatch(sendWithState(getGnosisProxyTransactionHash, {
-//     safeInstance,
-//     to,
-//     value,
-//     data,
-//     operation,
-//     nonce,
-//     safeTxGas,
-//     baseGas,
-//     gasPrice,
-//     gasToken,
-//     refundReceiver,
-//     sender,
-//     origin,
-//     signature,
-//   }))
-//   // const safeTxHashEnchodedABI = await safeInstance.methods
-//   //   .getTransactionHash(to, value, data, operation, safeTxGas, baseGas, gasPrice, gasToken, refundReceiver || '', nonce)
-//   //   .encodeABI()
-//   return {
-//     to: to,
-//     value,
-//     data,
-//     operation,
-//     nonce: nonce.toString(),
-//     safeTxGas: safeTxGas.toString(),
-//     baseGas: baseGas.toString(),
-//     gasPrice,
-//     gasToken,
-//     refundReceiver,
-//     safeTxHash,
-//     sender: sender,
-//     origin,
-//     signature,
-//   }
-// }
-
 type SaveTxToHistoryTypes = TxArgs & { origin?: string | null; signature?: string }
 
 export const saveTxToHistory = async (

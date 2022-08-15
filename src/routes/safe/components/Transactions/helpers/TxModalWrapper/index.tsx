@@ -120,6 +120,7 @@ export const TxModalWrapper = ({
   const isOffChainSignature = checkIfOffChainSignatureIsPossible(doExecute, isSmartContract, safeVersion)
   const approvalAndExecution = isApproveAndExecute(Number(threshold), confirmationsLen, preApprovingOwner)
   const dispatch = useDispatch<Dispatch>()
+
   if (manualGasLimit) {
   }
   const txParameters = useMemo(
@@ -156,7 +157,6 @@ export const TxModalWrapper = ({
   // const estimateGasLimit = useCallback(() => {
   //   return estimateGasForTransactionExecution(txParameters)
   // }, [txParameters])
-  // console.log('TxModalWrapper');
 
   // const gasLimit = useEstimateGasLimit(estimateGasLimit, doExecute, txParameters.txData, manualGasLimit)
   const gasLimit = '250000'
@@ -269,12 +269,6 @@ export const TxModalWrapper = ({
               parametersStatus={parametersStatus}
             />
           </Container>
-          {/* {console.log('isCreation', isCreation)}
-              {console.log('doExecute', doExecute)}
-              {console.log('isRejectTx', isRejectTx)}
-              {console.log('xParameters.safeNonce', txParameters.safeNonce)}
-              {console.log('safeTxGasError', safeTxGasError)}
-              {console.log('txEstimationExecutionStatus', txEstimationExecutionStatus)} */}
           <ReviewInfoText
             isCreation={isCreation}
             isExecution={doExecute}

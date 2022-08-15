@@ -35,19 +35,7 @@ export const sendAddOracle = async (
   delayExecution: boolean,
   oracle: string,
 ): Promise<void> => {
-  // const result = await dispatch(sendWithState(sendAddNewOwner, { safeAddress, oracleAddress }))
-  // console.log(result)
-
-  // const sdk = await getSafeSDK(connectedWalletAddress, safeAddress, safeVersion)
-  // const safeTx = await sdk.getAddOwnerTx(
-  //   { ownerAddress: values.ownerAddress, threshold: +values.threshold },
-  //   { safeTxGas: 0 },
-  // )
-  console.log('oracleAddress', oracleAddress)
-
   const txData = encodeMethodWithParams(GnosisSafe, 'setOracle', ['0x' + oracleAddress])
-  // const txData = safeTx.data.data
-  console.log('txParameters', txParameters)
 
   await dispatch(
     createTransaction(
@@ -110,8 +98,6 @@ export const AddOwnerModal = ({ oracle, isOpen, onClose }: Props): React.ReactEl
   }
 
   const onAddOracle = async (txParameters: TxParameters, delayExecution: boolean) => {
-    console.log('onAddOracle values', values)
-
     onClose()
 
     try {

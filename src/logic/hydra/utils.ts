@@ -29,8 +29,6 @@ export const setCurrentTxWaitingExecutionDetails = (value?: TransactionDetails) 
 }
 
 export const getSafeLogs = (logs: Log[]): any => {
-  // console.log('in logs', logs);
-
   const _logs = [...logs]
   for (let i = 0; i < logs.length; i++) {
     _logs[i].data = logs[i].data.startsWith('0x') ? logs[i].data : '0x' + logs[i].data

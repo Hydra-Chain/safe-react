@@ -27,7 +27,6 @@ export const getSafeInfo = async (
   state?: AppReduxState,
 ): Promise<SafeInfoHydra> => {
   try {
-    console.log('getSafeInfo safeAddress', safeAddress)
     if (state) {
     }
     const [contractInfo, txHashes, modules, nonce, version, owners, threshold, oracle] = await Promise.all([
@@ -68,7 +67,6 @@ export const getSafeInfo = async (
     safeInfo.nonce = Number(nonce)
     safeInfo.version = version
     safeInfo.oracle = [{ value: oracle } as AddressEx]
-    // console.log('before owners modules');
 
     safeInfo.owners = owners[0].map((o: string) => {
       const addrEx = {} as AddressEx
@@ -80,7 +78,6 @@ export const getSafeInfo = async (
       addrEx.value = m
       return addrEx
     })
-    // console.log('safeInfo', safeInfo);
 
     return safeInfo
   } catch (e) {

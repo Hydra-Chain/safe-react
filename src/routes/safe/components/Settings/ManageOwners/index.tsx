@@ -8,7 +8,7 @@ import cn from 'classnames'
 import { AddOwnerModal } from './AddOwnerModal'
 import { EditOwnerModal } from './EditOwnerModal'
 import { RemoveOwnerModal } from './RemoveOwnerModal'
-import { ReplaceOwnerModal } from './ReplaceOwnerModal'
+// import { ReplaceOwnerModal } from './ReplaceOwnerModal'
 import { OWNERS_TABLE_ADDRESS_ID, generateColumns, getOwnerData, OwnerData } from './dataFetcher'
 import { useStyles } from './style'
 
@@ -125,11 +125,11 @@ const ManageOwners = ({ granted, owners }: Props): ReactElement => {
                       </Track>
                       {granted && (
                         <>
-                          <Track {...SETTINGS_EVENTS.OWNERS.REPLACE_OWNER}>
+                          {/* <Track {...SETTINGS_EVENTS.OWNERS.REPLACE_OWNER}>
                             <ButtonHelper onClick={onShow('ReplaceOwner', row)} dataTestId={REPLACE_OWNER_BTN_TEST_ID}>
                               <Icon size="sm" type="replaceOwner" color="icon" tooltip="Replace owner" />
                             </ButtonHelper>
-                          </Track>
+                          </Track> */}
                           {ownerData.length > 1 && (
                             <Track {...SETTINGS_EVENTS.OWNERS.REMOVE_OWNER}>
                               <ButtonHelper onClick={onShow('RemoveOwner', row)} dataTestId={REMOVE_OWNER_BTN_TEST_ID}>
@@ -175,11 +175,11 @@ const ManageOwners = ({ granted, owners }: Props): ReactElement => {
             onClose={onHide('RemoveOwner')}
             owner={selectedOwner}
           />
-          <ReplaceOwnerModal
+          {/* <ReplaceOwnerModal
             isOpen={modalsStatus.showReplaceOwner}
             onClose={onHide('ReplaceOwner')}
             owner={selectedOwner}
-          />
+          /> */}
           <EditOwnerModal isOpen={modalsStatus.showEditOwner} onClose={onHide('EditOwner')} owner={selectedOwner} />
         </>
       )}

@@ -40,8 +40,6 @@ const convertToHumanReadableMessage = (message: string): string => {
 }
 
 export const SignMessageModal = ({ message, isOpen, ...rest }: SignMessageModalProps): ReactElement => {
-  console.log('SignMessageModal')
-
   const web3 = getWeb3ReadOnly()
   const networkId = useSelector(currentChainId)
   const txRecipient = getSignMessageLibAddress(networkId) || ZERO_ADDRESS

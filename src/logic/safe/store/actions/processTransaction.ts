@@ -46,7 +46,6 @@ export const processTransaction = (props: ProcessTransactionArgs): ProcessTransa
     // Selectors
     const state = getState()
     const { tx, approveAndExecute } = props
-    console.log('processTransaction', props)
 
     // Set specific transaction being finalised
     sender.txId = tx.id

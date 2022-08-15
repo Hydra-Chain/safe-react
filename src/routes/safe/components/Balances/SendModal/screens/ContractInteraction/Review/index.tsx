@@ -68,8 +68,6 @@ const ContractInteractionReview = ({ onClose, onPrev, tx }: Props): React.ReactE
   }, [tx.contractAddress, tx.value, tx.data, safeAddress, nativeCurrency.decimals])
 
   const submitTx = (txParameters: TxParameters, delayExecution: boolean) => {
-    console.log('ContractInteractionReview submitTx')
-
     if (safeAddress && txInfo) {
       dispatch(
         createTransaction({

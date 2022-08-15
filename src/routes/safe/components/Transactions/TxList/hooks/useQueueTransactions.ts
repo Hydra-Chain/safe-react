@@ -17,8 +17,6 @@ export const useQueueTransactions = (): QueueTransactionsInfo | undefined => {
   const queuedTxs = useSelector(queuedTransactions)
   const dispatch = useDispatch()
   const [txsCount, setTxsCount] = useState<{ next: number; queued: number } | undefined>()
-  console.log('nextTxs', nextTxs)
-  console.log('queuedTxs', queuedTxs)
 
   useEffect(() => {
     const next = nextTxs

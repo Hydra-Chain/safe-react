@@ -70,18 +70,12 @@ export const getTransactionWithLocationByAttribute = createSelector(
     attrDetails: { attributeName: keyof Transaction; attributeValue: Transaction[keyof Transaction] },
   ) => attrDetails,
   (gatewayTransactions, chainId, safeAddress, attrDetails) => {
-    // console.log('gatewayTransactions', gatewayTransactions);
-    // console.log('gatewayTransactsafeAddressions', safeAddress);
-    // console.log('attrDetails', attrDetails);
-
     const { attributeName, attributeValue } = attrDetails
     for (const txLocation of txLocations) {
       const storedTxs: StoreStructure['history'] | StoreStructure['queued']['queued' | 'next'] | undefined = get(
         gatewayTransactions?.[chainId]?.[safeAddress],
         txLocation,
       )
-      // console.log('txLocation',txLocation);
-      // console.log('storedTxs',storedTxs);
 
       if (!storedTxs) {
         continue

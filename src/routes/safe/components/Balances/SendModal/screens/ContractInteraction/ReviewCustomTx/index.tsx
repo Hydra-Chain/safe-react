@@ -49,8 +49,6 @@ const ReviewCustomTx = ({ onClose, onPrev, tx }: Props): ReactElement => {
   const txValue = tx.value ? toTokenUnit(tx.value, nativeCurrency.decimals) : '0'
 
   const submitTx = (txParameters: TxParameters, delayExecution: boolean) => {
-    console.log('ReviewCustomTx submitTx')
-
     if (safeAddress) {
       dispatch(
         createTransaction({

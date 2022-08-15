@@ -20,6 +20,7 @@ import {
   removeOwner,
   transfer,
   transferHydra,
+  changeThreshold,
 } from '../transformTransaction'
 import { getItemEmpty, getSafeLogs, getTransactionListPageEmpty } from '../utils'
 import { SAFE_PROXY_FACTORY_ADDRESS } from '../contracts'
@@ -80,8 +81,6 @@ export async function fetchContractInfo(address: string): Promise<any> {
     }
     const url = API_BASE + 'contract/' + address
     const result = await (await fetch(url)).json()
-    // console.log('fetchContractInfo result', result);
-
     return result
   } catch (e) {
     throw e
@@ -191,8 +190,6 @@ export async function fetchContractTransactions(address: string, dispatch: Dispa
     const safeAddressHex = info.addressHex
     const txs = (await fetchTransactions((await respTxHashes.json()).transactions)) ?? []
     const txsFactory = (await fetchTransactions(factoryTxs.transactions)) ?? []
-    console.log('txs', txs)
-
     const tlp = getTransactionListPageEmpty()
     tlp.next = ''
     tlp.previous = ''
@@ -241,6 +238,10 @@ export async function fetchContractTransactions(address: string, dispatch: Dispa
               break
             case 'RemovedOwner':
               tli = removeOwner(tli, logs)
+              if (tli?.transaction?.txInfo) tlp.results.push(tli)
+              break
+            case 'ChangedThreshold':
+              tli = changeThreshold(tli, logs)
               if (tli?.transaction?.txInfo) tlp.results.push(tli)
               break
           }
@@ -294,8 +295,6 @@ export const fetchQueedTransactionsHydra = async (address: string, dispatch: Dis
       }
     }
   }
-  // console.log('approvedTransactionSchema',approvedTransactionSchema);
-
   return tlp
 }
 
@@ -307,7 +306,6 @@ export const fetchSafeTransactionDetails = async (
   // await new Promise(r => setTimeout(r, 10000));
   const txHash = transactionId.split('_')[2]
   const [tx, info] = await Promise.all([fetchTransaction(txHash.substring(2)), fetchContractInfo(safeAddress)])
-  console.log('tx', tx)
 
   const safeAddressHydra = info.address
   const _tli = await getTransactionItemList(tx, async (tli: Transaction, receipt: any) => {
@@ -318,9 +316,6 @@ export const fetchSafeTransactionDetails = async (
     if (ht) return ht
     tli.transaction.txStatus === TransactionStatus.FAILED
     if (logs?.length <= 0) return null
-    if (tx.id === '5c5fb4d49aac5eb88f89b2749fe2820d9a7c14faa194635760af6da06289c0f9') {
-      console.log('------------------logs', logs)
-    }
     for (const log of logs) {
       // tli.transaction.txInfo = {} as TransactionInfo
       switch (log.name) {
@@ -338,6 +333,9 @@ export const fetchSafeTransactionDetails = async (
           break
         case 'ApproveHash':
           tli = await approvedHash(safeAddress, _tx, dispatch)
+          break
+        case 'ChangedThreshold':
+          tli = changeThreshold(tli, logs)
           break
       }
     }

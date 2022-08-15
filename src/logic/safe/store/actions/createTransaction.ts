@@ -104,7 +104,6 @@ export class TxSender {
   // On transaction completion (either confirming or executing)
   async onComplete(signature?: string, confirmCallback?: ConfirmEventHandler): Promise<void> {
     const { txArgs, safeTxHash, txProps, dispatch, notifications, isFinalization } = this
-    console.log('onComplete this', this)
 
     // Propose the tx to the backend
     // 1) If signing
@@ -116,7 +115,6 @@ export class TxSender {
         setCurrentTxWaitingExecutionDetails(txDetails)
         this.txId = txDetails.txId
         // this.safeTxHash = txDetails.
-        console.log('after saveTxToHistory this', this)
       } catch (err) {
         logError(Errors._816, err.message)
         return
@@ -124,8 +122,6 @@ export class TxSender {
     }
 
     if (isFinalization && this.txId && this.txHash) {
-      console.log('in if (isFinalization && this.txId && this.txHash)')
-
       dispatch(setPendingTransaction({ id: this.txId, txHash: this.txHash }))
     }
 
@@ -137,19 +133,16 @@ export class TxSender {
     confirmCallback?.(safeTxHash)
 
     // Go to a tx deep-link
-    console.log('txDetails && txProps.navigateToTransactionsTab', txDetails, txProps.navigateToTransactionsTab)
 
     if (txDetails && txProps.navigateToTransactionsTab) {
       navigateToTx(txProps.safeAddress, txDetails)
     }
-    console.log('onComplete txProps', txProps)
 
     dispatch(fetchTransactions(_getChainId(), txProps.safeAddress))
   }
 
   async onError(err: Error & { code: number }, errorCallback?: ErrorEventHandler): Promise<void> {
     const { txArgs, isFinalization, from, txProps, dispatch, notifications, safeInstance, txId } = this
-    console.log('createTransaction onError')
 
     errorCallback?.()
 
@@ -219,7 +212,6 @@ export class TxSender {
     sentTx?: any,
   ): Promise<void> {
     const { txArgs, isFinalization, from, safeTxHash, txProps } = this
-    console.log('sendTx this', this)
     const tx = isFinalization
       ? getExecutionTransaction(txArgs)
       : getApprovalTransaction(this.safeInstance, safeTxHash, txArgs)
@@ -272,7 +264,6 @@ export class TxSender {
   ): Promise<string | undefined> {
     // const isOffchain = await this.canSignOffchain()
     const isOffchain = false
-    // console.log(' isOffchain, this.isFinalization', isOffchain, this.isFinalization);
 
     // Off-chain signature
     if (!this.isFinalization && isOffchain) {
@@ -389,7 +380,6 @@ export const createTransaction = (
       // Contract will compare the sender address to this
       sigs: getPreValidatedSignatures(sender.from),
     }
-    // console.log('before generateSafeTxHash');
 
     // SafeTxHash acts as the unique ID of a tx throughout the app
 
@@ -413,8 +403,6 @@ export const createTransaction = (
     )
     // sender.safeTxHash = generateSafeTxHash(txProps.safeAddress, sender.safeVersion, sender.txArgs)
     sender.safeTxHash = safeTxHash
-    // console.log('after generateSafeTxHash', sender.safeTxHash);
-    // console.log('sender', sender);
 
     // Start the creation
     sender.submitTx(dispatch, confirmCallback, errorCallback, oracle, sentTx)

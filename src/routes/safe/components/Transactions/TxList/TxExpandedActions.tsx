@@ -14,8 +14,6 @@ type TxExpandedActionsProps = {
 }
 
 export const TxExpandedActions = ({ transaction }: TxExpandedActionsProps): ReactElement => {
-  console.log('----------------------------TxExpandedActions')
-
   const {
     canCancel,
     handleConfirmButtonClick,

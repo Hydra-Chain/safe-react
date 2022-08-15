@@ -132,7 +132,7 @@ const createNewSafe = (
     // console.log('deploymentTx', deploymentTx.encodeABI());
 
     const tx = await dispatch(sendWithState(deploySafeWithNonce, { deploymentTx }))
-    console.log('tx', tx)
+    // console.log('tx', tx)
     onHash('0x' + tx.id)
     saveToStorage(SAFE_PENDING_CREATION_STORAGE_KEY, {
       ...safeCreationFormValues,
@@ -142,18 +142,15 @@ const createNewSafe = (
     // let isReceipt = false
     setInterval0(
       setInterval(async () => {
-        console.log('in furst interval')
         let receipt
         try {
           const txConfirmed = await fetchTransaction(tx.id)
-          console.log(' setInterval txConfirmed', txConfirmed)
 
           if (!txConfirmed.confirmations || txConfirmed.confirmations === 0) {
             return
           }
 
           receipt = txConfirmed.outputs.find((output) => output.receipt)
-          console.log('Original tx mined:', receipt)
           // isReceipt = true
           trackEvent(CREATE_SAFE_EVENTS.CREATED_SAFE)
           resolve(receipt)
@@ -223,8 +220,6 @@ const pollSafeInfo = async (safeAddress: string, dispatch: Dispatch): Promise<Sa
 const APP_URL_QUERY_PARAM = 'appUrl'
 
 function SafeCreationProcess(): ReactElement {
-  console.log('SafeCreationProcess')
-
   const [safeCreationTxHash, setSafeCreationTxHash] = useState<string | undefined>()
   const [creationTxPromise, setCreationTxPromise] = useState<Promise<TransactionReceipt>>()
 
@@ -299,7 +294,6 @@ function SafeCreationProcess(): ReactElement {
   }
 
   const onRetry = (): void => {
-    console.log('onRetry')
     const safeCreationFormValues = loadSavedDataOrLeave()
 
     if (!safeCreationFormValues) {

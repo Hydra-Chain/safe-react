@@ -24,7 +24,6 @@ export const estimateSafeTxGas = async (
   safeVersion: string,
   dispatch: Dispatch,
 ): Promise<string> => {
-  console.log('in estimateSafeTxGas')
   if (hasFeature(FEATURES.SAFE_TX_GAS_OPTIONAL, safeVersion)) {
     return '0'
   }

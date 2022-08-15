@@ -8,7 +8,6 @@ export const generateSafeTxHash = (safeAddress: string, safeVersion: string, txA
   if (safeAddress.length === 40) {
     safeAddress = '0x' + safeAddress
   }
-  console.log('generateSafeTxHash -> safeAddress, txArgs, safeVersion', safeAddress, txArgs, safeVersion)
   const typedData = generateTypedDataFrom({ safeAddress, safeVersion, ...txArgs })
 
   const messageTypes = getEip712MessageTypes(safeVersion)

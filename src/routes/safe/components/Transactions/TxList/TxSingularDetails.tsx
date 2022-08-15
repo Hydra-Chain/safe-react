@@ -59,9 +59,6 @@ const TxSingularDetails = (): ReactElement => {
     return () => clearInterval(interval)
   }, [txId, dispatch, safeAddress])
 
-  console.log('fetchedTx', fetchedTx)
-  console.log('currentTxWaitingExecutionDetails', currentTxWaitingExecutionDetails)
-
   if (fetchedTx) {
     const approvedTransactionSchema = getLocalStorageApprovedTransactionSchema()
     const safeTxHash = (fetchedTx?.detailedExecutionInfo as any)?.safeTxHash
@@ -90,7 +87,6 @@ const TxSingularDetails = (): ReactElement => {
   }
 
   const detailedTx = storedTx?.transaction || (fetchedTx?.txId ? makeTxFromDetails(fetchedTx) : null)
-  console.log('detailedTx', detailedTx)
 
   // if (detailedTx?.txDetails) {
   //   detailedTx.timestamp = detailedTx.txDetails.executedAt ?? 0

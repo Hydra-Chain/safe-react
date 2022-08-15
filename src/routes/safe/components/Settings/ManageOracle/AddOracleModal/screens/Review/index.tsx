@@ -33,8 +33,6 @@ type ReviewAddOracleProps = {
 }
 
 export const ReviewAddOracle = ({ onClickBack, onClose, onSubmit, values }: ReviewAddOracleProps): ReactElement => {
-  console.log('in ReviewAddOracle')
-
   const classes = useStyles()
   const [data, setData] = useState('')
   const {
@@ -50,16 +48,7 @@ export const ReviewAddOracle = ({ onClickBack, onClose, onSubmit, values }: Revi
 
     const calculateAddOwnerData = async () => {
       try {
-        // const sdk = await getSafeSDK(connectedWalletAddress, safeAddress, safeVersion)
-        // const safeTx = await sdk.getAddOwnerTx(
-        //   { ownerAddress: values.oracleAddress, threshold: +values.threshold },
-        //   { safeTxGas: 0 },
-        // )
-        console.log('calculateAddOwnerData values', values)
-
         const txData = encodeMethodWithParams(GnosisSafe, 'setOracle', ['0x' + values.oracleAddress])
-        console.log('calculateAddOwnerData txData', txData)
-
         if (isCurrent) {
           setData(txData)
         }

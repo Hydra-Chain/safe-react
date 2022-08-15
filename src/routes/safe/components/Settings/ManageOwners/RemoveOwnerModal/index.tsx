@@ -34,17 +34,6 @@ export const sendRemoveOwner = async (
   connectedWalletAddress: string,
   delayExecution: boolean,
 ): Promise<void> => {
-  console.log('in sendRemoveOwner')
-  console.log('connectedWalletAddress', connectedWalletAddress)
-
-  // const sdk = await getSafeSDK(connectedWalletAddress, safeAddress, safeVersion)
-  // const safeTx = await sdk.getRemoveOwnerTx(
-  //   { ownerAddress: ownerAddressToRemove, threshold: +values.threshold },
-  //   { safeTxGas: 0 },
-  // )
-  // const txData = encodeMethodWithParams(GnosisSafe, 'setOracle', ['0x'+oracleAddress])
-  // const txData = safeTx.data.data
-  // console.log('txData');
   const sentTx = await dispatch(
     sendWithState(sendRemoveExistingOwner, {
       safeAddress,

@@ -66,7 +66,6 @@ export const getExecutionTransaction = ({
   to,
   valueInWei,
 }: TxArgs): NonPayableTransactionObject<boolean> => {
-  // console.log('getExecutionTransaction', to, valueInWei, data, operation, safeTxGas, baseGas, gasPrice, gasToken, refundReceiver, sigs);
   if (safeInstance) {
   }
   try {

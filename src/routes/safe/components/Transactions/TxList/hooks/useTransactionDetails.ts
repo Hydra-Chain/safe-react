@@ -15,8 +15,6 @@ export const useTransactionDetails = (
   transactionId: string,
   transactionDetails?: ExpandedTxDetails,
 ): LoadTransactionDetails => {
-  // console.log('useTransactionDetails useTransactionDetails useTransactionDetails', transactionId, transactionDetails);
-
   const dispatch = useRef(useDispatch())
   const [txDetails, setTxDetails] = useState<LoadTransactionDetails>({
     loading: transactionDetails ? false : true,
