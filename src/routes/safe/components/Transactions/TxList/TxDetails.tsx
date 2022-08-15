@@ -92,6 +92,8 @@ type TxDetailsProps = {
 }
 
 export const TxDetails = ({ transaction }: TxDetailsProps): ReactElement => {
+  console.log('----------------------------txDetails')
+
   const { txLocation } = useContext(TxLocationContext)
   const { data, loading } = useTransactionDetails(transaction.id, transaction.txDetails)
   const txStatus = useTxStatus(transaction)
@@ -100,6 +102,14 @@ export const TxDetails = ({ transaction }: TxDetailsProps): ReactElement => {
   const currentUser = useSelector(userAccountSelector)
   const isMultiSend = data && isMultiSendTxInfo(data.txInfo)
   const shouldShowStepper = data?.detailedExecutionInfo && isMultiSigExecutionDetails(data.detailedExecutionInfo)
+  console.log('data', data)
+  console.log('loading', loading)
+  console.log('txStatus', txStatus)
+  console.log('willBeReplaced', willBeReplaced)
+  console.log('isPending', isPending)
+  console.log('currentUser', currentUser)
+  console.log('isMultiSend', isMultiSend)
+  console.log('shouldShowStepper', shouldShowStepper)
 
   // To avoid prop drilling into TxDataGroup, module details are positioned here accordingly
   const getModuleDetails = () => {

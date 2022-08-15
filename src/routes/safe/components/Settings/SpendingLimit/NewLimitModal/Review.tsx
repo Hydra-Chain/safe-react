@@ -226,6 +226,8 @@ export const ReviewSpendingLimits = ({ onBack, onClose, txToken, values }: Revie
     }
 
     if (safeAddress) {
+      console.log('ReviewSpendingLimits handleSubmit')
+
       const { spendingLimitTxData } = await calculateSpendingLimitsTxData(
         safeAddress,
         safeVersion,

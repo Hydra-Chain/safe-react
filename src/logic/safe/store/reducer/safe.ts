@@ -5,7 +5,7 @@ import { REMOVE_SAFE } from 'src/logic/safe/store/actions/removeSafe'
 import { SET_LATEST_MASTER_CONTRACT_VERSION } from 'src/logic/safe/store/actions/setLatestMasterContractVersion'
 import { UPDATE_SAFE } from 'src/logic/safe/store/actions/updateSafe'
 import makeSafe, { SafeRecord, SafeRecordProps } from 'src/logic/safe/store/models/safe'
-import { checksumAddress } from 'src/utils/checksumAddress'
+// import { checksumAddress } from 'src/utils/checksumAddress'
 import { ADD_OR_UPDATE_SAFE } from 'src/logic/safe/store/actions/addOrUpdateSafe'
 import { CLEAR_SAFE_LIST } from 'src/logic/safe/store/actions/clearSafeList'
 import { shouldSafeStoreBeUpdated } from 'src/logic/safe/utils/shouldSafeStoreBeUpdated'
@@ -14,12 +14,14 @@ import { SafeReducerMap } from './types/safe'
 export const SAFE_REDUCER_ID = 'safes'
 
 export const buildSafe = (storedSafe: SafeRecordProps): SafeRecordProps => {
-  const owners = storedSafe.owners.map(checksumAddress)
+  const owners = storedSafe.owners
+  const oracle = storedSafe.oracle
 
   return {
     ...storedSafe,
     loaded: false,
     owners,
+    oracle,
     modules: null,
   }
 }

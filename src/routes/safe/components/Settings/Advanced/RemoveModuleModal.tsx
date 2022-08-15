@@ -61,6 +61,8 @@ export const RemoveModuleModal = ({ onClose, selectedModuleAddress }: RemoveModu
   }, [connectedWalletAddress, safeAddress, safeVersion, selectedModuleAddress])
 
   const removeSelectedModule = async (txParameters: TxParameters, delayExecution: boolean): Promise<void> => {
+    console.log('RemoveModuleModal removeSelectedModule')
+
     try {
       dispatch(
         createTransaction({

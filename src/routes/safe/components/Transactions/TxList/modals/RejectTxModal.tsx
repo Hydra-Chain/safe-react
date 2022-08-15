@@ -35,6 +35,8 @@ export const RejectTxModal = ({ isOpen, onClose, transaction }: Props): React.Re
   const nonce = isMultisigExecutionInfo(transaction.executionInfo) ? transaction.executionInfo.nonce : 0
 
   const sendReplacementTransaction = (txParameters: TxParameters, delayExecution: boolean) => {
+    console.log('RejectTxModal sendReplacementTransaction')
+
     dispatch(
       createTransaction({
         safeAddress,

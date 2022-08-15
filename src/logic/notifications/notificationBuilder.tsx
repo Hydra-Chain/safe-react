@@ -187,6 +187,7 @@ const addressBookExportEntries = {
 
 export const getNotificationsFromTxType: any = (txType, origin) => {
   let notificationsQueue
+  console.log('txType, origin', txType, origin)
 
   switch (txType) {
     case TX_NOTIFICATION_TYPES.STANDARD_TX: {
@@ -290,6 +291,8 @@ export const createTxNotifications = (
   // Each tx gets a slot in the global snackbar queue
   // When multiple snackbars are shown, it will re-use the same slot for
   // notifications about different states of the tx
+  console.log('--------------------createTxNotifications')
+
   const notificationSlot = getNotificationsFromTxType(notifiedTransaction, origin)
   const beforeExecutionKey = dispatch(enqueueSnackbar(notificationSlot.beforeExecution))
 

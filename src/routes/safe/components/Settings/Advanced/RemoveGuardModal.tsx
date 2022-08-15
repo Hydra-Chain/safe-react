@@ -34,6 +34,8 @@ export const RemoveGuardModal = ({ onClose, guardAddress }: RemoveGuardModalProp
   const txData = useMemo(() => getRemoveGuardTxData(safeAddress, safeVersion), [safeAddress, safeVersion])
 
   const removeTransactionGuard = async (txParameters: TxParameters, delayExecution: boolean): Promise<void> => {
+    console.log('RemoveGuardModal removeTransactionGuard')
+
     try {
       dispatch(
         createTransaction({

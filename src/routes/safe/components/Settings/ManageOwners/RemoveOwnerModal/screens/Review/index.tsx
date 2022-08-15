@@ -16,7 +16,6 @@ import { OwnerData } from 'src/routes/safe/components/Settings/ManageOwners/data
 import { useStyles } from './style'
 import { sameAddress } from 'src/logic/wallets/ethAddresses'
 import { ModalHeader } from 'src/routes/safe/components/Balances/SendModal/screens/ModalHeader'
-import { getSafeSDK } from 'src/logic/wallets/getWeb3'
 import { logError } from 'src/logic/exceptions/CodedException'
 import ErrorCodes from 'src/logic/exceptions/registry'
 import { TxModalWrapper } from 'src/routes/safe/components/Transactions/helpers/TxModalWrapper'
@@ -59,12 +58,12 @@ export const ReviewRemoveOwnerModal = ({
 
     const calculateRemoveOwnerData = async () => {
       try {
-        const sdk = await getSafeSDK(connectedWalletAddress, safeAddress, safeVersion)
-        const safeTx = await sdk.getRemoveOwnerTx(
-          { ownerAddress: owner.address, threshold: +threshold },
-          { safeTxGas: 0 },
-        )
-        const txData = safeTx.data.data
+        // const sdk = await getSafeSDK(connectedWalletAddress, safeAddress, safeVersion)
+        // const safeTx = await sdk.getRemoveOwnerTx(
+        //   { ownerAddress: owner.address, threshold: +threshold },
+        //   { safeTxGas: 0 },
+        // )
+        const txData = '0x'
 
         if (isCurrent) {
           setData(txData)

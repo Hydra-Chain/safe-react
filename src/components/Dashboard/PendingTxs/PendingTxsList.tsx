@@ -43,6 +43,8 @@ const EmptyState = (
 )
 
 const PendingTxsList = ({ size = 5 }: { size?: number }): ReactElement | null => {
+  // console.log('PendingTxsList PendingTxsList PendingTxsList');
+
   const { address, loaded } = useSelector(currentSafe)
   const chainId = useSelector(currentChainId)
   const queueTxns = useSelector(pendingTransactions)

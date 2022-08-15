@@ -6,14 +6,14 @@ import { userAccountSelector } from 'src/logic/wallets/store/selectors'
 import { addressBookAddOrUpdate } from 'src/logic/addressBook/store/actions'
 import { TX_NOTIFICATION_TYPES } from 'src/logic/safe/transactions'
 import { createTransaction } from 'src/logic/safe/store/actions/createTransaction'
-import { checksumAddress } from 'src/utils/checksumAddress'
+// import { checksumAddress } from 'src/utils/checksumAddress'
 import { makeAddressBookEntry } from 'src/logic/addressBook/model/addressBook'
 import { Dispatch } from 'src/logic/safe/store/actions/types.d'
 
 import { OwnerForm } from 'src/routes/safe/components/Settings/ManageOwners/ReplaceOwnerModal/screens/OwnerForm'
 import { ReviewReplaceOwnerModal } from 'src/routes/safe/components/Settings/ManageOwners/ReplaceOwnerModal/screens/Review'
 import { TxParameters } from 'src/routes/safe/container/hooks/useTransactionParameters'
-import { isValidAddress } from 'src/utils/isValidAddress'
+import { isValidAddressHydraHex } from 'src/utils/isValidAddress'
 import { OwnerData } from 'src/routes/safe/components/Settings/ManageOwners/dataFetcher'
 import { getSafeSDK } from 'src/logic/wallets/getWeb3'
 import { Errors, logError } from 'src/logic/exceptions/CodedException'
@@ -85,8 +85,8 @@ export const ReplaceOwnerModal = ({ isOpen, onClose, owner }: ReplaceOwnerProps)
   const ownerSubmitted = (newValues) => {
     const { ownerAddress, ownerName } = newValues
 
-    if (isValidAddress(ownerAddress)) {
-      const checksumAddr = checksumAddress(ownerAddress)
+    if (isValidAddressHydraHex(ownerAddress)) {
+      const checksumAddr = ownerAddress
       setNewOwner({ address: checksumAddr, name: ownerName })
       setActiveScreen('reviewReplaceOwner')
     }

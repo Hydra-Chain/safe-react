@@ -10,8 +10,7 @@ import Button from 'src/components/layout/Button'
 import Heading from 'src/components/layout/Heading'
 import Img from 'src/components/layout/Img'
 import Paragraph from 'src/components/layout/Paragraph'
-import { EMPTY_DATA } from 'src/logic/wallets/ethTransactions'
-import { getWeb3ReadOnly, isTxPendingError } from 'src/logic/wallets/getWeb3'
+import { isTxPendingError } from 'src/logic/wallets/getWeb3'
 import { background, connected, fontColor } from 'src/theme/variables'
 import { providerNameSelector } from 'src/logic/wallets/store/selectors'
 
@@ -25,6 +24,7 @@ import enqueueSnackbar from 'src/logic/notifications/store/actions/enqueueSnackb
 import { getNewSafeAddressFromLogs } from 'src/routes/opening/utils/getSafeAddressFromLogs'
 import { getExplorerInfo } from 'src/config'
 import PrefixedEthHashInfo from 'src/components/PrefixedEthHashInfo'
+import { fetchTransaction } from 'src/logic/hydra/api/explorer'
 
 export const SafeDeployment = ({
   creationTxHash,
@@ -33,6 +33,9 @@ export const SafeDeployment = ({
   onSuccess,
   submittedPromise,
 }: Props): React.ReactElement => {
+  ;(async () => {})()
+  console.log('SafeDeployment txcreation', creationTxHash)
+
   const [loading, setLoading] = useState(true)
   const [stepIndex, setStepIndex] = useState(0)
   const [safeCreationTxHash, setSafeCreationTxHash] = useState('')
@@ -114,11 +117,14 @@ export const SafeDeployment = ({
     const handlePromise = async () => {
       setStepIndex(0)
       try {
+        console.log('useEff handlePromise')
+
         const receipt = await submittedPromise
         setSafeCreationTxHash(receipt.transactionHash)
         setStepIndex(1)
         setIntervalStarted(true)
       } catch (err) {
+        console.log('useEff handlePromise error')
         onError(err)
       }
     }
@@ -142,19 +148,27 @@ export const SafeDeployment = ({
     }
 
     const isTxMined = async (txHash: string) => {
-      const web3 = getWeb3ReadOnly()
+      // const web3 = getWeb3ReadOnly()
 
-      const txResult = await web3.eth.getTransaction(txHash)
-      if (txResult?.blockNumber == null) {
+      // const txResult = await web3.eth.getTransaction(txHash)
+      try {
+        const txResult = await fetchTransaction(txHash.substring(2))
+        console.log('isTxMined', txResult)
+
+        if (!txResult?.blockHeight) {
+          return false
+        }
+
+        const receipt = txResult.outputs.find((output) => output.receipt).receipt
+
+        if (receipt?.excepted !== 'None') {
+          throw Error('TX status reverted')
+        }
+
+        return true
+      } catch (e) {
         return false
       }
-
-      const receipt = await web3.eth.getTransactionReceipt(txHash)
-      if (!receipt?.status) {
-        throw Error('TX status reverted')
-      }
-
-      return true
     }
 
     const interval = setInterval(async () => {
@@ -174,17 +188,21 @@ export const SafeDeployment = ({
       // safe pending creation recovered from storage
       if (creationTxHash !== undefined) {
         try {
+          console.log('setInterval creationTxHash !== undefined', creationTxHash)
           const res = await isTxMined(creationTxHash)
+          console.log('res', res)
+
           if (res) {
             setStepIndex(4)
             setWaitingSafeDeployed(true)
             setIntervalStarted(false)
           }
         } catch (error) {
+          console.log('setInterval creationTxHash !== undefined error')
           onError(error)
         }
       }
-    }, 3000)
+    }, 5000)
 
     return () => {
       clearInterval(interval)
@@ -196,33 +214,30 @@ export const SafeDeployment = ({
 
     const awaitUntilSafeIsDeployed = async (safeCreationTxHash: string) => {
       try {
-        const web3 = getWeb3ReadOnly()
-        const receipt = await web3.eth.getTransactionReceipt(safeCreationTxHash)
-
-        let safeAddress = ''
-
-        if (receipt?.events) {
-          safeAddress = receipt.events.ProxyCreation.returnValues.proxy
-        } else {
-          // If the node doesn't return the events we try to fetch it from logs
-          safeAddress = getNewSafeAddressFromLogs(receipt?.logs || [])
-        }
-
-        setCreatedSafeAddress(safeAddress)
+        console.log('awaitUntilSafeIsDeployed')
+        // const web3 = getWeb3ReadOnly()
+        // const receipt = await web3.eth.getTransactionReceipt(safeCreationTxHash)
 
         interval = setInterval(async () => {
-          let code = EMPTY_DATA
-          try {
-            code = await web3.eth.getCode(safeAddress)
-          } catch (err) {
-            console.log(err)
+          const txResult = await fetchTransaction(safeCreationTxHash.substring(2))
+          const receipt = txResult.outputs.find((output) => output.receipt).receipt
+
+          let safeAddress = ''
+
+          if (receipt?.logs) {
+            const data = receipt.logs[0].data
+            safeAddress = data.substring(data.length - 40)
+          } else {
+            // If the node doesn't return the events we try to fetch it from logs
+            safeAddress = getNewSafeAddressFromLogs(receipt?.logs || [])
           }
-          if (code !== EMPTY_DATA) {
-            setStepIndex(5)
-            setError(false)
-          }
-        }, 1000)
+
+          setCreatedSafeAddress(safeAddress)
+          setStepIndex(5)
+          setError(false)
+        }, 5000)
       } catch (error) {
+        console.log('awaitUntilSafeIsDeployed error')
         onError(error)
       }
     }
@@ -232,6 +247,8 @@ export const SafeDeployment = ({
     }
 
     if (typeof safeCreationTxHash === 'string') {
+      console.log('safeCreationTxHash', safeCreationTxHash)
+
       awaitUntilSafeIsDeployed(safeCreationTxHash)
     }
 

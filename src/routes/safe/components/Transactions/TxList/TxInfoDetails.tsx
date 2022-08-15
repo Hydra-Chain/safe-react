@@ -38,7 +38,7 @@ export const TxInfoDetails = ({
     // is transfer type by context
     isTransferType &&
     // not a Collectible
-    txInfo?.transferInfo.type !== TransactionTokenType.ERC721 &&
+    txInfo?.transferInfo?.type !== TransactionTokenType.ERC721 &&
     // in history list
     txLocation === 'history' &&
     // it's outgoing
@@ -66,13 +66,13 @@ export const TxInfoDetails = ({
 
   useEffect(() => {
     if (txInfo) {
-      const isCollectible = txInfo.transferInfo.type === TransactionTokenType.ERC721
+      const isCollectible = txInfo?.transferInfo?.type === TransactionTokenType.ERC721
       const { address, value, decimals } = getTxTokenData(txInfo)
 
       setSendModalParams((prev) => ({
         ...prev,
         activeScreenType: isCollectible ? 'sendCollectible' : 'sendFunds',
-        selectedToken: isCollectible ? (txInfo.transferInfo as Erc721Transfer) : address,
+        selectedToken: isCollectible ? (txInfo?.transferInfo as Erc721Transfer) : address,
         tokenAmount: isCollectible ? '1' : fromTokenUnit(value, Number(decimals)),
       }))
     }

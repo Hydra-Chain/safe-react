@@ -15,7 +15,7 @@ function renderWithProviders(Components: ReactElement, customState?: any): Rende
     ...customState,
     safes: Map({
       safes: Map(buildSafesState(customState?.safes?.safes)),
-      latestMasterContractVersion: customState?.safes?.latestMasterContractVersion || '1.3.0',
+      latestMasterContractVersion: customState?.safes?.latestMasterContractVersion || '1.1.1',
     }) as SafeReducerMap,
   }
   const testStore = customState ? createPreloadedStore(customStore) : store

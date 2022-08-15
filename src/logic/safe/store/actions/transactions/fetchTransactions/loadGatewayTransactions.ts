@@ -1,8 +1,10 @@
 import { getTransactionHistory, getTransactionQueue } from '@gnosis.pm/safe-react-gateway-sdk'
 import { _getChainId } from 'src/config'
 import { HistoryGatewayResponse, QueuedGatewayResponse } from 'src/logic/safe/store/models/types/gateway.d'
-import { checksumAddress } from 'src/utils/checksumAddress'
+// import { checksumAddress } from 'src/utils/checksumAddress'
 import { Errors, CodedException } from 'src/logic/exceptions/CodedException'
+import { fetchContractTransactions, fetchQueedTransactionsHydra } from 'src/logic/hydra/api/explorer'
+import { Dispatch } from '../../types'
 
 /*************/
 /*  HISTORY  */
@@ -17,6 +19,8 @@ const historyPointers: { [chainId: string]: { [safeAddress: string]: { next?: st
 export const loadPagedHistoryTransactions = async (
   safeAddress: string,
 ): Promise<{ values: HistoryGatewayResponse['results']; next?: string } | undefined> => {
+  console.log('loadPagedHistoryTransactions')
+
   const chainId = _getChainId()
   // if `historyPointers[safeAddress] is `undefined` it means `loadHistoryTransactions` wasn't called
   // if `historyPointers[safeAddress].next is `null`, it means it reached the last page in gateway-client
@@ -24,10 +28,10 @@ export const loadPagedHistoryTransactions = async (
     throw new CodedException(Errors._608)
   }
 
-  try {
+  https: try {
     const { results, next, previous } = await getTransactionHistory(
       chainId,
-      checksumAddress(safeAddress),
+      safeAddress,
       historyPointers[chainId][safeAddress].next,
     )
 
@@ -39,10 +43,18 @@ export const loadPagedHistoryTransactions = async (
   }
 }
 
-export const loadHistoryTransactions = async (safeAddress: string): Promise<HistoryGatewayResponse['results']> => {
+export const loadHistoryTransactions = async (
+  safeAddress: string,
+  dispatch: Dispatch,
+): Promise<HistoryGatewayResponse['results']> => {
   const chainId = _getChainId()
+  console.log('loadHistoryTransactions')
+
   try {
-    const { results, next, previous } = await getTransactionHistory(chainId, checksumAddress(safeAddress))
+    const { results, next, previous } = await fetchContractTransactions(safeAddress, dispatch)
+
+    // const { results, next, previous } = await getTransactionHistory(chainId, safeAddress)
+    console.log('results', results)
 
     if (!historyPointers[chainId]) {
       historyPointers[chainId] = {}
@@ -71,6 +83,7 @@ const queuedPointers: { [chainId: string]: { [safeAddress: string]: { next?: str
 export const loadPagedQueuedTransactions = async (
   safeAddress: string,
 ): Promise<{ values: QueuedGatewayResponse['results']; next?: string } | undefined> => {
+  console.log('loadPagedQueuedTransactions')
   const chainId = _getChainId()
   // if `queuedPointers[safeAddress] is `undefined` it means `loadHistoryTransactions` wasn't called
   // if `queuedPointers[safeAddress].next is `null`, it means it reached the last page in gateway-client
@@ -81,7 +94,7 @@ export const loadPagedQueuedTransactions = async (
   try {
     const { results, next, previous } = await getTransactionQueue(
       chainId,
-      checksumAddress(safeAddress),
+      safeAddress,
       queuedPointers[chainId][safeAddress].next,
     )
 
@@ -93,10 +106,14 @@ export const loadPagedQueuedTransactions = async (
   }
 }
 
-export const loadQueuedTransactions = async (safeAddress: string): Promise<QueuedGatewayResponse['results']> => {
+export const loadQueuedTransactions = async (
+  safeAddress: string,
+  dispatch: Dispatch,
+): Promise<QueuedGatewayResponse['results']> => {
   const chainId = _getChainId()
   try {
-    const { results, next, previous } = await getTransactionQueue(chainId, checksumAddress(safeAddress))
+    const { results, next, previous } = await fetchQueedTransactionsHydra(safeAddress, dispatch)
+    console.log('loadQueuedTransactions results', results)
 
     if (!queuedPointers[chainId]) {
       queuedPointers[chainId] = {}

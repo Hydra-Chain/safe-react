@@ -9,9 +9,13 @@ import { TxCollapsed } from './TxCollapsed'
 
 export const TxHistoryCollapsed = ({ transaction }: { transaction: Transaction }): ReactElement => {
   const nonce = (transaction.executionInfo as MultisigExecutionInfo)?.nonce
+
   const type = useTransactionType(transaction)
   const info = useAssetInfo(transaction.txInfo)
   const status = useTransactionStatus(transaction)
+  // console.log('transaction', transaction);
+
+  // console.log('info', info);
 
   return (
     <TxCollapsed

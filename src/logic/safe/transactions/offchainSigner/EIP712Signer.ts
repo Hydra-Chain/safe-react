@@ -47,7 +47,7 @@ export const getEip712MessageTypes = (
   EIP712Domain: typeof EIP712_DOMAIN | typeof EIP712_DOMAIN_BEFORE_V130
   SafeTx: Array<{ type: string; name: string }>
 } => {
-  const eip712WithChainId = semverSatisfies(safeVersion, '>=1.3.0')
+  const eip712WithChainId = semverSatisfies(safeVersion, '>=1.1.1')
 
   return {
     EIP712Domain: eip712WithChainId ? EIP712_DOMAIN : EIP712_DOMAIN_BEFORE_V130,
@@ -107,7 +107,7 @@ export const generateTypedDataFrom = ({
   valueInWei,
 }: SigningTxArgs): GenerateTypedData => {
   const networkId = Number(_getChainId())
-  const eip712WithChainId = semverSatisfies(safeVersion, '>=1.3.0')
+  const eip712WithChainId = semverSatisfies(safeVersion, '>=1.1.1')
 
   const typedData = {
     types: getEip712MessageTypes(safeVersion),

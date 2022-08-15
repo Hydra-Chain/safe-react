@@ -95,6 +95,8 @@ const SendFunds = ({
   selectedToken = '',
   amount,
 }: SendFundsProps): ReactElement => {
+  console.log('in SendFunds')
+
   const classes = useStyles()
   const tokens = useSelector(extendedSafeTokensSelector)
   const addressBook = useSelector(currentNetworkAddressBook)
@@ -201,6 +203,7 @@ const SendFunds = ({
 
           const handleScan = (value, closeQrModal) => {
             let scannedAddress = value
+            console.log('handleScan scannedAddress', scannedAddress)
 
             if (scannedAddress.startsWith('ethereum:')) {
               scannedAddress = scannedAddress.replace('ethereum:', '')

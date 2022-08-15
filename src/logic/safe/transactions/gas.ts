@@ -6,10 +6,10 @@ import { calculateGasOf } from 'src/logic/wallets/ethTransactions'
 import { generateSignaturesFromTxConfirmations } from 'src/logic/safe/safeTxSigner'
 import { fetchSafeTxGasEstimation } from 'src/logic/safe/api/fetchSafeTxGasEstimation'
 import { Confirmation } from 'src/logic/safe/store/models/types/confirmation'
-import { checksumAddress } from 'src/utils/checksumAddress'
 import { hasFeature } from '../utils/safeVersion'
 import { PayableTx } from 'src/types/contracts/types'
 import { TxParameters } from 'src/routes/safe/container/hooks/useTransactionParameters'
+import { Dispatch } from '../store/actions/types'
 
 export type SafeTxGasEstimationProps = {
   safeAddress: string
@@ -22,15 +22,17 @@ export type SafeTxGasEstimationProps = {
 export const estimateSafeTxGas = async (
   { safeAddress, txData, txRecipient, txAmount, operation }: SafeTxGasEstimationProps,
   safeVersion: string,
+  dispatch: Dispatch,
 ): Promise<string> => {
+  console.log('in estimateSafeTxGas')
   if (hasFeature(FEATURES.SAFE_TX_GAS_OPTIONAL, safeVersion)) {
     return '0'
   }
 
   try {
-    const { safeTxGas } = await fetchSafeTxGasEstimation({
+    const { safeTxGas } = await fetchSafeTxGasEstimation(dispatch, {
       safeAddress,
-      to: checksumAddress(txRecipient),
+      to: txRecipient,
       value: txAmount,
       data: txData,
       operation,
@@ -90,37 +92,46 @@ export const estimateGasForTransactionExecution = async ({
   })
 }
 
-export const checkTransactionExecution = async ({
-  safeAddress,
-  safeVersion,
-  txRecipient,
-  txConfirmations,
-  txAmount,
-  txData,
-  operation,
-  from,
-  gasPrice,
-  gasToken,
-  gasLimit,
-  refundReceiver,
-  safeTxGas,
-  approvalAndExecution,
-}: TransactionExecutionEstimationProps): Promise<boolean> => {
-  const safeInstance = getGnosisSafeInstanceAt(safeAddress, safeVersion)
+export const checkTransactionExecution = async (
+  {
+    safeAddress,
+    safeVersion,
+    txRecipient,
+    txConfirmations,
+    txAmount,
+    txData,
+    operation,
+    from,
+    gasPrice,
+    gasToken,
+    gasLimit,
+    refundReceiver,
+    safeTxGas,
+    approvalAndExecution,
+  }: TransactionExecutionEstimationProps,
+  dispatch: Dispatch,
+): Promise<boolean> => {
+  console.log(dispatch)
+
+  const safeInstance = getGnosisSafeInstanceAt('0x' + safeAddress, safeVersion)
   // If it's approvalAndExecution we have to add a preapproved signature else we have all signatures
   const sigs = generateSignaturesFromTxConfirmations(txConfirmations, approvalAndExecution ? from : undefined)
 
-  return safeInstance.methods
-    .execTransaction(txRecipient, txAmount, txData, operation, safeTxGas, 0, gasPrice, gasToken, refundReceiver, sigs)
-    .call({
-      from,
-      gas: gasLimit,
-    })
-    .then(() => true)
-    .catch((e) => {
-      console.warn('Transaction will fail\n\n', e)
-      return false
-    })
+  return safeAddress &&
+    safeInstance &&
+    txRecipient &&
+    txAmount &&
+    txData &&
+    operation &&
+    safeTxGas &&
+    gasPrice &&
+    gasToken &&
+    refundReceiver &&
+    from &&
+    gasLimit &&
+    sigs
+    ? true
+    : false
 }
 
 export const isMaxFeeParam = (): boolean => {
@@ -137,7 +148,6 @@ export const createSendParams = (
     gas: txParams.ethGasLimit,
     nonce: txParams.ethNonce,
   }
-
   if (isMaxFeeParam()) {
     sendParams.maxPriorityFeePerGas = txParams.ethMaxPrioFeeInGWei
     sendParams.maxFeePerGas = txParams.ethGasPriceInGWei

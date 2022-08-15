@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux'
 import { estimateSafeTxGas } from 'src/logic/safe/transactions/gas'
 import { currentSafe } from 'src/logic/safe/store/selectors'
 import useAsync from 'src/logic/hooks/useAsync'
+import { Dispatch } from '../safe/store/actions/types'
 
 type UseEstimateSafeTxGasProps = {
   isRejectTx: boolean
@@ -13,13 +14,10 @@ type UseEstimateSafeTxGasProps = {
   operation?: Operation
 }
 
-export const useEstimateSafeTxGas = ({
-  isRejectTx,
-  txData,
-  txRecipient,
-  txAmount,
-  operation,
-}: UseEstimateSafeTxGasProps): { result: string; error: Error | undefined } => {
+export const useEstimateSafeTxGas = (
+  dispatch: Dispatch,
+  { isRejectTx, txData, txRecipient, txAmount, operation }: UseEstimateSafeTxGasProps,
+): { result: string; error: Error | undefined } => {
   const defaultEstimation = '0'
   const { address: safeAddress, currentVersion: safeVersion } = useSelector(currentSafe)
 
@@ -35,6 +33,7 @@ export const useEstimateSafeTxGas = ({
         operation: operation || Operation.CALL,
       },
       safeVersion,
+      dispatch,
     )
   }, [isRejectTx, operation, safeAddress, safeVersion, txAmount, txData, txRecipient])
 

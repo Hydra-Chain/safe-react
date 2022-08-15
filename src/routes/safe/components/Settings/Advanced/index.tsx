@@ -39,7 +39,7 @@ const Advanced = (): ReactElement => {
   const { nonce, modules, guard, currentVersion } = useSelector(currentSafe) ?? {}
 
   const moduleData = modules ? getModuleData(modules) ?? null : null
-  const isVersionWithGuards = semverSatisfies(currentVersion, '>=1.3.0')
+  const isVersionWithGuards = semverSatisfies(currentVersion, '>=1.1.1')
 
   return (
     <>
