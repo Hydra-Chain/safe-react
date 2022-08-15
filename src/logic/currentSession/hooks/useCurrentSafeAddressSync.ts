@@ -20,7 +20,9 @@ export const useCurrentSafeAddressSync = (): void => {
       dispatch(addCurrentShortName(shortName))
     }
     if (currentSafeAddress !== safeAddress) {
-      dispatch(addCurrentSafeAddress(safeAddress))
+      ;(async () => {
+        dispatch(addCurrentSafeAddress(safeAddress))
+      })()
     }
   }, [location.pathname, dispatch, currentShortName, currentSafeAddress])
 }

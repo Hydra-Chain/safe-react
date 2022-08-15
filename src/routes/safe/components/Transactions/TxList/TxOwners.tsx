@@ -113,11 +113,12 @@ const shouldHideConfirmations = (detailedExecutionInfo: DetailedExecutionInfo | 
     return true
   }
 
-  const confirmationsNeeded = detailedExecutionInfo.confirmationsRequired - detailedExecutionInfo.confirmations.length
+  const confirmationsNeeded =
+    detailedExecutionInfo?.confirmationsRequired - detailedExecutionInfo?.confirmations?.length
   const isConfirmed = confirmationsNeeded <= 0
 
   // Threshold reached or more than 3 confirmations
-  return isConfirmed || detailedExecutionInfo.confirmations.length > 3
+  return isConfirmed || detailedExecutionInfo?.confirmations?.length > 3
 }
 
 const getConfirmationStep = (
@@ -155,13 +156,14 @@ export const TxOwners = ({
     return null
   }
 
-  const confirmationsNeeded = detailedExecutionInfo.confirmationsRequired - detailedExecutionInfo.confirmations.length
+  const confirmationsNeeded =
+    detailedExecutionInfo?.confirmationsRequired - detailedExecutionInfo?.confirmations?.length
 
   const isImmediateExecution = isPending && threshold === 1
   const isConfirmed = confirmationsNeeded <= 0 || isImmediateExecution
   const isExecuted = !!detailedExecutionInfo.executor
 
-  const numberOfConfirmations = isImmediateExecution ? 1 : detailedExecutionInfo.confirmations.length
+  const numberOfConfirmations = isImmediateExecution ? 1 : detailedExecutionInfo?.confirmations?.length
   return (
     <StyledStepper orientation="vertical" nonLinear connector={<StyledStepConnector />}>
       {isCancelTxDetails(txInfo) ? (
@@ -177,15 +179,15 @@ export const TxOwners = ({
         <StepLabel icon={isConfirmed ? <CheckIcon /> : <CircleIcon />}>
           Confirmations{' '}
           <span style={confirmationsStyle}>
-            ({`${numberOfConfirmations} of ${detailedExecutionInfo.confirmationsRequired}`})
+            ({`${numberOfConfirmations} of ${detailedExecutionInfo?.confirmationsRequired}`})
           </span>
         </StepLabel>
       </StyledStep>
       {!hideConfirmations &&
         (isImmediateExecution
           ? getConfirmationStep({ value: account, name, logoUri: null })
-          : detailedExecutionInfo.confirmations.map(({ signer }) => getConfirmationStep(signer, signer.value)))}
-      {detailedExecutionInfo.confirmations.length > 0 && (
+          : detailedExecutionInfo?.confirmations?.map(({ signer }) => getConfirmationStep(signer, signer.value)))}
+      {detailedExecutionInfo?.confirmations?.length > 0 && (
         <StyledStep state="confirmed">
           <StepLabel icon={<DotIcon />} onClick={toggleHide}>
             <span style={pointerStyle}>{hideConfirmations ? 'Show all' : 'Hide all'}</span>
@@ -201,9 +203,9 @@ export const TxOwners = ({
           detailedExecutionInfo.executor ? (
             <StepContent>
               <AddressInfo
-                address={detailedExecutionInfo.executor.value}
-                name={detailedExecutionInfo.executor.name || undefined}
-                avatarUrl={detailedExecutionInfo.executor.logoUri || undefined}
+                address={detailedExecutionInfo?.executor?.value}
+                name={detailedExecutionInfo?.executor?.name || undefined}
+                avatarUrl={detailedExecutionInfo?.executor?.logoUri || undefined}
                 shortenHash={4}
               />
             </StepContent>

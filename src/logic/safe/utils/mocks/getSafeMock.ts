@@ -11,7 +11,7 @@ export const mockGetSafeInfoResponse = {
   modules: null,
   fallbackHandler: { value: '0xf48f2B2d2a534e402487b3ee7C18c33Aec0Fe5e4' },
   guard: null,
-  version: '1.3.0',
+  version: '1.1.1',
   implementationVersionState: 'UP_TO_DATE',
   collectiblesTag: '1629729817',
   txQueuedTag: '1629729817',

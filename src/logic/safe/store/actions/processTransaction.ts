@@ -45,7 +45,6 @@ export const processTransaction = (props: ProcessTransactionArgs): ProcessTransa
 
     // Selectors
     const state = getState()
-
     const { tx, approveAndExecute } = props
 
     // Set specific transaction being finalised
@@ -90,6 +89,6 @@ export const processTransaction = (props: ProcessTransactionArgs): ProcessTransa
 
     sender.safeTxHash = tx.safeTxHash
 
-    sender.submitTx()
+    sender.submitTx(dispatch)
   }
 }

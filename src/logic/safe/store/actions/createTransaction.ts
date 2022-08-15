@@ -2,8 +2,7 @@ import { Operation, TransactionDetails } from '@gnosis.pm/safe-react-gateway-sdk
 import { AnyAction } from 'redux'
 import { ThunkAction } from 'redux-thunk'
 
-import onboard, { checkWallet } from 'src/logic/wallets/onboard'
-import { getWeb3, isHardwareWallet, isSmartContractWallet } from 'src/logic/wallets/getWeb3'
+import { isSmartContractWallet } from 'src/logic/wallets/getWeb3'
 import { getGnosisSafeInstanceAt } from 'src/logic/contracts/safeContracts'
 import { createTxNotifications } from 'src/logic/notifications'
 import {
@@ -17,7 +16,6 @@ import { currentSafeCurrentVersion } from 'src/logic/safe/store/selectors'
 import { ZERO_ADDRESS } from 'src/logic/wallets/ethAddresses'
 import { EMPTY_DATA } from 'src/logic/wallets/ethTransactions'
 import { providerSelector } from 'src/logic/wallets/store/selectors'
-import { generateSafeTxHash } from 'src/logic/safe/store/actions/transactions/utils/transactionHelpers'
 import { getNonce, canExecuteCreatedTx, navigateToTx } from 'src/logic/safe/store/actions/utils'
 import fetchTransactions from './transactions/fetchTransactions'
 import { AppReduxState } from 'src/store'
@@ -35,6 +33,17 @@ import { getContractErrorMessage } from 'src/logic/contracts/safeContractErrors'
 import { isWalletRejection } from 'src/logic/wallets/errors'
 import { trackEvent } from 'src/utils/googleTagManager'
 import { WALLET_EVENTS } from 'src/utils/events/wallet'
+import { hydraToHexAddress, setCurrentTxWaitingExecutionDetails } from 'src/logic/hydra/utils'
+import {
+  getGnosisProxyTransactionHash,
+  safeGnosisSendAsset,
+  sendWithState,
+  setGnosisProxyOracle,
+} from 'src/logic/hydra/contractInteractions/utils'
+import {
+  getLocalStorageApprovedTransactionSchema,
+  setLocalStorageApprovedTransactionSchema,
+} from 'src/logic/hydra/api/explorer'
 
 export interface CreateTransactionArgs {
   navigateToTransactionsTab?: boolean
@@ -58,7 +67,7 @@ type CreateTransactionAction = ThunkAction<Promise<void | string>, AppReduxState
 type ConfirmEventHandler = (safeTxHash: string) => void
 type ErrorEventHandler = () => void
 
-const getSafeTxGas = async (txProps: RequiredTxProps, safeVersion: string): Promise<string> => {
+const getSafeTxGas = async (txProps: RequiredTxProps, safeVersion: string, dispatch: Dispatch): Promise<string> => {
   const estimationProps: SafeTxGasEstimationProps = {
     safeAddress: txProps.safeAddress,
     txData: txProps.txData,
@@ -69,7 +78,7 @@ const getSafeTxGas = async (txProps: RequiredTxProps, safeVersion: string): Prom
 
   let safeTxGas = '0'
   try {
-    safeTxGas = await estimateSafeTxGas(estimationProps, safeVersion)
+    safeTxGas = await estimateSafeTxGas(estimationProps, safeVersion, dispatch)
   } catch (err) {
     logError(Errors._617, err.message)
   }
@@ -99,11 +108,13 @@ export class TxSender {
     // Propose the tx to the backend
     // 1) If signing
     // 2) If creating a new tx (no txId yet)
-    let txDetails: TransactionDetails | null = null
+    let txDetails: TransactionDetails | undefined
     if (!isFinalization || !this.txId) {
       try {
-        txDetails = await saveTxToHistory({ ...txArgs, signature, origin: txProps.origin })
+        txDetails = await saveTxToHistory({ ...txArgs, signature, origin: txProps.origin }, dispatch, this.txHash)
+        setCurrentTxWaitingExecutionDetails(txDetails)
         this.txId = txDetails.txId
+        // this.safeTxHash = txDetails.
       } catch (err) {
         logError(Errors._816, err.message)
         return
@@ -122,6 +133,7 @@ export class TxSender {
     confirmCallback?.(safeTxHash)
 
     // Go to a tx deep-link
+
     if (txDetails && txProps.navigateToTransactionsTab) {
       navigateToTx(txProps.safeAddress, txDetails)
     }
@@ -140,7 +152,6 @@ export class TxSender {
     if (isFinalization && txId) {
       dispatch(removePendingTransaction({ id: txId }))
     }
-
     // Display a notification when user rejects the tx
     if (isWalletRejection(err)) {
       // show snackbar
@@ -183,30 +194,58 @@ export class TxSender {
 
   async onlyConfirm(): Promise<string | undefined> {
     const { txArgs, safeTxHash, txProps, safeVersion } = this
-    const { wallet } = onboard().getState()
+    // const { wallet } = onboard().getState()
 
     return await tryOffChainSigning(
       safeTxHash,
       { ...txArgs, sender: String(txArgs.sender), safeAddress: txProps.safeAddress },
-      isHardwareWallet(wallet),
+      false,
+      // isHardwareWallet(wallet),
       safeVersion,
     )
   }
 
-  async sendTx(confirmCallback?: ConfirmEventHandler): Promise<void> {
+  async sendTx(
+    dispatch: Dispatch,
+    confirmCallback?: ConfirmEventHandler,
+    oracle?: { currentOracle: string; newOracle: string; gasLimit?: string },
+    sentTx?: any,
+  ): Promise<void> {
     const { txArgs, isFinalization, from, safeTxHash, txProps } = this
-
-    const tx = isFinalization ? getExecutionTransaction(txArgs) : getApprovalTransaction(this.safeInstance, safeTxHash)
+    const tx = isFinalization
+      ? getExecutionTransaction(txArgs)
+      : getApprovalTransaction(this.safeInstance, safeTxHash, txArgs)
     const sendParams = createSendParams(from, txProps.ethParameters || {})
+    const tx0 =
+      sentTx ??
+      (oracle
+        ? await dispatch(
+            sendWithState(setGnosisProxyOracle, {
+              safeAddress: txProps.safeAddress,
+              oracle: oracle.newOracle,
+              gasLimit: oracle.gasLimit,
+            }),
+          )
+        : await dispatch(sendWithState(safeGnosisSendAsset, { tx, sendParams, safeAddress: txProps.safeAddress })))
 
-    await tx.send(sendParams).once('transactionHash', (hash) => {
-      this.txHash = hash
+    this.txHash = '0x' + tx0.id
+    const approvedTransactionSchema = getLocalStorageApprovedTransactionSchema()
+    if (approvedTransactionSchema[safeTxHash]) {
+      approvedTransactionSchema[safeTxHash][this.txHash] = 0
+      setLocalStorageApprovedTransactionSchema(approvedTransactionSchema)
+    }
+    if (isFinalization) {
+      aboutToExecuteTx.setNonce(txArgs.nonce)
+    }
+    this.onComplete(undefined, confirmCallback)
+    // await tx.send(sendParams).once('transactionHash', (hash) => {
+    //   this.txHash = hash
 
-      if (isFinalization) {
-        aboutToExecuteTx.setNonce(txArgs.nonce)
-      }
-      this.onComplete(undefined, confirmCallback)
-    })
+    //   if (isFinalization) {
+    //     aboutToExecuteTx.setNonce(txArgs.nonce)
+    //   }
+    //   this.onComplete(undefined, confirmCallback)
+    // })
   }
 
   async canSignOffchain(): Promise<boolean> {
@@ -217,10 +256,14 @@ export class TxSender {
   }
 
   async submitTx(
+    dispatch: Dispatch,
     confirmCallback?: ConfirmEventHandler,
     errorCallback?: ErrorEventHandler,
+    oracle?: { currentOracle: string; newOracle: string; gasLimit?: string },
+    sentTx?: any,
   ): Promise<string | undefined> {
-    const isOffchain = await this.canSignOffchain()
+    // const isOffchain = await this.canSignOffchain()
+    const isOffchain = false
 
     // Off-chain signature
     if (!this.isFinalization && isOffchain) {
@@ -242,7 +285,7 @@ export class TxSender {
 
     // On-chain signature or execution
     try {
-      await this.sendTx(confirmCallback)
+      await this.sendTx(dispatch, confirmCallback, oracle, sentTx)
     } catch (err) {
       logError(Errors._803, err.message)
       this.onError(err, errorCallback)
@@ -252,20 +295,21 @@ export class TxSender {
     return this.txHash
   }
 
-  static async _isOnboardReady(): Promise<boolean> {
-    // web3 is set on wallet connection
-    const walletSelected = getWeb3() ? true : await onboard().walletSelect()
-    return walletSelected && checkWallet()
+  static async _isOnboardReady() {
+    return async (dispatch: Dispatch, getState: () => AppReduxState): Promise<boolean> => {
+      const state = getState()
+      return state.providers.loaded && !!state.providers.account
+    }
   }
 
   async prepare(dispatch: Dispatch, state: AppReduxState, txProps: RequiredTxProps): Promise<void> {
-    if (!(await TxSender._isOnboardReady())) {
+    if (!dispatch(await TxSender._isOnboardReady())) {
       throw Error('No wallet connection')
     }
 
     // Selectors
     const { account } = providerSelector(state)
-    this.from = account
+    this.from = hydraToHexAddress(account, true)
 
     this.safeVersion = currentSafeCurrentVersion(state)
     this.safeInstance = getGnosisSafeInstanceAt(txProps.safeAddress, this.safeVersion)
@@ -274,8 +318,7 @@ export class TxSender {
     this.notifications = createTxNotifications(txProps.notifiedTransaction, txProps.origin, dispatch)
 
     // Use the user-provided none or the recommented nonce
-    this.nonce = txProps.txNonce?.toString() || (await getNonce(txProps.safeAddress, this.safeVersion))
-
+    this.nonce = txProps.txNonce?.toString() || (await getNonce(txProps.safeAddress, this.safeVersion, dispatch))
     this.txProps = txProps
     this.dispatch = dispatch
   }
@@ -285,13 +328,14 @@ export const createTransaction = (
   props: CreateTransactionArgs,
   confirmCallback?: ConfirmEventHandler,
   errorCallback?: ErrorEventHandler,
+  oracle?: { currentOracle: string; newOracle: string; gasLimit?: string },
+  sentTx?: any,
 ): CreateTransactionAction => {
   return async (dispatch: Dispatch, getState: () => AppReduxState): Promise<void> => {
     const sender = new TxSender()
 
     // Selectors
     const state = getState()
-
     // Assign fallback values to certain props
     const txProps = {
       ...props,
@@ -311,7 +355,11 @@ export const createTransaction = (
 
     // Execute right away?
     sender.isFinalization =
-      !props.delayExecution && (await canExecuteCreatedTx(sender.safeInstance, sender.nonce, getLastTransaction(state)))
+      !props.delayExecution &&
+      (await canExecuteCreatedTx(sender.safeInstance, sender.nonce, getLastTransaction(state), dispatch))
+    if (txProps.to.length === 40) {
+      txProps.to = '0x' + txProps.to
+    }
 
     // Prepare a TxArgs object
     sender.txArgs = {
@@ -321,7 +369,7 @@ export const createTransaction = (
       data: txProps.txData,
       operation: txProps.operation,
       nonce: Number.parseInt(sender.nonce),
-      safeTxGas: txProps.safeTxGas ?? (await getSafeTxGas(txProps, sender.safeVersion)),
+      safeTxGas: txProps.safeTxGas ?? (await getSafeTxGas(txProps, sender.safeVersion, dispatch)),
       baseGas: '0',
       gasPrice: '0',
       gasToken: ZERO_ADDRESS,
@@ -334,9 +382,29 @@ export const createTransaction = (
     }
 
     // SafeTxHash acts as the unique ID of a tx throughout the app
-    sender.safeTxHash = generateSafeTxHash(txProps.safeAddress, sender.safeVersion, sender.txArgs)
+
+    const safeTxHash = await dispatch(
+      sendWithState(getGnosisProxyTransactionHash, {
+        safeInstance: sender.safeInstance,
+        to: sender.txArgs.to,
+        value: sender.txArgs.valueInWei,
+        data: sender.txArgs.data,
+        operation: sender.txArgs.operation,
+        nonce: sender.txArgs.nonce,
+        safeTxGas: sender.txArgs.safeTxGas,
+        baseGas: sender.txArgs.baseGas,
+        gasPrice: sender.txArgs.gasPrice,
+        gasToken: sender.txArgs.gasToken,
+        refundReceiver: sender.txArgs.refundReceiver,
+        sender: sender.txArgs.sender,
+        origin: '',
+        signature: '',
+      }),
+    )
+    // sender.safeTxHash = generateSafeTxHash(txProps.safeAddress, sender.safeVersion, sender.txArgs)
+    sender.safeTxHash = safeTxHash
 
     // Start the creation
-    sender.submitTx(confirmCallback, errorCallback)
+    sender.submitTx(dispatch, confirmCallback, errorCallback, oracle, sentTx)
   }
 }

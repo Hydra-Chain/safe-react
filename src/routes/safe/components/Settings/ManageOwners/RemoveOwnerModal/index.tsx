@@ -12,13 +12,13 @@ import { TX_NOTIFICATION_TYPES } from 'src/logic/safe/transactions'
 import { createTransaction } from 'src/logic/safe/store/actions/createTransaction'
 import { Dispatch } from 'src/logic/safe/store/actions/types.d'
 import { TxParameters } from 'src/routes/safe/container/hooks/useTransactionParameters'
-import { getSafeSDK } from 'src/logic/wallets/getWeb3'
 import { Errors, logError } from 'src/logic/exceptions/CodedException'
 import { currentSafe, currentSafeCurrentVersion } from 'src/logic/safe/store/selectors'
 import { trackEvent } from 'src/utils/googleTagManager'
 import { SETTINGS_EVENTS } from 'src/utils/events/settings'
 import { store } from 'src/store'
 import useSafeAddress from 'src/logic/currentSession/hooks/useSafeAddress'
+import { sendRemoveExistingOwner, sendWithState } from 'src/logic/hydra/contractInteractions/utils'
 
 type OwnerValues = OwnerData & {
   threshold: string
@@ -34,25 +34,31 @@ export const sendRemoveOwner = async (
   connectedWalletAddress: string,
   delayExecution: boolean,
 ): Promise<void> => {
-  const sdk = await getSafeSDK(connectedWalletAddress, safeAddress, safeVersion)
-  const safeTx = await sdk.getRemoveOwnerTx(
-    { ownerAddress: ownerAddressToRemove, threshold: +values.threshold },
-    { safeTxGas: 0 },
-  )
-  const txData = safeTx.data.data
-
-  dispatch(
-    createTransaction({
+  const sentTx = await dispatch(
+    sendWithState(sendRemoveExistingOwner, {
       safeAddress,
-      to: safeAddress,
-      valueInWei: '0',
-      txData,
-      txNonce: txParameters.safeNonce,
-      safeTxGas: txParameters.safeTxGas,
-      ethParameters: txParameters,
-      notifiedTransaction: TX_NOTIFICATION_TYPES.SETTINGS_CHANGE_TX,
-      delayExecution,
+      ownerAddress: ownerAddressToRemove,
+      threshold: values.threshold,
     }),
+  )
+  dispatch(
+    createTransaction(
+      {
+        safeAddress,
+        to: safeAddress,
+        valueInWei: '0',
+        txData: '0x',
+        txNonce: txParameters.safeNonce,
+        safeTxGas: txParameters.safeTxGas,
+        ethParameters: txParameters,
+        notifiedTransaction: TX_NOTIFICATION_TYPES.SETTINGS_CHANGE_TX,
+        delayExecution,
+      },
+      undefined,
+      undefined,
+      undefined,
+      sentTx,
+    ),
   )
 
   trackEvent({ ...SETTINGS_EVENTS.THRESHOLD.THRESHOLD, label: values.threshold })

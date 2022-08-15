@@ -1,9 +1,9 @@
 import { createAction } from 'redux-actions'
+import { fetchGeneralInfo } from 'src/logic/hydra/api/explorer'
 import {
   AddPendingTransactionPayload,
   RemovePendingTransactionPayload,
 } from 'src/logic/safe/store/reducer/pendingTransactions'
-import { getWeb3 } from 'src/logic/wallets/getWeb3'
 import { Dispatch } from './types'
 
 export enum PENDING_TRANSACTIONS_ACTIONS {
@@ -20,7 +20,8 @@ export const setPendingTransaction = (details: { id: string; txHash: string }) =
   return async (dispatch: Dispatch): Promise<void> => {
     let block: number | undefined
     try {
-      block = await getWeb3().eth.getBlockNumber()
+      const { height } = await fetchGeneralInfo()
+      block = height
     } catch {}
 
     const pendingTransaction = {

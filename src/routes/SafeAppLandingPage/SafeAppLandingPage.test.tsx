@@ -168,7 +168,7 @@ describe('<SafeAppLandingPage>', () => {
 
     fireEvent.click(screen.getByText('Try Demo'))
 
-    const demoSafeAppUrl = '/eth:0xfF501B324DC6d78dC9F983f140B9211c3EdB4dc7/apps'
+    const demoSafeAppUrl = ''
 
     await waitFor(() => {
       expect(historySpy).toHaveBeenCalledWith(`${demoSafeAppUrl}?appUrl=${SAFE_APP_URL_FROM_MANIFEST}`)

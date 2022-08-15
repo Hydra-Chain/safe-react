@@ -1,8 +1,10 @@
 import { getTransactionHistory, getTransactionQueue } from '@gnosis.pm/safe-react-gateway-sdk'
 import { _getChainId } from 'src/config'
 import { HistoryGatewayResponse, QueuedGatewayResponse } from 'src/logic/safe/store/models/types/gateway.d'
-import { checksumAddress } from 'src/utils/checksumAddress'
+// import { checksumAddress } from 'src/utils/checksumAddress'
 import { Errors, CodedException } from 'src/logic/exceptions/CodedException'
+import { fetchContractTransactions, fetchQueedTransactionsHydra } from 'src/logic/hydra/api/explorer'
+import { Dispatch } from '../../types'
 
 /*************/
 /*  HISTORY  */
@@ -24,10 +26,10 @@ export const loadPagedHistoryTransactions = async (
     throw new CodedException(Errors._608)
   }
 
-  try {
+  https: try {
     const { results, next, previous } = await getTransactionHistory(
       chainId,
-      checksumAddress(safeAddress),
+      safeAddress,
       historyPointers[chainId][safeAddress].next,
     )
 
@@ -39,10 +41,16 @@ export const loadPagedHistoryTransactions = async (
   }
 }
 
-export const loadHistoryTransactions = async (safeAddress: string): Promise<HistoryGatewayResponse['results']> => {
+export const loadHistoryTransactions = async (
+  safeAddress: string,
+  dispatch: Dispatch,
+): Promise<HistoryGatewayResponse['results']> => {
   const chainId = _getChainId()
+
   try {
-    const { results, next, previous } = await getTransactionHistory(chainId, checksumAddress(safeAddress))
+    const { results, next, previous } = await fetchContractTransactions(safeAddress, dispatch)
+
+    // const { results, next, previous } = await getTransactionHistory(chainId, safeAddress)
 
     if (!historyPointers[chainId]) {
       historyPointers[chainId] = {}
@@ -81,7 +89,7 @@ export const loadPagedQueuedTransactions = async (
   try {
     const { results, next, previous } = await getTransactionQueue(
       chainId,
-      checksumAddress(safeAddress),
+      safeAddress,
       queuedPointers[chainId][safeAddress].next,
     )
 
@@ -93,10 +101,13 @@ export const loadPagedQueuedTransactions = async (
   }
 }
 
-export const loadQueuedTransactions = async (safeAddress: string): Promise<QueuedGatewayResponse['results']> => {
+export const loadQueuedTransactions = async (
+  safeAddress: string,
+  dispatch: Dispatch,
+): Promise<QueuedGatewayResponse['results']> => {
   const chainId = _getChainId()
   try {
-    const { results, next, previous } = await getTransactionQueue(chainId, checksumAddress(safeAddress))
+    const { results, next, previous } = await fetchQueedTransactionsHydra(safeAddress, dispatch)
 
     if (!queuedPointers[chainId]) {
       queuedPointers[chainId] = {}

@@ -31,8 +31,8 @@ const DetailsWithTxInfo = ({ children, txData, txInfo }: DetailsWithTxInfoProps)
   let avatarUrl
 
   if (isCustomTxInfo(txInfo)) {
-    name = txInfo.to.name
-    avatarUrl = txInfo.to.logoUri
+    name = txInfo?.to?.name ?? ''
+    avatarUrl = txInfo?.to?.logoUri ?? ''
   }
 
   return (

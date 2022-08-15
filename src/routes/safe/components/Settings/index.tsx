@@ -24,6 +24,7 @@ const RemoveSafeModal = lazy(() => import('./RemoveSafeModal'))
 const SafeDetails = lazy(() => import('./SafeDetails'))
 const ThresholdSettings = lazy(() => import('./ThresholdSettings'))
 const Appearance = lazy(() => import('./Appearance'))
+const ManageOracle = lazy(() => import('./ManageOracle'))
 
 export const OWNERS_SETTINGS_TAB_TEST_ID = 'owner-settings-tab'
 
@@ -37,7 +38,7 @@ const Settings = (): React.ReactElement => {
   const classes = useStyles()
   const [state, setState] = useState(INITIAL_STATE)
   const { shortName, safeAddress } = useSafeAddress()
-  const { owners, loadedViaUrl } = useSelector(currentSafeWithNames)
+  const { owners, loadedViaUrl, oracle } = useSelector(currentSafeWithNames)
   const granted = useSelector(grantedSelector)
 
   // Question mark makes matching [SAFE_SUBSECTION_SLUG] optional
@@ -67,6 +68,9 @@ const Settings = (): React.ReactElement => {
       break
     case currentSafeRoutes.SETTINGS_ADVANCED:
       settingsSection = 'Advanced'
+      break
+    case currentSafeRoutes.SETTINGS_ORACLE:
+      settingsSection = 'Oracle'
       break
     default:
       settingsSection = ''
@@ -121,6 +125,11 @@ const Settings = (): React.ReactElement => {
                 render={() => <ManageOwners granted={granted} owners={owners} />}
               />
               <Route path={SAFE_ROUTES.SETTINGS_POLICIES} exact render={() => <ThresholdSettings />} />
+              <Route
+                path={SAFE_ROUTES.SETTINGS_ORACLE}
+                exact
+                render={() => <ManageOracle granted={granted} oracle={oracle} />}
+              />
               <Route path={SAFE_ROUTES.SETTINGS_SPENDING_LIMIT} exact render={() => <SpendingLimitSettings />} />
               <Route path={SAFE_ROUTES.SETTINGS_ADVANCED} exact render={() => <Advanced />} />
               <Redirect to={SAFE_ROUTES.SETTINGS_DETAILS} />

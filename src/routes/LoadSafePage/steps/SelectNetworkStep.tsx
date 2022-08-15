@@ -1,5 +1,4 @@
 import { ReactElement, useState } from 'react'
-import { ButtonLink } from '@gnosis.pm/safe-react-components'
 import styled from 'styled-components'
 import Dialog from '@material-ui/core/Dialog'
 import DialogTitle from '@material-ui/core/DialogTitle'
@@ -23,10 +22,6 @@ export const selectNetworkStepLabel = 'Select network'
 function SelectNetworkStep(): ReactElement {
   const [isNetworkSelectorPopupOpen, setIsNetworkSelectorPopupOpen] = useState(false)
 
-  function openNetworkSelectorPopup() {
-    setIsNetworkSelectorPopupOpen(true)
-  }
-
   const onNetworkSwitch = (chainId: ChainId) => {
     setChainId(chainId)
     setIsNetworkSelectorPopupOpen(false)
@@ -35,13 +30,13 @@ function SelectNetworkStep(): ReactElement {
   return (
     <Container data-testid={'select-network-step'}>
       <Paragraph color="primary" noMargin size="lg">
-        Select network on which the Safe was created: <NetworkLabel onClick={openNetworkSelectorPopup} />
+        The Safe was created on: <NetworkLabel />
       </Paragraph>
-      <SwitchNetworkContainer>
+      {/* <SwitchNetworkContainer>
         <ButtonLink type="button" onClick={openNetworkSelectorPopup} color="primary">
           Switch Network
         </ButtonLink>
-      </SwitchNetworkContainer>
+      </SwitchNetworkContainer> */}
       <Dialog
         onClose={() => setIsNetworkSelectorPopupOpen(false)}
         aria-labelledby="select-network"
@@ -83,11 +78,11 @@ const StyledDialogTitle = styled(DialogTitle)`
   justify-content: space-between;
   padding: 16px 24px;
 `
-const SwitchNetworkContainer = styled.div`
-  margin: ${lg};
-  display: flex;
-  justify-content: center;
-`
+// const SwitchNetworkContainer = styled.div`
+//   margin: ${lg};
+//   display: flex;
+//   justify-content: center;
+// `
 const NetworkLabelItem = styled.div`
   display: flex;
   margin: ${lg} auto;

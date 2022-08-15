@@ -22,6 +22,7 @@ import { TxParameters } from 'src/routes/safe/container/hooks/useTransactionPara
 import { useStyles } from './style'
 import { trackEvent } from 'src/utils/googleTagManager'
 import { SETTINGS_EVENTS } from 'src/utils/events/settings'
+import { sendChangeThreshold, sendWithState } from 'src/logic/hydra/contractInteractions/utils'
 
 const THRESHOLD_FIELD_NAME = 'threshold'
 
@@ -56,6 +57,7 @@ export const ChangeThresholdModal = ({
     }
 
     calculateChangeThresholdData()
+
     return () => {
       isCurrent = false
     }
@@ -67,19 +69,32 @@ export const ChangeThresholdModal = ({
     setEditedThreshold(value)
   }
 
-  const handleSubmit = (txParameters: TxParameters, delayExecution: boolean) => {
+  const handleSubmit = async (txParameters: TxParameters, delayExecution: boolean) => {
+    const changeThreshold = async () => {
+      const tx = dispatch(
+        sendWithState(sendChangeThreshold, { threshold: editedThreshold, safeAddress, gasLimit: '100000' }),
+      )
+      return tx
+    }
+    const sendTx = await changeThreshold()
     dispatch(
-      createTransaction({
-        safeAddress,
-        to: safeAddress,
-        valueInWei: '0',
-        txData: data,
-        txNonce: txParameters.safeNonce,
-        safeTxGas: txParameters.safeTxGas,
-        ethParameters: txParameters,
-        notifiedTransaction: TX_NOTIFICATION_TYPES.SETTINGS_CHANGE_TX,
-        delayExecution,
-      }),
+      createTransaction(
+        {
+          safeAddress,
+          to: safeAddress,
+          valueInWei: '0',
+          txData: data,
+          txNonce: txParameters.safeNonce,
+          safeTxGas: txParameters.safeTxGas,
+          ethParameters: txParameters,
+          notifiedTransaction: TX_NOTIFICATION_TYPES.SETTINGS_CHANGE_TX,
+          delayExecution,
+        },
+        undefined,
+        undefined,
+        undefined,
+        sendTx,
+      ),
     )
 
     trackEvent({ ...SETTINGS_EVENTS.THRESHOLD.OWNERS, label: ownersCount })

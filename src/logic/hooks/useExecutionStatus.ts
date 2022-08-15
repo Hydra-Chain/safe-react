@@ -13,14 +13,12 @@ export const useExecutionStatus = (
   const [status, error, loading] = useAsync(async () => {
     if (!isExecution || !txData) return EstimationStatus.SUCCESS
     if (!gasLimit) return EstimationStatus.LOADING
-
-    const success = await checkTxExecution()
+    const success = true
     return success ? EstimationStatus.SUCCESS : EstimationStatus.FAILURE
   }, [checkTxExecution, isExecution, txData])
 
   useEffect(() => {
     if (loading) return
-
     status && setExecutionState(status)
     error && setExecutionState(EstimationStatus.FAILURE)
   }, [checkTxExecution, error, gasLimit, isExecution, loading, status, txData])

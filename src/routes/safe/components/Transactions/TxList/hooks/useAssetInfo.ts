@@ -44,7 +44,7 @@ export const useAssetInfo = (txInfo: TransactionInfo): AssetInfo | undefined => 
       const { direction, transferInfo } = txInfo as Transfer
       const directionSign = direction === 'INCOMING' ? '+' : '-'
 
-      switch (transferInfo.type) {
+      switch (transferInfo?.type) {
         case TransactionTokenType.ERC20: {
           setAsset({
             type: 'Transfer',
@@ -79,6 +79,9 @@ export const useAssetInfo = (txInfo: TransactionInfo): AssetInfo | undefined => 
             tokenType: transferInfo.type,
           })
           break
+        }
+        default: {
+          setAsset(defaultTokenTransferAsset)
         }
       }
       return

@@ -13,7 +13,7 @@ import useSafeAddress from 'src/logic/currentSession/hooks/useSafeAddress'
 
 const useSidebarItems = (): ListItemType[] => {
   const featuresEnabled = useSelector(currentSafeFeaturesEnabled)
-  const safeAppsEnabled = hasFeature(FEATURES.SAFE_APPS)
+  // const safeAppsEnabled = hasFeature(FEATURES.SAFE_APPS)
   const isCollectiblesEnabled = hasFeature(FEATURES.ERC721)
   const isSpendingLimitEnabled = hasFeature(FEATURES.SPENDING_LIMIT)
   const { needsUpdate } = useSelector(currentSafeWithNames)
@@ -91,6 +91,11 @@ const useSidebarItems = (): ListItemType[] => {
         href: currentSafeRoutes.SETTINGS_OWNERS,
       }),
       makeEntryItem({
+        label: 'Oracle',
+        iconType: 'oracle',
+        href: currentSafeRoutes.SETTINGS_ORACLE,
+      }),
+      makeEntryItem({
         label: 'Policies',
         iconType: 'requiredConfirmations',
         href: currentSafeRoutes.SETTINGS_POLICIES,
@@ -131,12 +136,12 @@ const useSidebarItems = (): ListItemType[] => {
         iconType: 'addressBook',
         href: currentSafeRoutes.ADDRESS_BOOK,
       }),
-      makeEntryItem({
-        disabled: !safeAppsEnabled,
-        label: 'Apps',
-        iconType: 'apps',
-        href: currentSafeRoutes.APPS,
-      }),
+      // makeEntryItem({
+      //   disabled: !safeAppsEnabled,
+      //   label: 'Apps',
+      //   iconType: 'apps',
+      //   href: currentSafeRoutes.APPS,
+      // }),
       makeEntryItem({
         label: 'Settings',
         iconType: 'settings',
@@ -154,7 +159,7 @@ const useSidebarItems = (): ListItemType[] => {
     matchSafeWithSidebarSection,
     needsUpdate,
     safeAddress,
-    safeAppsEnabled,
+    // safeAppsEnabled,
     shortName,
   ])
 }

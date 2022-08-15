@@ -25,6 +25,7 @@ export const TxExpandedActions = ({ transaction }: TxExpandedActionsProps): Reac
   } = useActionButtonsHandlers(transaction)
   const nonce = useSelector(currentSafeNonce)
   const txStatus = useTxStatus(transaction)
+
   const isAwaitingEx = isAwaitingExecution(txStatus)
 
   const onExecuteOrConfirm = (event) => {

@@ -200,6 +200,7 @@ export const ApproveTxModal = ({ onClose, isOpen, transaction }: Props): React.R
   const classes = useStyles()
   const { safeAddress } = useSafeAddress()
   const txInfo = useTxInfo(transaction)
+
   const submitDisabled = useSelector(sameAddressAsSafeSelector)
 
   const { executionInfo } = transaction
