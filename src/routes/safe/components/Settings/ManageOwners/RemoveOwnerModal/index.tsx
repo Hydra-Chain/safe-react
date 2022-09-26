@@ -18,7 +18,9 @@ import { trackEvent } from 'src/utils/googleTagManager'
 import { SETTINGS_EVENTS } from 'src/utils/events/settings'
 import { store } from 'src/store'
 import useSafeAddress from 'src/logic/currentSession/hooks/useSafeAddress'
-import { sendRemoveExistingOwner, sendWithState } from 'src/logic/hydra/contractInteractions/utils'
+import { encodeMethodWithParams, getGnosisProxyOracle, sendWithState } from 'src/logic/hydra/contractInteractions/utils'
+import { SnapshotOracle } from 'src/logic/hydra/abis'
+// import { Operation } from '@gnosis.pm/safe-apps-sdk'
 
 type OwnerValues = OwnerData & {
   threshold: string
@@ -34,30 +36,37 @@ export const sendRemoveOwner = async (
   connectedWalletAddress: string,
   delayExecution: boolean,
 ): Promise<void> => {
-  const sentTx = await dispatch(
-    sendWithState(sendRemoveExistingOwner, {
+  console.log('[connectedWalletAddress, ownerAddressToRemove]', [connectedWalletAddress, ownerAddressToRemove])
+  const txData = encodeMethodWithParams(SnapshotOracle, 'removeAdmin', [
+    connectedWalletAddress,
+    '0x' + ownerAddressToRemove,
+  ])
+  console.log('txData', txData)
+  // const sentTx = await dispatch(sendWithState(sendRemoveExistingOwner, { safeAddress, ownerAddress: ownerAddressToRemove, threshold: 1 }))
+
+  const oracleAddress = await dispatch(
+    sendWithState(getGnosisProxyOracle, {
       safeAddress,
-      ownerAddress: ownerAddressToRemove,
-      threshold: values.threshold,
     }),
   )
   dispatch(
     createTransaction(
       {
         safeAddress,
-        to: safeAddress,
+        to: oracleAddress,
         valueInWei: '0',
-        txData: '0x',
+        txData,
         txNonce: txParameters.safeNonce,
         safeTxGas: txParameters.safeTxGas,
         ethParameters: txParameters,
         notifiedTransaction: TX_NOTIFICATION_TYPES.SETTINGS_CHANGE_TX,
         delayExecution,
+        // operation: Operation.DELEGATE
       },
-      undefined,
-      undefined,
-      undefined,
-      sentTx,
+      // undefined,
+      // undefined,
+      // undefined,
+      // sentTx,
     ),
   )
 

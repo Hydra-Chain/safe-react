@@ -212,6 +212,8 @@ export class TxSender {
     sentTx?: any,
   ): Promise<void> {
     const { txArgs, isFinalization, from, safeTxHash, txProps } = this
+    console.log('txArgs', txArgs)
+
     const tx = isFinalization
       ? getExecutionTransaction(txArgs)
       : getApprovalTransaction(this.safeInstance, safeTxHash, txArgs)

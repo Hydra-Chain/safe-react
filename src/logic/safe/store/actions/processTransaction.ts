@@ -42,6 +42,7 @@ type ProcessTransactionAction = ThunkAction<Promise<void | string>, AppReduxStat
 export const processTransaction = (props: ProcessTransactionArgs): ProcessTransactionAction => {
   return async (dispatch: Dispatch, getState: () => AppReduxState): Promise<void> => {
     const sender = new TxSender()
+    console.log('processTransaction')
 
     // Selectors
     const state = getState()

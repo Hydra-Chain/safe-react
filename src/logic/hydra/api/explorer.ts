@@ -20,10 +20,11 @@ import {
   removeOwner,
   transfer,
   transferHydra,
-  changeThreshold,
+  changeThresholdPercentage,
 } from '../transformTransaction'
 import { getItemEmpty, getSafeLogs, getTransactionListPageEmpty } from '../utils'
 import { SAFE_PROXY_FACTORY_ADDRESS } from '../contracts'
+import { getGnosisProxyOracle, sendWithState } from '../contractInteractions/utils'
 
 export const API_BASE = 'https://explorer.hydrachain.org/api/'
 
@@ -188,8 +189,13 @@ export async function fetchContractTransactions(address: string, dispatch: Dispa
     ])
     const safeAddressHydra = info.address
     const safeAddressHex = info.addressHex
-    const txs = (await fetchTransactions((await respTxHashes.json()).transactions)) ?? []
-    const txsFactory = (await fetchTransactions(factoryTxs.transactions)) ?? []
+    const [oracle, txs, txsFactory] = await Promise.all([
+      dispatch(sendWithState(getGnosisProxyOracle, { safeAddress: safeAddressHex })),
+      fetchTransactions((await respTxHashes.json()).transactions),
+      fetchTransactions(factoryTxs.transactions),
+    ])
+    const oracleTxHashes = await fetchContractTxHashes(oracle)
+    const oracleTxs = await fetchTransactions(oracleTxHashes.transactions)
     const tlp = getTransactionListPageEmpty()
     tlp.next = ''
     tlp.previous = ''
@@ -212,9 +218,21 @@ export async function fetchContractTransactions(address: string, dispatch: Dispa
       })
       if (_tli?.transaction?.txInfo) tlp.results.push(_tli)
     }
+
+    for (const t of oracleTxs) {
+      const _tli = await getTransactionItemList(t, (tli: Transaction, receipt: any) => {
+        const logs = getSafeLogs(receipt.logs as Log[])
+        return changeThresholdPercentage(tli, logs)
+      })
+      if (_tli?.transaction?.txInfo) tlp.results.push(_tli)
+    }
+
     for (const t of txs) {
       await getTransactionItemList(t, async (tli: Transaction, receipt: any) => {
         const logs = getSafeLogs(receipt.logs as Log[])
+        if (t.id === 'e23e1e5c81b9154604be4b12df45d1d8128cb4932d9aba79b23b1a757a631138') {
+          console.log('logs', logs)
+        }
         const ht = transferHydra(t, address, safeAddressHydra, receipt, logs, true)
         if (ht) {
           tlp.results.push(ht)
@@ -240,10 +258,10 @@ export async function fetchContractTransactions(address: string, dispatch: Dispa
               tli = removeOwner(tli, logs)
               if (tli?.transaction?.txInfo) tlp.results.push(tli)
               break
-            case 'ChangedThreshold':
-              tli = changeThreshold(tli, logs)
-              if (tli?.transaction?.txInfo) tlp.results.push(tli)
-              break
+            // case 'ChangedThreshold':
+            //   tli = changeThreshold(tli, logs)
+            //   if (tli?.transaction?.txInfo) tlp.results.push(tli)
+            //   break
           }
         }
         return tli
@@ -276,6 +294,9 @@ export const fetchQueedTransactionsHydra = async (address: string, dispatch: Dis
   tlp.previous = ''
   for (let i = txs.length - 1; i >= 0; i--) {
     const t = txs[i]
+    if (t.id === 'e6720edb27fea7c47f3618daec33e067c06586520b0b290a8a4ce3d2a991c94d') {
+      console.log('transaction', t)
+    }
     const _tli = await approvedHash(address, t, dispatch)
     if (_tli.transaction) {
       const safeTxHash = (_tli as any).transaction.executionInfo.safeTxHash
@@ -334,8 +355,8 @@ export const fetchSafeTransactionDetails = async (
         case 'ApproveHash':
           tli = await approvedHash(safeAddress, _tx, dispatch)
           break
-        case 'ChangedThreshold':
-          tli = changeThreshold(tli, logs)
+        case 'ThresholdPercentageChanged':
+          tli = changeThresholdPercentage(tli, logs)
           break
       }
     }
@@ -353,6 +374,7 @@ export const fetchSafeTransactionDetails = async (
   _transactionDetails.txHash = txHash
   _transactionDetails.txData = {} as TransactionData
   _transactionDetails.txData.to = { value: 'unknown' } as AddressEx
+  _transactionDetails.executedAt = tx.timestamp * 1000
   _transactionDetails.txData.hexData =
     (_tli?.transaction?.executionInfo as any)?.hydraExecution?.data ??
     tx?.outputs

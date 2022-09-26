@@ -11,6 +11,7 @@ import {
   getGnosisProxyOwners,
   getGnosisProxyThreshold,
   getGnosisProxyVersion,
+  getSnapshotOracleThresholdPercentage,
   sendWithState,
 } from 'src/logic/hydra/contractInteractions/utils'
 import { fetchContractInfo } from 'src/logic/hydra/api/explorer'
@@ -39,6 +40,10 @@ export const getSafeInfo = async (
       dispatch(sendWithState(getGnosisProxyThreshold, { safeAddress })),
       dispatch(sendWithState(getGnosisProxyOracle, { safeAddress })),
     ])
+    let thresholdPercentage = ''
+    if (oracle) {
+      thresholdPercentage = await dispatch(sendWithState(getSnapshotOracleThresholdPercentage, { oracle }))
+    }
     console.log(
       'contractInfo, modules, nonce, version, owners, threshold, oracle',
       contractInfo,
@@ -48,6 +53,7 @@ export const getSafeInfo = async (
       owners,
       threshold,
       oracle,
+      thresholdPercentage,
     )
 
     const txs = await fetchTransactions(txHashes.transactions)
@@ -67,6 +73,7 @@ export const getSafeInfo = async (
     safeInfo.nonce = Number(nonce)
     safeInfo.version = version
     safeInfo.oracle = [{ value: oracle } as AddressEx]
+    safeInfo.thresholdPercentage = Number(thresholdPercentage)
 
     safeInfo.owners = owners[0].map((o: string) => {
       const addrEx = {} as AddressEx

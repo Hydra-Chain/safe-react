@@ -46,6 +46,7 @@ export type SafeRecordProps = {
   collectiblesTag: string
   txQueuedTag: string
   txHistoryTag: string
+  thresholdPercentage: number
 }
 
 /**
@@ -73,6 +74,7 @@ const makeSafe = Record<SafeRecordProps>({
   collectiblesTag: '0',
   txQueuedTag: '0',
   txHistoryTag: '0',
+  thresholdPercentage: 0,
 })
 
 export type SafeRecord = RecordOf<SafeRecordProps>

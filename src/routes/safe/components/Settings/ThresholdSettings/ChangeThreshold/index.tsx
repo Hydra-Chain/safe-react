@@ -1,5 +1,5 @@
 import MenuItem from '@material-ui/core/MenuItem'
-import { ReactElement, useEffect, useState } from 'react'
+import { ReactElement, useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 
 import Field from 'src/components/forms/Field'
@@ -22,7 +22,7 @@ import { TxParameters } from 'src/routes/safe/container/hooks/useTransactionPara
 import { useStyles } from './style'
 import { trackEvent } from 'src/utils/googleTagManager'
 import { SETTINGS_EVENTS } from 'src/utils/events/settings'
-import { sendChangeThreshold, sendWithState } from 'src/logic/hydra/contractInteractions/utils'
+import { sendChangeThresholdPercentage, sendWithState } from 'src/logic/hydra/contractInteractions/utils'
 
 const THRESHOLD_FIELD_NAME = 'threshold'
 
@@ -45,6 +45,15 @@ export const ChangeThresholdModal = ({
   const [data, setData] = useState('')
   const [editedThreshold, setEditedThreshold] = useState<number>(threshold)
   const [disabledSubmitForm, setDisabledSubmitForm] = useState<boolean>(true)
+  const [percetageArr, setPercentageArr] = useState<number[]>([])
+
+  useMemo(() => {
+    const arr: number[] = []
+    for (let i = 1; i <= 100; i++) {
+      arr.push(i)
+    }
+    setPercentageArr(arr)
+  }, [])
 
   useEffect(() => {
     let isCurrent = true
@@ -72,7 +81,11 @@ export const ChangeThresholdModal = ({
   const handleSubmit = async (txParameters: TxParameters, delayExecution: boolean) => {
     const changeThreshold = async () => {
       const tx = dispatch(
-        sendWithState(sendChangeThreshold, { threshold: editedThreshold, safeAddress, gasLimit: '100000' }),
+        sendWithState(sendChangeThresholdPercentage, {
+          thresholdPercentage: editedThreshold,
+          safeAddress,
+          gasLimit: '100000',
+        }),
       )
       return tx
     }
@@ -121,9 +134,9 @@ export const ChangeThresholdModal = ({
                   onChange={handleThreshold}
                   render={(props) => (
                     <SelectField {...props} disableError>
-                      {[...Array(Number(ownersCount))].map((x, index) => (
-                        <MenuItem key={index} value={`${index + 1}`}>
-                          {index + 1}
+                      {percetageArr.map((x, index) => (
+                        <MenuItem key={index} value={`${x}`}>
+                          {x}
                         </MenuItem>
                       ))}
                     </SelectField>
@@ -133,7 +146,7 @@ export const ChangeThresholdModal = ({
               </Col>
               <Col xs={10}>
                 <Paragraph className={classes.ownersText} color="primary" noMargin size="lg">
-                  {`out of ${ownersCount} owner(s)`}
+                  {`out of 100 %`}
                 </Paragraph>
               </Col>
             </Row>

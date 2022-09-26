@@ -9,18 +9,20 @@ import {
 import { Encoder, Decoder } from 'hydraweb3-js'
 import abiDecoder from 'abi-decoder'
 import { Log } from 'web3-core'
-import { ERC20, GnosisSafe, GnosisSafeProxyFactory } from './abis'
+import { ERC20, GnosisSafe, GnosisSafeProxyFactory, SnapshotOracle } from './abis'
 import { Dispatch } from '../safe/store/actions/types'
 import { sendWithState, getGnosisProxyApprovedHash } from './contractInteractions/utils'
 
 export interface SafeInfoHydra extends SafeInfo {
   oracle: AddressEx[]
+  thresholdPercentage: number
 }
 
 // Init abiDecoder with ProxyCreation ABI
 abiDecoder.addABI(GnosisSafe)
 abiDecoder.addABI(GnosisSafeProxyFactory)
 abiDecoder.addABI(ERC20)
+abiDecoder.addABI(SnapshotOracle)
 
 export let currentTxWaitingExecutionDetails: TransactionDetails | undefined
 

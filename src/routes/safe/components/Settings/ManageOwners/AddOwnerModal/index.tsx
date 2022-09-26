@@ -20,7 +20,11 @@ import { trackEvent } from 'src/utils/googleTagManager'
 import { SETTINGS_EVENTS } from 'src/utils/events/settings'
 import { store } from 'src/store'
 import useSafeAddress from 'src/logic/currentSession/hooks/useSafeAddress'
-import { sendAddNewOwner, sendWithState } from 'src/logic/hydra/contractInteractions/utils'
+import {
+  getSnapshotOracleAdminsByPercentage,
+  sendAddNewOwner,
+  sendWithState,
+} from 'src/logic/hydra/contractInteractions/utils'
 
 export type OwnerValues = {
   ownerAddress: string
@@ -37,8 +41,10 @@ export const sendAddOwner = async (
   connectedWalletAddress: string,
   delayExecution: boolean,
 ): Promise<void> => {
+  console.log(threshold)
+
   const result = await dispatch(
-    sendWithState(sendAddNewOwner, { safeAddress, ownerAddress, threshold, gasLimit: txParameters.ethGasLimit }),
+    sendWithState(sendAddNewOwner, { safeAddress, ownerAddress, gasLimit: txParameters.ethGasLimit }),
   )
   await dispatch(
     createTransaction(
@@ -60,7 +66,7 @@ export const sendAddOwner = async (
     ),
   )
 
-  trackEvent({ ...SETTINGS_EVENTS.THRESHOLD.THRESHOLD, label: threshold })
+  // trackEvent({ ...SETTINGS_EVENTS.THRESHOLD.THRESHOLD, label: threshold })
   trackEvent({ ...SETTINGS_EVENTS.THRESHOLD.OWNERS, label: currentSafe(store.getState()).owners.length })
 }
 
@@ -80,10 +86,14 @@ export const AddOwnerModal = ({ isOpen, onClose }: Props): React.ReactElement =>
 
   useEffect(
     () => () => {
-      setActiveScreen('selectOwner')
-      setValues({ ownerName: '', ownerAddress: '', threshold: '' })
+      const getNewThreshold = async () => {
+        const threshold = await dispatch(sendWithState(getSnapshotOracleAdminsByPercentage, { safeAddress }))
+        setActiveScreen('selectOwner')
+        setValues({ ownerName: '', ownerAddress: '', threshold: threshold as unknown as string })
+      }
+      if (connectedWalletAddress) getNewThreshold()
     },
-    [isOpen],
+    [isOpen, connectedWalletAddress, dispatch, safeAddress],
   )
 
   const onClickBack = () => {

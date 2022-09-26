@@ -56,7 +56,6 @@ export const getCallResult = (resp: any): HydraResult => {
     result.error.exceptedMessage = resp.executionResult.exceptedMessage
     return result
   }
-
   result.value = resp.executionResult.formattedOutput
   return result
 }
@@ -263,12 +262,10 @@ export const sendAddNewOwner = async (
   {
     safeAddress,
     ownerAddress,
-    threshold,
     gasLimit,
   }: {
     safeAddress: string
     ownerAddress: string
-    threshold: string
     gasLimit: string
   },
 ): Promise<number> => {
@@ -280,34 +277,32 @@ export const sendAddNewOwner = async (
   const oracleTx = await contractSend(
     getContract(sdk, oracleAddress.value[0], SnapshotOracle),
     'addAdminWithTreshhold',
-    [ownerAddress, +threshold, safeAddress],
+    [ownerAddress],
     address,
     Number(gasLimit),
   )
 
   return oracleTx
 }
-export const sendChangeThreshold = async (
+export const sendChangeThresholdPercentage = async (
   state: AppReduxState,
   {
-    threshold,
+    thresholdPercentage,
     safeAddress,
     gasLimit,
   }: {
-    threshold: string
+    thresholdPercentage: string
     safeAddress: string
     gasLimit: string
   },
 ): Promise<number> => {
   const { sdk, address } = _getSdkAccount(state)
-  const oracleAddress: HydraResult = getCallResult(
-    await contractCall(getContract(sdk, safeAddress, GnosisSafe), 'getOracle', [], address),
-  )
+  const oracle = await getGnosisProxyOracle(state, { safeAddress })
 
   const oracleTx = await contractSend(
-    getContract(sdk, oracleAddress.value[0], SnapshotOracle),
-    'changeThreshold',
-    [+threshold, safeAddress],
+    getContract(sdk, oracle, SnapshotOracle),
+    'setThresholdPercentage',
+    [thresholdPercentage],
     address,
     Number(gasLimit),
   )
@@ -320,21 +315,21 @@ export const sendRemoveExistingOwner = async (
   {
     safeAddress,
     ownerAddress,
-    threshold,
-  }: {
+  }: // threshold,
+  {
     safeAddress: string
     ownerAddress: string
-    threshold: string
+    // threshold: string
   },
 ): Promise<any> => {
   const { sdk, address } = _getSdkAccount(state)
   const oracleAddress: HydraResult = getCallResult(
-    await contractCall(getContract(sdk, safeAddress, GnosisSafe), 'oracle', [], address),
+    await contractCall(getContract(sdk, safeAddress, GnosisSafe), 'getOracle', [], address),
   )
   const oracleTx = await contractSend(
     getContract(sdk, oracleAddress.value[0], SnapshotOracle),
     'removeAdmin',
-    [hydraToHexAddress(address), ownerAddress, +threshold, safeAddress],
+    [hydraToHexAddress(address), ownerAddress],
     address,
   )
 
@@ -363,9 +358,36 @@ export const safeGnosisSendAsset = async (
       sendParams.gas,
       address,
     ])
+    console.log('result send', result)
 
     return result
   } catch (e) {
     throw new Error(e)
   }
+}
+
+export const getSnapshotOracleAdminsByPercentage = async (
+  state: AppReduxState,
+  { safeAddress }: { safeAddress: string },
+): Promise<any> => {
+  const { sdk, address } = _getSdkAccount(state)
+  const threshold = await getGnosisProxyThreshold(state, { safeAddress })
+  const oracle = await getGnosisProxyOracle(state, { safeAddress })
+  const newThreshold = getCallResult(
+    await contractCall(getContract(sdk, oracle, SnapshotOracle), 'getAdminsByPercentage', [threshold + 1], address),
+  )
+
+  return newThreshold.value[0].toString()
+}
+
+export const getSnapshotOracleThresholdPercentage = async (
+  state: AppReduxState,
+  { oracle }: { oracle: string },
+): Promise<any> => {
+  const { sdk, address } = _getSdkAccount(state)
+  const thresholdPercentage = getCallResult(
+    await contractCall(getContract(sdk, oracle, SnapshotOracle), 'thresholdPercentage', [], address),
+  )
+
+  return thresholdPercentage.value[0].toString()
 }

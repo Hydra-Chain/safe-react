@@ -33,6 +33,7 @@ import {
   getERC20Decimals,
   getERC20Name,
   getERC20Symbol,
+  getGnosisProxyOracle,
 } from './contractInteractions/utils'
 import { SAFE_PROXY_FACTORY_ADDRESS, SAFE_SINGLETON_ADDRESS } from './contracts'
 import { getSafeLogs, hydraToHexAddress, isHashConsumed } from './utils'
@@ -63,7 +64,7 @@ const getPreValidatedSignatures = (from: string, initialString: string = EMPTY_D
 }
 
 export const approvedHash = async (safeAddress: string, transaction: any, dispatch: Dispatch): Promise<Transaction> => {
-  const tli = {} as Transaction
+  let tli = {} as Transaction
   for (const output of transaction.outputs) {
     const receipt = output.receipt
     if (!receipt) continue
@@ -151,38 +152,47 @@ export const approvedHash = async (safeAddress: string, transaction: any, dispat
     })
     const isNativeTransfer = executionInfo.hydraExecution.data === '0x'
     let decoded
-    if (!isNativeTransfer) {
-      const data = executionInfo.hydraExecution.data.slice(0, 2) + executionInfo.hydraExecution.data.slice(10)
-      decoded = decodeMethodWithParams(ERC20, 'transfer', data)
-      const [name, symbol, decimals] = await Promise.all([
-        dispatch(sendWithState(getERC20Name, { erc20Address: executionInfo.hydraExecution.to })),
-        dispatch(sendWithState(getERC20Symbol, { erc20Address: executionInfo.hydraExecution.to })),
-        dispatch(sendWithState(getERC20Decimals, { erc20Address: executionInfo.hydraExecution.to })),
-      ])
-      decoded.decimals = Number(decimals)
-      decoded.name = name
-      decoded.symbol = symbol
+    console.log('before isNativetransfer')
+    const oracle = await dispatch(sendWithState(getGnosisProxyOracle, { safeAddress }))
+
+    const to = logExecutionParams.events.find((e) => e.name === 'to').value
+    console.log('to, oracle', to, oracle)
+    if ('0x' + oracle === to) {
+      tli = await addOwner(tli, logs[0], safeAddress, dispatch)
+      tli.transaction.executionInfo = executionInfo as MultisigExecutionInfo
+      console.log('tli', tli)
+    } else {
+      if (!isNativeTransfer) {
+        const data = executionInfo.hydraExecution.data.slice(0, 2) + executionInfo.hydraExecution.data.slice(10)
+        decoded = decodeMethodWithParams(ERC20, 'transfer', data)
+        const [name, symbol, decimals] = await Promise.all([
+          dispatch(sendWithState(getERC20Name, { erc20Address: executionInfo.hydraExecution.to })),
+          dispatch(sendWithState(getERC20Symbol, { erc20Address: executionInfo.hydraExecution.to })),
+          dispatch(sendWithState(getERC20Decimals, { erc20Address: executionInfo.hydraExecution.to })),
+        ])
+        decoded.decimals = Number(decimals)
+        decoded.name = name
+        decoded.symbol = symbol
+      }
+      tli.transaction.executionInfo = executionInfo as MultisigExecutionInfo
+      tli.transaction.txInfo = {} as Transfer
+      tli.transaction.txInfo.type = 'Transfer'
+      tli.transaction.txInfo.direction = TransferDirection.OUTGOING
+      tli.transaction.txInfo.sender = { value: ownerApproved } as AddressEx
+      tli.transaction.txInfo.recipient = { value: decoded ? decoded.to : executionInfo.hydraExecution.to } as AddressEx
+      const transferInfo = {} as any
+      transferInfo.value = decoded
+        ? decoded.value.toString()
+        : logExecutionParams.events.find((e) => e.name === 'value').value
+      transferInfo.tokenAddress = !isNativeTransfer ? executionInfo.to : undefined
+      transferInfo.decimals = decoded ? decoded.decimals : undefined
+      transferInfo.tokenName = decoded ? decoded.name : undefined
+      transferInfo.tokenSymbol = decoded ? decoded.symbol : undefined
+      transferInfo.type =
+        executionInfo.hydraExecution.data === '0x' ? TransactionTokenType.NATIVE_COIN : TransactionTokenType.ERC20
+      tli.transaction.txInfo.transferInfo = transferInfo as Erc20Transfer | NativeCoinTransfer
     }
-
-    tli.transaction.executionInfo = executionInfo as MultisigExecutionInfo
-    tli.transaction.txInfo = {} as Transfer
-    tli.transaction.txInfo.type = 'Transfer'
-    tli.transaction.txInfo.direction = TransferDirection.OUTGOING
-    tli.transaction.txInfo.sender = { value: ownerApproved } as AddressEx
-    tli.transaction.txInfo.recipient = { value: decoded ? decoded.to : executionInfo.hydraExecution.to } as AddressEx
-    const transferInfo = {} as any
-    transferInfo.value = decoded
-      ? decoded.value.toString()
-      : logExecutionParams.events.find((e) => e.name === 'value').value
-    transferInfo.tokenAddress = !isNativeTransfer ? executionInfo.to : undefined
-    transferInfo.decimals = decoded ? decoded.decimals : undefined
-    transferInfo.tokenName = decoded ? decoded.name : undefined
-    transferInfo.tokenSymbol = decoded ? decoded.symbol : undefined
-    transferInfo.type =
-      executionInfo.hydraExecution.data === '0x' ? TransactionTokenType.NATIVE_COIN : TransactionTokenType.ERC20
-    tli.transaction.txInfo.transferInfo = transferInfo as Erc20Transfer | NativeCoinTransfer
   }
-
   return tli
 }
 
@@ -192,6 +202,8 @@ export const addOwner = async (
   safeAddress: string,
   dispatch: Dispatch,
 ): Promise<Transaction> => {
+  console.log('addowner!!')
+
   const threshold = log.events.find((e) => e.name === '_threshold')?.value
   tli.transaction.txInfo = (tli.transaction.txInfo ?? {}) as SettingsChange
   tli.transaction.txInfo.type = 'SettingsChange'
@@ -241,6 +253,21 @@ export const changeThreshold = (tli: Transaction, logs: any): Transaction => {
   tli.transaction.txInfo.settingsInfo.threshold = threshold
   tli.transaction.txInfo.dataDecoded = (tli.transaction.txInfo.dataDecoded ?? {}) as DataDecoded
   tli.transaction.txInfo.dataDecoded.method = 'changeThreshold'
+  tli.transaction.txInfo.dataDecoded.parameters = (tli.transaction.txInfo.dataDecoded.parameters ?? []) as Parameter[]
+  tli.transaction.txInfo.dataDecoded.parameters = logs.events
+  return tli
+}
+
+export const changeThresholdPercentage = (tli: Transaction, logs: any): Transaction => {
+  const thresholdPercentage = logs.find((e) => e.name === 'ThresholdPercentageChanged')?.events?.[2].value
+  if (!thresholdPercentage) return tli
+  tli.transaction.txInfo = (tli.transaction.txInfo ?? {}) as SettingsChange
+  tli.transaction.txInfo.type = 'SettingsChange'
+  tli.transaction.txInfo.settingsInfo = (tli.transaction.txInfo.settingsInfo ?? {}) as ChangeThreshold
+  tli.transaction.txInfo.settingsInfo.type = SettingsInfoType.CHANGE_THRESHOLD
+  tli.transaction.txInfo.settingsInfo.threshold = thresholdPercentage
+  tli.transaction.txInfo.dataDecoded = (tli.transaction.txInfo.dataDecoded ?? {}) as DataDecoded
+  tli.transaction.txInfo.dataDecoded.method = 'changeThresholdPercentage'
   tli.transaction.txInfo.dataDecoded.parameters = (tli.transaction.txInfo.dataDecoded.parameters ?? []) as Parameter[]
   tli.transaction.txInfo.dataDecoded.parameters = logs.events
   return tli

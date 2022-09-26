@@ -6,7 +6,7 @@ import {
   Operation,
   TransactionTokenType,
 } from '@gnosis.pm/safe-react-gateway-sdk'
-import { useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 
 import { useStyles } from './style'
@@ -152,8 +152,9 @@ const useTxInfo = (transaction: Props['transaction']) => {
         }
       case 'Custom':
         return t.current.txInfo.to.value
-      case 'Creation':
       case 'SettingsChange':
+        return (t.current.executionInfo as unknown as any).to ?? safeAddress
+      case 'Creation':
       default:
         return safeAddress
     }
@@ -202,7 +203,7 @@ export const ApproveTxModal = ({ onClose, isOpen, transaction }: Props): React.R
   const txInfo = useTxInfo(transaction)
 
   const submitDisabled = useSelector(sameAddressAsSafeSelector)
-
+  useEffect(() => {}, [transaction])
   const { executionInfo } = transaction
   const { confirmationsSubmitted = 0, confirmationsRequired = 0 } = isMultisigExecutionInfo(executionInfo)
     ? executionInfo

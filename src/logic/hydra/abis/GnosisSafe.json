@@ -235,20 +235,6 @@
     "constant": false,
     "inputs": [
       {
-        "name": "_threshold",
-        "type": "uint256"
-      }
-    ],
-    "name": "changeThreshold",
-    "outputs": [],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "constant": false,
-    "inputs": [
-      {
         "name": "to",
         "type": "address"
       },
