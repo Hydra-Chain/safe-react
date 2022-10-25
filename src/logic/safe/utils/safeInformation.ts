@@ -7,18 +7,18 @@ import { getSafeInfoEmpty, SafeInfoHydra } from 'src/logic/hydra/utils'
 import {
   getGnosisProxyModules,
   getGnosisProxyNonce,
-  getGnosisProxyOracle,
+  // getGnosisProxyOracle,
   getGnosisProxyOwners,
   getGnosisProxyThreshold,
   getGnosisProxyVersion,
-  getSnapshotOracleThresholdPercentage,
+  // getSnapshotOracleThresholdPercentage,
   sendWithState,
 } from 'src/logic/hydra/contractInteractions/utils'
 import { fetchContractInfo } from 'src/logic/hydra/api/explorer'
 import { Dispatch } from '../store/actions/types'
 import { AppReduxState } from 'src/store'
-import { fetchTransactions } from 'src/logic/hydra/api/explorer'
-import { fetchContractTxHashes } from 'src/logic/hydra/api/explorer'
+// import { fetchTransactions } from 'src/logic/hydra/api/explorer'
+// import { fetchContractTxHashes } from 'src/logic/hydra/api/explorer'
 
 const GATEWAY_ERROR = /1337|42/
 
@@ -30,50 +30,53 @@ export const getSafeInfo = async (
   try {
     if (state) {
     }
-    const [contractInfo, txHashes, modules, nonce, version, owners, threshold, oracle] = await Promise.all([
+    console.log('safeAddress', safeAddress)
+
+    const [contractInfo, modules, nonce, version, owners, threshold] = await Promise.all([
       fetchContractInfo(safeAddress),
-      fetchContractTxHashes(safeAddress, 'limit=10&offset=0'),
+      // fetchContractTxHashes(safeAddress, 'limit=10&offset=0'),
       dispatch(sendWithState(getGnosisProxyModules, { safeAddress })),
       dispatch(sendWithState(getGnosisProxyNonce, { safeAddress })),
       dispatch(sendWithState(getGnosisProxyVersion, { safeAddress })),
       dispatch(sendWithState(getGnosisProxyOwners, { safeAddress })),
       dispatch(sendWithState(getGnosisProxyThreshold, { safeAddress })),
-      dispatch(sendWithState(getGnosisProxyOracle, { safeAddress })),
+      // dispatch(sendWithState(getGnosisProxyOracle, { safeAddress })),
     ])
-    let thresholdPercentage = ''
-    if (oracle) {
-      thresholdPercentage = await dispatch(sendWithState(getSnapshotOracleThresholdPercentage, { oracle }))
-    }
+    // let thresholdPercentage = ''
+    // if (oracle) {
+    //   thresholdPercentage = await dispatch(sendWithState(getSnapshotOracleThresholdPercentage, { oracle }))
+    // }
     console.log(
-      'contractInfo, modules, nonce, version, owners, threshold, oracle',
+      'contractInfo, modules, nonce, version, owners, threshold',
       contractInfo,
       modules,
       nonce,
       version,
       owners,
       threshold,
-      oracle,
-      thresholdPercentage,
+      // oracle,
+      // thresholdPercentage,
     )
+    // console.log('txHashes', txHashes);
 
-    const txs = await fetchTransactions(txHashes.transactions)
-    let unconfirmedTxs = 0
-    txs?.forEach((t) => (!t.confirmations || t.confirmations <= 0) && unconfirmedTxs++)
+    // const txs = await fetchTransactions(txHashes.transactions)
+    // let unconfirmedTxs = 0
+    // txs?.forEach((t) => (!t.confirmations || t.confirmations <= 0) && unconfirmedTxs++)
     const safeInfo = getSafeInfoEmpty()
     safeInfo.address = {} as AddressEx
     safeInfo.address.value = safeAddress
     safeInfo.chainId = _getChainId()
     safeInfo.collectiblesTag = '0'
-    safeInfo.txHistoryTag = contractInfo.transactionCount - unconfirmedTxs + ''
-    safeInfo.txQueuedTag = unconfirmedTxs + ''
+    safeInfo.txHistoryTag = '0'
+    safeInfo.txQueuedTag = '0'
     safeInfo.fallbackHandler.value = '' // get
     safeInfo.guard = null as unknown as AddressEx
     safeInfo.implementation.value = SAFE_SINGLETON_ADDRESS
     safeInfo.threshold = threshold
     safeInfo.nonce = Number(nonce)
     safeInfo.version = version
-    safeInfo.oracle = [{ value: oracle } as AddressEx]
-    safeInfo.thresholdPercentage = Number(thresholdPercentage)
+    // safeInfo.oracle = [{ value: oracle } as AddressEx]
+    // safeInfo.thresholdPercentage = Number(thresholdPercentage)
 
     safeInfo.owners = owners[0].map((o: string) => {
       const addrEx = {} as AddressEx

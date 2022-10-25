@@ -90,11 +90,11 @@ const useSidebarItems = (): ListItemType[] => {
         iconType: 'owners',
         href: currentSafeRoutes.SETTINGS_OWNERS,
       }),
-      makeEntryItem({
-        label: 'Oracle',
-        iconType: 'oracle',
-        href: currentSafeRoutes.SETTINGS_ORACLE,
-      }),
+      // makeEntryItem({
+      //   label: 'Oracle',
+      //   iconType: 'oracle',
+      //   href: currentSafeRoutes.SETTINGS_ORACLE,
+      // }),
       makeEntryItem({
         label: 'Policies',
         iconType: 'requiredConfirmations',

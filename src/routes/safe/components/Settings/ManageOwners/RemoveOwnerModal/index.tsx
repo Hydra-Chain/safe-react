@@ -18,8 +18,8 @@ import { trackEvent } from 'src/utils/googleTagManager'
 import { SETTINGS_EVENTS } from 'src/utils/events/settings'
 import { store } from 'src/store'
 import useSafeAddress from 'src/logic/currentSession/hooks/useSafeAddress'
-import { encodeMethodWithParams, getGnosisProxyOracle, sendWithState } from 'src/logic/hydra/contractInteractions/utils'
-import { SnapshotOracle } from 'src/logic/hydra/abis'
+import { encodeMethodWithParams } from 'src/logic/hydra/contractInteractions/utils'
+import { GnosisSafe } from 'src/logic/hydra/abis'
 // import { Operation } from '@gnosis.pm/safe-apps-sdk'
 
 type OwnerValues = OwnerData & {
@@ -36,24 +36,30 @@ export const sendRemoveOwner = async (
   connectedWalletAddress: string,
   delayExecution: boolean,
 ): Promise<void> => {
-  console.log('[connectedWalletAddress, ownerAddressToRemove]', [connectedWalletAddress, ownerAddressToRemove])
-  const txData = encodeMethodWithParams(SnapshotOracle, 'removeAdmin', [
+  console.log(
+    'connectedWalletAddress, ownerAddressToRemove, values',
+    connectedWalletAddress,
+    ownerAddressToRemove,
+    values,
+  )
+  const txData = encodeMethodWithParams(GnosisSafe, 'removeOwner', [
     connectedWalletAddress,
     '0x' + ownerAddressToRemove,
+    values.threshold,
   ])
   console.log('txData', txData)
   // const sentTx = await dispatch(sendWithState(sendRemoveExistingOwner, { safeAddress, ownerAddress: ownerAddressToRemove, threshold: 1 }))
 
-  const oracleAddress = await dispatch(
-    sendWithState(getGnosisProxyOracle, {
-      safeAddress,
-    }),
-  )
+  // const oracleAddress = await dispatch(
+  //   sendWithState(getGnosisProxyOracle, {
+  //     safeAddress,
+  //   }),
+  // )
   dispatch(
     createTransaction(
       {
         safeAddress,
-        to: oracleAddress,
+        to: safeAddress,
         valueInWei: '0',
         txData,
         txNonce: txParameters.safeNonce,
@@ -61,7 +67,6 @@ export const sendRemoveOwner = async (
         ethParameters: txParameters,
         notifiedTransaction: TX_NOTIFICATION_TYPES.SETTINGS_CHANGE_TX,
         delayExecution,
-        // operation: Operation.DELEGATE
       },
       // undefined,
       // undefined,

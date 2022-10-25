@@ -1,5 +1,5 @@
 import MenuItem from '@material-ui/core/MenuItem'
-import { ReactElement, useEffect, useMemo, useState } from 'react'
+import { ReactElement, useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 
 import Field from 'src/components/forms/Field'
@@ -13,7 +13,7 @@ import Paragraph from 'src/components/layout/Paragraph'
 import Row from 'src/components/layout/Row'
 import { ModalHeader } from 'src/routes/safe/components/Balances/SendModal/screens/ModalHeader'
 import { currentSafeCurrentVersion } from 'src/logic/safe/store/selectors'
-import { getGnosisSafeInstanceAt } from 'src/logic/contracts/safeContracts'
+// import { getGnosisSafeInstanceAt } from 'src/logic/contracts/safeContracts'
 import { createTransaction } from 'src/logic/safe/store/actions/createTransaction'
 import { TX_NOTIFICATION_TYPES } from 'src/logic/safe/transactions'
 import { TxModalWrapper } from 'src/routes/safe/components/Transactions/helpers/TxModalWrapper'
@@ -22,7 +22,8 @@ import { TxParameters } from 'src/routes/safe/container/hooks/useTransactionPara
 import { useStyles } from './style'
 import { trackEvent } from 'src/utils/googleTagManager'
 import { SETTINGS_EVENTS } from 'src/utils/events/settings'
-import { sendChangeThresholdPercentage, sendWithState } from 'src/logic/hydra/contractInteractions/utils'
+import { encodeMethodWithParams } from 'src/logic/hydra/contractInteractions/utils'
+import { GnosisSafe } from 'src/logic/hydra/abis'
 
 const THRESHOLD_FIELD_NAME = 'threshold'
 
@@ -45,28 +46,18 @@ export const ChangeThresholdModal = ({
   const [data, setData] = useState('')
   const [editedThreshold, setEditedThreshold] = useState<number>(threshold)
   const [disabledSubmitForm, setDisabledSubmitForm] = useState<boolean>(true)
-  const [percetageArr, setPercentageArr] = useState<number[]>([])
-
-  useMemo(() => {
-    const arr: number[] = []
-    for (let i = 1; i <= 100; i++) {
-      arr.push(i)
-    }
-    setPercentageArr(arr)
-  }, [])
 
   useEffect(() => {
     let isCurrent = true
     const calculateChangeThresholdData = () => {
-      const safeInstance = getGnosisSafeInstanceAt(safeAddress, safeVersion)
-      const txData = safeInstance.methods.changeThreshold(editedThreshold).encodeABI()
+      // const txData = safeInstance.methods.changeThreshold(editedThreshold).encodeABI()
+      const txData = encodeMethodWithParams(GnosisSafe, 'changeThreshold', [editedThreshold])
       if (isCurrent) {
         setData(txData)
       }
     }
 
     calculateChangeThresholdData()
-
     return () => {
       isCurrent = false
     }
@@ -78,36 +69,19 @@ export const ChangeThresholdModal = ({
     setEditedThreshold(value)
   }
 
-  const handleSubmit = async (txParameters: TxParameters, delayExecution: boolean) => {
-    const changeThreshold = async () => {
-      const tx = dispatch(
-        sendWithState(sendChangeThresholdPercentage, {
-          thresholdPercentage: editedThreshold,
-          safeAddress,
-          gasLimit: '100000',
-        }),
-      )
-      return tx
-    }
-    const sendTx = await changeThreshold()
+  const handleSubmit = (txParameters: TxParameters, delayExecution: boolean) => {
     dispatch(
-      createTransaction(
-        {
-          safeAddress,
-          to: safeAddress,
-          valueInWei: '0',
-          txData: data,
-          txNonce: txParameters.safeNonce,
-          safeTxGas: txParameters.safeTxGas,
-          ethParameters: txParameters,
-          notifiedTransaction: TX_NOTIFICATION_TYPES.SETTINGS_CHANGE_TX,
-          delayExecution,
-        },
-        undefined,
-        undefined,
-        undefined,
-        sendTx,
-      ),
+      createTransaction({
+        safeAddress,
+        to: safeAddress,
+        valueInWei: '0',
+        txData: data,
+        txNonce: txParameters.safeNonce,
+        safeTxGas: txParameters.safeTxGas,
+        ethParameters: txParameters,
+        notifiedTransaction: TX_NOTIFICATION_TYPES.SETTINGS_CHANGE_TX,
+        delayExecution,
+      }),
     )
 
     trackEvent({ ...SETTINGS_EVENTS.THRESHOLD.OWNERS, label: ownersCount })
@@ -134,9 +108,9 @@ export const ChangeThresholdModal = ({
                   onChange={handleThreshold}
                   render={(props) => (
                     <SelectField {...props} disableError>
-                      {percetageArr.map((x, index) => (
-                        <MenuItem key={index} value={`${x}`}>
-                          {x}
+                      {[...Array(Number(ownersCount))].map((x, index) => (
+                        <MenuItem key={index} value={`${index + 1}`}>
+                          {index + 1}
                         </MenuItem>
                       ))}
                     </SelectField>
@@ -146,7 +120,7 @@ export const ChangeThresholdModal = ({
               </Col>
               <Col xs={10}>
                 <Paragraph className={classes.ownersText} color="primary" noMargin size="lg">
-                  {`out of 100 %`}
+                  {`out of ${ownersCount} owner(s)`}
                 </Paragraph>
               </Col>
             </Row>

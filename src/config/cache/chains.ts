@@ -7,7 +7,11 @@ let chains: ChainInfo[] = []
 export const getChains = (): ChainInfo[] => chains
 
 export const loadChains = async () => {
+  console.log('loadChains')
+
   const { results = [] } = await getChainsConfig()
+  console.log('results', results)
+
   results.forEach((chain) => {
     if (chain.chainId === '1') {
       chain.shortName = 'hyd'

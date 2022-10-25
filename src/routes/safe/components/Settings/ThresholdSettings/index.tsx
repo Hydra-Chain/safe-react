@@ -20,11 +20,9 @@ import Track from 'src/components/Track'
 const useStyles = makeStyles(styles)
 
 const ThresholdSettings = (): React.ReactElement => {
-  // const dispatch = useDispatch()
   const classes = useStyles()
   const [isModalOpen, setModalOpen] = useState(false)
-
-  const { address: safeAddress = '', owners, threshold = 1, thresholdPercentage } = useSelector(currentSafe)
+  const { address: safeAddress = '', owners, threshold = 1 } = useSelector(currentSafe)
   const granted = useSelector(grantedSelector)
 
   const toggleModal = () => {
@@ -39,11 +37,7 @@ const ThresholdSettings = (): React.ReactElement => {
         <Paragraph className={classes.ownersText} size="lg">
           <Bold>{threshold}</Bold> out of <Bold>{owners?.length || 0}</Bold> owners
         </Paragraph>
-        <Paragraph>Threshold percentage of current Snapshot Oracle:</Paragraph>
-        <Paragraph className={classes.ownersText} size="lg">
-          <Bold>{thresholdPercentage}</Bold> out of <Bold>100</Bold> %
-        </Paragraph>
-        {owners && granted && (
+        {owners && owners.length > 1 && granted && (
           <Row className={classes.buttonRow}>
             <Track {...SETTINGS_EVENTS.THRESHOLD.CHANGE}>
               <Button
@@ -53,7 +47,7 @@ const ThresholdSettings = (): React.ReactElement => {
                 onClick={toggleModal}
                 variant="contained"
               >
-                Change Percentage
+                Change
               </Button>
             </Track>
           </Row>
