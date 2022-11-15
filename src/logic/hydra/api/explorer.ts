@@ -187,7 +187,6 @@ export async function fetchContractTransactions(address: string, dispatch: Dispa
       ),
       fetchContractTxHashes(SAFE_PROXY_FACTORY_ADDRESS.substring(2)),
     ])
-    console.log('tx history')
 
     const safeAddressHydra = info.address
     const safeAddressHex = info.addressHex
@@ -231,14 +230,13 @@ export async function fetchContractTransactions(address: string, dispatch: Dispa
       })
       if (_tli?.transaction?.txInfo) tlp.results.push(_tli)
     }
-    console.log('before txs')
 
     for (const t of txs) {
       await getTransactionItemList(t, async (tli: Transaction, receipt: any) => {
         const logs = getSafeLogs(receipt.logs as Log[])
-        if (t.id === 'd46fed7fe9dd363c0088e3c93d3777d1405962307654c2c09ee71acf1104216d') {
-          console.log('logs', logs)
-        }
+        // if (t.id === 'd46fed7fe9dd363c0088e3c93d3777d1405962307654c2c09ee71acf1104216d') {
+        //   console.log('logs', logs)
+        // }
         const ht = transferHydra(t, address, safeAddressHydra, receipt, logs, true)
         if (ht) {
           tlp.results.push(ht)
@@ -247,14 +245,13 @@ export async function fetchContractTransactions(address: string, dispatch: Dispa
         if (logs?.length <= 0) return null
         for (const log of logs) {
           // tli.transaction.txInfo = {} as TransactionInfo
-          console.log('log.name', log.name)
           switch (log?.name) {
             case 'Transfer':
               tli = transfer(t, tli, log, address)
               if (tli?.transaction?.txInfo) tlp.results.push(tli)
               break
             case 'AddedOwner':
-              tli = await addOwner(tli, log, address, dispatch)
+              tli = await addOwner(tli, address, dispatch, log)
               if (tli?.transaction?.txInfo) tlp.results.push(tli)
               break
             case 'AddedOracle':
@@ -270,12 +267,11 @@ export async function fetchContractTransactions(address: string, dispatch: Dispa
             //   if (tli?.transaction?.txInfo) tlp.results.push(tli)
             //   break
           }
-          console.log('after log.name')
+          // console.log('after log.name')
         }
         return tli
       })
     }
-    console.log('after txs')
 
     return tlp
   } catch (e) {
@@ -304,10 +300,9 @@ export const fetchQueedTransactionsHydra = async (address: string, dispatch: Dis
   tlp.previous = ''
   for (let i = txs.length - 1; i >= 0; i--) {
     const t = txs[i]
-    // if (t.id === 'e6720edb27fea7c47f3618daec33e067c06586520b0b290a8a4ce3d2a991c94d') {
-    //   console.log('transaction', t)
-    // }
+
     const _tli = await approvedHash(address, t, dispatch)
+
     if (_tli.transaction) {
       const safeTxHash = (_tli as any).transaction.executionInfo.safeTxHash
       const txHash = _tli.transaction.id.split('_')[2]
@@ -354,7 +349,7 @@ export const fetchSafeTransactionDetails = async (
           tli = transfer(_tx, tli, log, safeAddress)
           break
         case 'AddedOwner':
-          tli = await addOwner(tli, log, safeAddress, dispatch)
+          tli = await addOwner(tli, safeAddress, dispatch, log)
           break
         case 'AddedOracle':
           tli = addOracle(tli, log, safeAddress)
@@ -369,6 +364,9 @@ export const fetchSafeTransactionDetails = async (
           tli = changeThresholdPercentage(tli, logs)
           break
       }
+    }
+    if (tx.id === '4606b24e40798a86e10c88d9e788fd4f35cf2f8a98657669e429f60533a4ee71') {
+      console.log('tli', tli)
     }
     return tli
   })

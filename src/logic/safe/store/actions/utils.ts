@@ -72,7 +72,7 @@ export const canExecuteCreatedTx = async (
  * @param {SafeInfo} remoteSafeInfo
  * @returns Promise<Partial<SafeRecordProps>>
  */
-export const extractRemoteSafeInfo = async (remoteSafeInfo: SafeInfo): Promise<Partial<SafeRecordProps>> => {
+export const extractRemoteSafeInfo = async (remoteSafeInfo: SafeInfoHydra): Promise<Partial<SafeRecordProps>> => {
   const safeInfo: Partial<SafeRecordProps> = {
     modules: undefined,
     spendingLimits: undefined,

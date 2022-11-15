@@ -30,6 +30,10 @@ export const setCurrentTxWaitingExecutionDetails = (value?: TransactionDetails) 
   currentTxWaitingExecutionDetails = value
 }
 
+export const decodeMethod = (txData: string) => {
+  return abiDecoder.decodeMethod(txData)
+}
+
 export const getSafeLogs = (logs: Log[]): any => {
   const _logs = [...logs]
   for (let i = 0; i < logs.length; i++) {
