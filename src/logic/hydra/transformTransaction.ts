@@ -234,10 +234,11 @@ export const transferHydra = (
 
   const isSentHydra =
     t.contractSpends?.length > 0 &&
-    receipt.logs.length === 1 &&
-    logsDecoded[0].name === 'ExecutionSuccess' &&
+    !logsDecoded[1]?.events?.find((e) => e.name === 'data')?.value &&
+    logsDecoded[0]?.name === 'ExecutionSuccess' &&
     receipt.excepted === 'None' &&
     !t.qrc20TokenTransfers
+
   if (!isSentHydra && !isReceiveHydra) return
 
   const tli = {} as Transaction
@@ -250,12 +251,10 @@ export const transferHydra = (
   tli.transaction.txInfo = (tli.transaction.txInfo ?? {}) as Transfer
   tli.transaction.txInfo.type = 'Transfer'
   tli.transaction.txInfo.sender = {
-    value: hydraToHexAddress(isSentHydra ? safeAddrHydra : t.outputs.find((o) => o.address !== safeAddrHydra).address),
+    value: hydraToHexAddress(isSentHydra ? safeAddrHydra : receipt.sender),
   } as AddressEx
   tli.transaction.txInfo.recipient = {
-    value: hydraToHexAddress(
-      isReceiveHydra ? safeAddrHydra : t.outputs.find((o) => o.address !== safeAddrHydra).address,
-    ),
+    value: hydraToHexAddress(isReceiveHydra ? safeAddrHydra : logsDecoded[1].events.find((e) => e.name === 'to').value),
   } as AddressEx
   tli.transaction.txInfo.direction = isReceiveHydra ? TransferDirection.INCOMING : TransferDirection.OUTGOING
   tli.transaction.txInfo.transferInfo = (tli.transaction.txInfo.transferInfo ?? {
@@ -367,18 +366,18 @@ export const approvedHash = async (safeAddress: string, transaction: any, dispat
       }
       executionInfo[e.name] = e.value
     })
-    const isNativeTransfer = executionInfo.hydraExecution.data === '0x'
+    const isNativeTransfer = !executionInfo.hydraExecution.data || executionInfo.hydraExecution.data === '0x'
     let decoded
-    console.log('before isNativetransfer')
+    console.log('before isNativetransfer', isNativeTransfer)
     console.log(' quee logs', logs)
     const data = logExecutionParams.events.find((e) => e.name === 'data').value
-    const dataDecoded = decodeMethod(data)
+    const dataDecoded = decodeMethod(data ?? '0x')
     console.log('dataDecoded', dataDecoded)
 
     // const oracle = await dispatch(sendWithState(getGnosisProxyOracle, { safeAddress }))
     // const to = logExecutionParams.events.find((e) => e.name === 'to').value
     // console.log('to, oracle', to, oracle)
-    switch (dataDecoded.name) {
+    switch (dataDecoded?.name) {
       case 'addOwnerWithThreshold':
         tli = await addOwner(tli, safeAddress, dispatch, undefined, dataDecoded.params)
         tli.transaction.executionInfo = executionInfo as MultisigExecutionInfo

@@ -218,6 +218,10 @@ export class TxSender {
       ? getExecutionTransaction(txArgs)
       : getApprovalTransaction(this.safeInstance, safeTxHash, txArgs)
     const sendParams = createSendParams(from, txProps.ethParameters || {})
+    console.log('oracle', oracle)
+    console.log('isFinalization', isFinalization)
+    console.log('tx', tx)
+
     const tx0 =
       sentTx ??
       (oracle

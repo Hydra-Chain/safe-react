@@ -44,7 +44,7 @@ export const sendWithState =
 const _getSdkAccount = (state: AppReduxState) => {
   return {
     sdk: state.providers.hydraSDK,
-    address: state.providers.account,
+    address: state.providers.account?.substring(2),
   }
 }
 
@@ -78,7 +78,6 @@ export const getGnosisProxyModules = async (
   const { sdk, address } = _getSdkAccount(state)
   const resp = await contractCall(getContract(sdk, safeAddress, GnosisSafe), 'getModules', [], address)
   const result = getCallResult(resp)
-
   return result.value
 }
 
@@ -358,8 +357,6 @@ export const safeGnosisSendAsset = async (
       sendParams.gas,
       address,
     ])
-    console.log('result send', result)
-
     return result
   } catch (e) {
     throw new Error(e)

@@ -301,9 +301,9 @@ export const fetchQueedTransactionsHydra = async (address: string, dispatch: Dis
   if (txs) {
     for (let i = txs.length - 1; i >= 0; i--) {
       const t = txs[i]
-      if (t.id === 'e6720edb27fea7c47f3618daec33e067c06586520b0b290a8a4ce3d2a991c94d') {
-        console.log('transaction', t)
-      }
+      // if (t.id === 'ecc34967ff63d13613c5dbbd31887fb79110b7f8207e6d3acbcb72167bc4da39') {
+      //   console.log('transaction', t)
+      // }
       const _tli = await approvedHash(address, t, dispatch)
       if (_tli.transaction) {
         const safeTxHash = (_tli as any).transaction.executionInfo.safeTxHash
@@ -342,6 +342,10 @@ export const fetchSafeTransactionDetails = async (
     const _receipt = Object.assign({}, receipt)
     const logs = getSafeLogs(receipt.logs as Log[])
     const ht = transferHydra(_tx, safeAddress, safeAddressHydra, _receipt, logs, true)
+    // if (tx.id === 'c64e9657afbb5a663c14d0a883dd0b4aa2ff92f7382d477d4d2cf0cf2cd225c5') {
+    //   console.log('ht', ht);
+
+    // }
     if (ht) return ht
     tli.transaction.txStatus === TransactionStatus.FAILED
     if (logs?.length <= 0) return null
@@ -367,7 +371,7 @@ export const fetchSafeTransactionDetails = async (
           tli = await approvedHash(safeAddress, _tx, dispatch)
           break
         case 'ExecutionFailure':
-          tli = await executionFailure(tli, logs)
+          tli = executionFailure(tli, logs)
           break
         // case 'ThresholdPercentageChanged':
         //   tli = changeThresholdPercentage(tli, logs)
@@ -389,14 +393,7 @@ export const fetchSafeTransactionDetails = async (
   _transactionDetails.txData = {} as TransactionData
   _transactionDetails.txData.to = { value: 'unknown' } as AddressEx
   _transactionDetails.executedAt = tx.timestamp * 1000
-  _transactionDetails.txData.hexData =
-    (_tli?.transaction?.executionInfo as any)?.hydraExecution?.data ??
-    tx?.outputs
-      .map((output) => {
-        if (!output.receipt) return undefined
-        return '0x' + output.scriptPubKey.hex
-      })
-      .filter((o) => o)[0]
+  _transactionDetails.txData.hexData = (_tli?.transaction?.executionInfo as any)?.hydraExecution?.data
 
   return _transactionDetails
 }
