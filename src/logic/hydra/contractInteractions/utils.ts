@@ -44,7 +44,7 @@ export const sendWithState =
 const _getSdkAccount = (state: AppReduxState) => {
   return {
     sdk: state.providers.hydraSDK,
-    address: state.providers.account,
+    address: state.providers.account?.substring(2),
   }
 }
 

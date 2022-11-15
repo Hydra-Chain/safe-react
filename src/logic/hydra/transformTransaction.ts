@@ -329,10 +329,11 @@ export const transferHydra = (
 
   const isSentHydra =
     t.contractSpends?.length > 0 &&
-    receipt.logs.length === 1 &&
-    logsDecoded[0].name === 'ExecutionSuccess' &&
-    receipt.excepted === 'None' &&
+    !logsDecoded[1]?.events?.find((e) => e?.name === 'data')?.value &&
+    logsDecoded[0]?.name === 'ExecutionSuccess' &&
+    receipt?.excepted === 'None' &&
     !t.qrc20TokenTransfers
+
   if (!isSentHydra && !isReceiveHydra) return
 
   const tli = {} as Transaction
@@ -345,7 +346,7 @@ export const transferHydra = (
   tli.transaction.txInfo = (tli.transaction.txInfo ?? {}) as Transfer
   tli.transaction.txInfo.type = 'Transfer'
   tli.transaction.txInfo.sender = {
-    value: hydraToHexAddress(isSentHydra ? safeAddrHydra : t.outputs.find((o) => o.address !== safeAddrHydra).address),
+    value: hydraToHexAddress(isSentHydra ? safeAddrHydra : receipt.sender),
   } as AddressEx
   tli.transaction.txInfo.recipient = {
     value: hydraToHexAddress(
@@ -353,6 +354,7 @@ export const transferHydra = (
     ),
   } as AddressEx
   tli.transaction.txInfo.direction = isReceiveHydra ? TransferDirection.INCOMING : TransferDirection.OUTGOING
+
   tli.transaction.txInfo.transferInfo = (tli.transaction.txInfo.transferInfo ?? {
     type: TransactionTokenType.NATIVE_COIN,
     value: isReceiveHydra

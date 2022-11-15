@@ -87,7 +87,10 @@ export const AddOwnerModal = ({ isOpen, onClose }: Props): React.ReactElement =>
   useEffect(
     () => () => {
       const getNewThreshold = async () => {
-        const threshold = await dispatch(sendWithState(getSnapshotOracleAdminsByPercentage, { safeAddress }))
+        let threshold
+        try {
+          threshold = await dispatch(sendWithState(getSnapshotOracleAdminsByPercentage, { safeAddress }))
+        } catch (e) {}
         setActiveScreen('selectOwner')
         setValues({ ownerName: '', ownerAddress: '', threshold: threshold as unknown as string })
       }

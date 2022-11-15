@@ -41,7 +41,8 @@ export const getSafeInfo = async (
       dispatch(sendWithState(getGnosisProxyOracle, { safeAddress })),
     ])
     let thresholdPercentage = ''
-    if (oracle) {
+
+    if (oracle && oracle !== '0000000000000000000000000000000000000000') {
       thresholdPercentage = await dispatch(sendWithState(getSnapshotOracleThresholdPercentage, { oracle }))
     }
     console.log(

@@ -187,19 +187,25 @@ export async function fetchContractTransactions(address: string, dispatch: Dispa
       ),
       fetchContractTxHashes(SAFE_PROXY_FACTORY_ADDRESS.substring(2)),
     ])
+    console.log('tx history')
+
     const safeAddressHydra = info.address
     const safeAddressHex = info.addressHex
-    const [oracle, txs, txsFactory] = await Promise.all([
+    const [oracle, txs = [], txsFactory = []] = await Promise.all([
       dispatch(sendWithState(getGnosisProxyOracle, { safeAddress: safeAddressHex })),
       fetchTransactions((await respTxHashes.json()).transactions),
       fetchTransactions(factoryTxs.transactions),
     ])
-    const oracleTxHashes = await fetchContractTxHashes(oracle)
-    const oracleTxs = await fetchTransactions(oracleTxHashes.transactions)
+    let oracleTxs = []
+    if (oracle && oracle !== '0000000000000000000000000000000000000000') {
+      const oracleTxHashes = await fetchContractTxHashes(oracle)
+      oracleTxs = await fetchTransactions(oracleTxHashes.transactions)
+    }
     const tlp = getTransactionListPageEmpty()
     tlp.next = ''
     tlp.previous = ''
     let isCreationFound = false
+
     for (const t of txsFactory) {
       if (isCreationFound) continue
       const _tli = await getTransactionItemList(t, (tli: Transaction, receipt: any) => {
@@ -218,7 +224,6 @@ export async function fetchContractTransactions(address: string, dispatch: Dispa
       })
       if (_tli?.transaction?.txInfo) tlp.results.push(_tli)
     }
-
     for (const t of oracleTxs) {
       const _tli = await getTransactionItemList(t, (tli: Transaction, receipt: any) => {
         const logs = getSafeLogs(receipt.logs as Log[])
@@ -226,11 +231,12 @@ export async function fetchContractTransactions(address: string, dispatch: Dispa
       })
       if (_tli?.transaction?.txInfo) tlp.results.push(_tli)
     }
+    console.log('before txs')
 
     for (const t of txs) {
       await getTransactionItemList(t, async (tli: Transaction, receipt: any) => {
         const logs = getSafeLogs(receipt.logs as Log[])
-        if (t.id === 'e23e1e5c81b9154604be4b12df45d1d8128cb4932d9aba79b23b1a757a631138') {
+        if (t.id === 'd46fed7fe9dd363c0088e3c93d3777d1405962307654c2c09ee71acf1104216d') {
           console.log('logs', logs)
         }
         const ht = transferHydra(t, address, safeAddressHydra, receipt, logs, true)
@@ -241,7 +247,8 @@ export async function fetchContractTransactions(address: string, dispatch: Dispa
         if (logs?.length <= 0) return null
         for (const log of logs) {
           // tli.transaction.txInfo = {} as TransactionInfo
-          switch (log.name) {
+          console.log('log.name', log.name)
+          switch (log?.name) {
             case 'Transfer':
               tli = transfer(t, tli, log, address)
               if (tli?.transaction?.txInfo) tlp.results.push(tli)
@@ -263,10 +270,13 @@ export async function fetchContractTransactions(address: string, dispatch: Dispa
             //   if (tli?.transaction?.txInfo) tlp.results.push(tli)
             //   break
           }
+          console.log('after log.name')
         }
         return tli
       })
     }
+    console.log('after txs')
+
     return tlp
   } catch (e) {
     throw e
@@ -294,9 +304,9 @@ export const fetchQueedTransactionsHydra = async (address: string, dispatch: Dis
   tlp.previous = ''
   for (let i = txs.length - 1; i >= 0; i--) {
     const t = txs[i]
-    if (t.id === 'e6720edb27fea7c47f3618daec33e067c06586520b0b290a8a4ce3d2a991c94d') {
-      console.log('transaction', t)
-    }
+    // if (t.id === 'e6720edb27fea7c47f3618daec33e067c06586520b0b290a8a4ce3d2a991c94d') {
+    //   console.log('transaction', t)
+    // }
     const _tli = await approvedHash(address, t, dispatch)
     if (_tli.transaction) {
       const safeTxHash = (_tli as any).transaction.executionInfo.safeTxHash
@@ -375,14 +385,7 @@ export const fetchSafeTransactionDetails = async (
   _transactionDetails.txData = {} as TransactionData
   _transactionDetails.txData.to = { value: 'unknown' } as AddressEx
   _transactionDetails.executedAt = tx.timestamp * 1000
-  _transactionDetails.txData.hexData =
-    (_tli?.transaction?.executionInfo as any)?.hydraExecution?.data ??
-    tx?.outputs
-      .map((output) => {
-        if (!output.receipt) return undefined
-        return '0x' + output.scriptPubKey.hex
-      })
-      .filter((o) => o)[0]
+  _transactionDetails.txData.hexData = (_tli?.transaction?.executionInfo as any)?.hydraExecution?.data
 
   return _transactionDetails
 }
