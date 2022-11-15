@@ -368,12 +368,8 @@ export const approvedHash = async (safeAddress: string, transaction: any, dispat
     })
     const isNativeTransfer = !executionInfo.hydraExecution.data || executionInfo.hydraExecution.data === '0x'
     let decoded
-    console.log('before isNativetransfer', isNativeTransfer)
-    console.log(' quee logs', logs)
     const data = logExecutionParams.events.find((e) => e.name === 'data').value
     const dataDecoded = decodeMethod(data ?? '0x')
-    console.log('dataDecoded', dataDecoded)
-
     // const oracle = await dispatch(sendWithState(getGnosisProxyOracle, { safeAddress }))
     // const to = logExecutionParams.events.find((e) => e.name === 'to').value
     // console.log('to, oracle', to, oracle)
@@ -417,7 +413,7 @@ export const approvedHash = async (safeAddress: string, transaction: any, dispat
         transferInfo.decimals = decoded.decimals
         transferInfo.tokenName = decoded.name
         transferInfo.tokenSymbol = decoded.symbol
-        transferInfo.type = executionInfo.hydraExecution.data === TransactionTokenType.ERC20
+        transferInfo.type = TransactionTokenType.ERC20
         tli.transaction.txInfo.transferInfo = transferInfo as Erc20Transfer
         break
       default:
