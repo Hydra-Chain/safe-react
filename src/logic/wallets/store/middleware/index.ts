@@ -1,6 +1,6 @@
 import { Dispatch } from 'redux'
 import { Action } from 'redux-actions'
-import WalletConnectProvider from '@walletconnect/web3-provider'
+// import WalletConnectProvider from '@walletconnect/web3-provider'
 
 import { store as reduxStore } from 'src/store'
 import { enhanceSnackbarForAction, NOTIFICATIONS } from 'src/logic/notifications'
@@ -11,10 +11,12 @@ import { providerSelector } from '../selectors'
 import { trackEvent } from 'src/utils/googleTagManager'
 import { WALLET_EVENTS } from 'src/utils/events/wallet'
 import { instantiateSafeContracts } from 'src/logic/contracts/safeContracts'
-import { resetWeb3, setWeb3 } from 'src/logic/wallets/getWeb3'
-import onboard, { removeLastUsedProvider, saveLastUsedProvider } from 'src/logic/wallets/onboard'
-import { checksumAddress } from 'src/utils/checksumAddress'
-import { shouldSwitchNetwork } from 'src/logic/wallets/utils/network'
+// import { resetWeb3, setWeb3 } from 'src/logic/wallets/getWeb3'
+// import onboard, { removeLastUsedProvider, saveLastUsedProvider } from 'src/logic/wallets/onboard'
+import { removeLastUsedProvider, saveLastUsedProvider } from 'src/logic/wallets/onboard'
+// import { checksumAddress } from 'src/utils/checksumAddress'
+// import { shouldSwitchNetwork } from 'src/logic/wallets/utils/network'
+// import { useSelector } from 'react-redux'
 
 const UNKNOWN_PEER = 'Unknown'
 
@@ -40,7 +42,7 @@ const providerMiddleware =
 
     // No wallet is connected via onboard, reset provider
     if (!name && !account && !network) {
-      resetWeb3()
+      // resetWeb3()
       removeLastUsedProvider()
     }
 
@@ -61,26 +63,26 @@ const providerMiddleware =
       return handledAction
     }
 
-    const { wallet, address } = onboard().getState()
-
-    if (name === wallet.name) {
-      saveLastUsedProvider(name)
-    }
+    // const { wallet, address } = onboard().getState()
+    // if (name === wallet.name) {
+    //   saveLastUsedProvider(name)
+    // }
 
     // Instantiate web3/contract
-    if (wallet.provider) {
-      setWeb3(wallet.provider)
+    if (account && name) {
+      saveLastUsedProvider(name)
+      // setWeb3(wallet.provider)
       instantiateSafeContracts()
     }
 
     // Only track when store/UI is in sync with onboard
-    if (account === checksumAddress(address) && !shouldSwitchNetwork(wallet)) {
+    if (account) {
       trackEvent({ ...WALLET_EVENTS.CONNECT, label: name })
       // Track WalletConnect peer wallet
       if (name.toUpperCase() === 'WALLETCONNECT') {
         trackEvent({
           ...WALLET_EVENTS.WALLET_CONNECT,
-          label: (wallet.provider as InstanceType<typeof WalletConnectProvider>)?.wc?.peerMeta?.name || UNKNOWN_PEER,
+          label: UNKNOWN_PEER,
         })
       }
     }

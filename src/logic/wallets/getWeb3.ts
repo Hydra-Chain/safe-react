@@ -10,15 +10,15 @@ import { FEATURES } from '@gnosis.pm/safe-react-gateway-sdk'
 import memoize from 'lodash/memoize'
 
 import { ZERO_ADDRESS } from './ethAddresses'
-import { EMPTY_DATA } from './ethTransactions'
 import { getRpcServiceUrl, _getChainId } from 'src/config'
 import { CHAIN_ID, ChainId } from 'src/config/chain.d'
 import { isValidCryptoDomainName } from 'src/logic/wallets/ethAddresses'
 import { getAddressFromUnstoppableDomain } from './utils/unstoppableDomains'
 import { hasFeature } from 'src/logic/safe/utils/safeVersion'
-import { checksumAddress } from 'src/utils/checksumAddress'
-import { isValidAddress } from 'src/utils/isValidAddress'
+import { isValidAddressHydra } from 'src/utils/isValidAddress'
 import { Wallet } from 'bnc-onboard/dist/src/interfaces'
+import { hydraToHexAddress } from '../hydra/utils'
+import { fetchContractInfo } from '../hydra/api/explorer'
 
 // This providers have direct relation with name assigned in bnc-onboard configuration
 export enum WALLET_PROVIDER {
@@ -87,15 +87,20 @@ export const isHardwareWallet = (wallet: Wallet): boolean => {
 }
 
 export const isSmartContract = async (account: string, chainId: ChainId): Promise<boolean> => {
-  let contractCode = ''
+  if (chainId) {
+  }
+  let contractInfo: any
+  // let contractCode = ''
   try {
-    contractCode = await getWeb3ReadOnly(chainId).eth.getCode(account)
+    contractInfo = await fetchContractInfo(hydraToHexAddress(account))
+    // contractCode = await getWeb3ReadOnly(chainId).eth.getCode(account)
   } catch (e) {
     console.log('e', e)
     // ignore
   }
 
-  return !!contractCode && contractCode.replace(EMPTY_DATA, '').replace(/0/g, '') !== ''
+  return contractInfo ? true : false
+  // return !!contractCode && contractCode.replace(EMPTY_DATA, '').replace(/0/g, '') !== ''
 }
 
 const memoizedIsSmartContract = memoize(
@@ -115,7 +120,7 @@ export const getAddressFromDomain = (name: string): Promise<string> => {
 }
 
 export const reverseENSLookup = async (address: string): Promise<string> => {
-  if (!address || !hasFeature(FEATURES.DOMAIN_LOOKUP) || !isValidAddress(address)) {
+  if (!address || !hasFeature(FEATURES.DOMAIN_LOOKUP) || !isValidAddressHydra(address)) {
     return ''
   }
 
@@ -139,7 +144,7 @@ export const reverseENSLookup = async (address: string): Promise<string> => {
     return ''
   }
 
-  return checksumAddress(verifiedAddress) === checksumAddress(address) ? name : ''
+  return verifiedAddress === address ? name : ''
 }
 
 export const getContentFromENS = (name: string): Promise<ContentHash> => web3.eth.ens.getContenthash(name)
@@ -168,7 +173,7 @@ export const getSafeSDK = async (signerAddress: string, safeAddress: string, saf
   const ethAdapter = getSDKWeb3Adapter(signerAddress)
 
   let isL1SafeMasterCopy: boolean
-  if (semverSatisfies(safeVersion, '<1.3.0')) {
+  if (semverSatisfies(safeVersion, '<1.1.1')) {
     isL1SafeMasterCopy = true
   } else {
     isL1SafeMasterCopy = networkId === CHAIN_ID.ETHEREUM

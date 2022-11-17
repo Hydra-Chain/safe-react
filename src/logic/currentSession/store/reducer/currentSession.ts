@@ -14,6 +14,7 @@ const MAX_VIEWED_SAFES = 10
 export type CurrentSessionState = {
   viewedSafes: string[]
   currentSafeAddress: string
+  currentSafeAddressHydra: string
   currentShortName: string
   restored: boolean
 }
@@ -21,6 +22,7 @@ export type CurrentSessionState = {
 export const initialState = {
   viewedSafes: [],
   currentSafeAddress: '',
+  currentSafeAddressHydra: '',
   currentShortName: '',
   restored: false,
 }
@@ -78,6 +80,15 @@ const currentSessionReducer = handleActions<CurrentSessionState, CurrentSessionP
 
       return newState
     },
+    // [ADD_CURRENT_SAFE_ADDRESS_HYDRA]: (state, action: Action<string>) => {
+    //   const safeAddressHydra = action.payload
+    //   const newState = {
+    //     ...state,
+    //     currentSafeAddressHydra: safeAddressHydra,
+    //   }
+
+    //   return newState
+    // },
   },
   initialState,
 )

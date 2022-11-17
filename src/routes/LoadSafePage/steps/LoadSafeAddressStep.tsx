@@ -1,5 +1,5 @@
 import { ReactElement, useState, useEffect } from 'react'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { useField, useForm } from 'react-final-form'
 import styled from 'styled-components'
 import CheckCircle from '@material-ui/icons/CheckCircle'
@@ -12,8 +12,6 @@ import Field from 'src/components/forms/Field'
 import TextField from 'src/components/forms/TextField'
 import AddressInput from 'src/components/forms/AddressInput'
 import { ScanQRWrapper } from 'src/components/ScanQRModal/ScanQRWrapper'
-import { isValidAddress } from 'src/utils/isValidAddress'
-import { isChecksumAddress } from 'src/utils/checksumAddress'
 import { getSafeInfo } from 'src/logic/safe/utils/safeInformation'
 import { lg, secondary, md } from 'src/theme/variables'
 import { AddressBookEntry, makeAddressBookEntry } from 'src/logic/addressBook/model/addressBook'
@@ -30,9 +28,10 @@ import {
 import NetworkLabel from 'src/components/NetworkLabel/NetworkLabel'
 import { getLoadSafeName } from '../fields/utils'
 import { currentChainId } from 'src/logic/config/store/selectors'
-import { reverseENSLookup } from 'src/logic/wallets/getWeb3'
 import { trackEvent } from 'src/utils/googleTagManager'
 import { LOAD_SAFE_EVENTS } from 'src/utils/events/createLoadSafe'
+import { providerHydraSdkSelector, userAccountSelector } from 'src/logic/wallets/store/selectors'
+import { Dispatch } from 'src/logic/safe/store/actions/types'
 
 export const loadSafeAddressStepLabel = 'Name and address'
 
@@ -46,6 +45,9 @@ function LoadSafeAddressStep(): ReactElement {
 
   const loadSafeForm = useForm()
   const addressBook = useSelector(currentNetworkAddressBookAsMap)
+  const addressHydra = useSelector(userAccountSelector)
+  const hydraSdk = useSelector(providerHydraSdkSelector)
+  const dispatch = useDispatch<Dispatch>()
 
   const {
     input: { value: safeAddress },
@@ -60,14 +62,14 @@ function LoadSafeAddressStep(): ReactElement {
 
   useEffect(() => {
     const checkSafeAddress = async () => {
-      const isValidSafeAddress = isValidAddress(safeAddress) && isChecksumAddress(safeAddress)
+      const isValidSafeAddress =
+        safeAddress && hydraSdk.utils.isHydraAddress(hydraSdk.decoder.toHydraAddress(safeAddress))
       if (!isValidSafeAddress) {
         return
       }
-
       setIsSafeInfoLoading(true)
       try {
-        const { owners, threshold } = await getSafeInfo(safeAddress)
+        const { owners, threshold } = await getSafeInfo(safeAddress, dispatch)
         setIsSafeInfoLoading(false)
         const ownersWithName = owners.map(({ value: address }) => {
           return makeAddressBookEntry(addressBook[address] || { address, name: '', chainId })
@@ -75,7 +77,7 @@ function LoadSafeAddressStep(): ReactElement {
 
         const ownersWithENSName = await Promise.all(
           owners.map(async ({ value: address }) => {
-            const ensName = await reverseENSLookup(address)
+            const ensName = hydraSdk.decoder.toHydraAddress(address)
             return makeAddressBookEntry({ address, name: ensName, chainId })
           }),
         )
@@ -86,7 +88,6 @@ function LoadSafeAddressStep(): ReactElement {
             [address]: name,
           }
         }, {})
-
         setOwnersWithName(ownersWithName)
         setOwnersWithENSName(ownersWithENSNameRecord)
         setThreshold(threshold)
@@ -100,7 +101,7 @@ function LoadSafeAddressStep(): ReactElement {
     }
 
     checkSafeAddress()
-  }, [safeAddress, addressBook, chainId])
+  }, [safeAddress, addressBook, chainId, hydraSdk, addressHydra, dispatch])
 
   useEffect(() => {
     if (threshold) {
@@ -249,7 +250,7 @@ export const loadSafeAddressStepValidations = (values: {
 
   // check that the address is actually a Safe (must have owners)
   const ownerList = values[FIELD_SAFE_OWNER_LIST]
-  const isValidSafeAddress = ownerList.length > 0 && isValidAddress(safeAddress)
+  const isValidSafeAddress = ownerList.length > 0
   if (!isValidSafeAddress) {
     errors = {
       ...errors,

@@ -1,6 +1,10 @@
+import { TokenType } from '@gnosis.pm/safe-apps-sdk'
 import { getBalances, SafeBalanceResponse, TokenInfo } from '@gnosis.pm/safe-react-gateway-sdk'
 import { _getChainId } from 'src/config'
-import { checksumAddress } from 'src/utils/checksumAddress'
+import { fetchAddressInfo, fetchBalances, fetchHydraPrice } from 'src/logic/hydra/api/explorer'
+import { hydraFromHexAddress } from 'src/logic/hydra/utils'
+import { ZERO_ADDRESS } from 'src/logic/wallets/ethAddresses'
+// import { checksumAddress } from 'src/utils/checksumAddress'
 
 export type TokenBalance = {
   tokenInfo: TokenInfo
@@ -22,9 +26,10 @@ export const fetchTokenCurrenciesBalances = async ({
   excludeSpamTokens = true,
   trustedTokens = false,
 }: FetchTokenCurrenciesBalancesProps): Promise<SafeBalanceResponse> => {
-  const address = checksumAddress(safeAddress)
-  return getBalances(_getChainId(), address, selectedCurrency, {
-    exclude_spam: excludeSpamTokens,
-    trusted: trustedTokens,
-  })
+  const address = safeAddress
+  return fetchBalances(address)
+  // return getBalances(_getChainId(), address, selectedCurrency, {
+  //   exclude_spam: excludeSpamTokens,
+  //   trusted: trustedTokens,
+  // })
 }

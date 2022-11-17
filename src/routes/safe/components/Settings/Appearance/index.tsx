@@ -8,8 +8,9 @@ import styled from 'styled-components'
 import { lg } from 'src/theme/variables'
 import Heading from 'src/components/layout/Heading'
 import Paragraph from 'src/components/layout/Paragraph'
-import { copyShortNameSelector, showShortNameSelector } from 'src/logic/appearance/selectors'
-import { useDispatch, useSelector } from 'react-redux'
+// import { copyShortNameSelector, showShortNameSelector } from 'src/logic/appearance/selectors'
+// import { useDispatch, useSelector } from 'react-redux'
+import { useDispatch } from 'react-redux'
 import { setShowShortName } from 'src/logic/appearance/actions/setShowShortName'
 import { setCopyShortName } from 'src/logic/appearance/actions/setCopyShortName'
 import PrefixedEthHashInfo from 'src/components/PrefixedEthHashInfo'
@@ -30,13 +31,15 @@ const StyledPrefixedEthHashInfo = styled(PrefixedEthHashInfo)`
 
 const Appearance = (): ReactElement => {
   const dispatch = useDispatch()
-  const copyShortName = useSelector(copyShortNameSelector)
-  const showShortName = useSelector(showShortNameSelector)
+  // const copyShortName = useSelector(copyShortNameSelector)
+  const copyShortName = false
+  // const showShortName = useSelector(showShortNameSelector)
+  const showShortName = false
   const { safeAddress } = useSafeAddress()
   const [darkMode, setDarkMode] = useDarkMode()
 
   const handleShowChange = (_: ChangeEvent<HTMLInputElement>, checked: boolean) => {
-    dispatch(setShowShortName({ showShortName: checked }))
+    dispatch(setShowShortName({ showShortName: false }))
 
     trackEvent({
       ...SETTINGS_EVENTS.APPEARANCE.PREPEND_PREFIXES,
@@ -44,7 +47,7 @@ const Appearance = (): ReactElement => {
     })
   }
   const handleCopyChange = (_: ChangeEvent<HTMLInputElement>, checked: boolean) => {
-    dispatch(setCopyShortName({ copyShortName: checked }))
+    dispatch(setCopyShortName({ copyShortName: false }))
 
     trackEvent({
       ...SETTINGS_EVENTS.APPEARANCE.COPY_PREFIXES,

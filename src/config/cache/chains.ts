@@ -8,6 +8,11 @@ export const getChains = (): ChainInfo[] => chains
 
 export const loadChains = async () => {
   const { results = [] } = await getChainsConfig()
+  results.forEach((chain) => {
+    if (chain.chainId === '1') {
+      chain.shortName = 'hyd'
+    }
+  })
   chains = results
   // Set the initail web3 provider after loading chains
   setWeb3ReadOnly()

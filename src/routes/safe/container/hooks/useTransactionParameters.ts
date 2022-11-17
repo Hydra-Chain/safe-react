@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { toWei } from 'web3-utils'
 
 import { getUserNonce } from 'src/logic/wallets/ethTransactions'
@@ -42,7 +42,6 @@ type Props = {
 export const useTransactionParameters = (props?: Props): TxParameters => {
   const connectedWalletAddress = useSelector(userAccountSelector)
   const { safeAddress } = useSafeAddress()
-
   // Safe Params
   const [safeNonce, setSafeNonce] = useState<string | undefined>(props?.initialSafeNonce)
   // SafeTxGas: for a new Tx call requiredTxGas, for an existing tx get it from the backend.
@@ -55,7 +54,7 @@ export const useTransactionParameters = (props?: Props): TxParameters => {
   const [ethGasPriceInGWei, setEthGasPriceInGWei] = useState<string>() // get fast gas price
   const [ethMaxPrioFee, setEthMaxPrioFee] = useState<string>() // get max prio fee
   const [ethMaxPrioFeeInGWei, setEthMaxPrioFeeInGWei] = useState<string>() // get max prio fee in gwei
-
+  const dispatch = useDispatch()
   // Get nonce for connected wallet
   useEffect(() => {
     const getNonce = async () => {
@@ -91,7 +90,7 @@ export const useTransactionParameters = (props?: Props): TxParameters => {
     const getSafeNonce = async () => {
       if (safeAddress) {
         try {
-          const recommendedNonce = (await getRecommendedNonce(safeAddress)).toString()
+          const recommendedNonce = (await getRecommendedNonce(safeAddress, dispatch)).toString()
           setSafeNonce(recommendedNonce)
         } catch (e) {
           logError(Errors._616, e.message)
@@ -102,7 +101,7 @@ export const useTransactionParameters = (props?: Props): TxParameters => {
     if (!safeNonce) {
       getSafeNonce()
     }
-  }, [safeAddress, safeNonce])
+  }, [safeAddress, safeNonce, dispatch])
 
   return {
     safeNonce,

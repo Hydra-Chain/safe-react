@@ -9,7 +9,7 @@ import { Validator, composeValidators, mustBeEthereumAddress, required } from 's
 import { trimSpaces } from 'src/utils/strings'
 import { getAddressFromDomain } from 'src/logic/wallets/getWeb3'
 import { isValidEnsName, isValidCryptoDomainName } from 'src/logic/wallets/ethAddresses'
-import { checksumAddress } from 'src/utils/checksumAddress'
+// import { checksumAddress } from 'src/utils/checksumAddress'
 import { Errors, logError } from 'src/logic/exceptions/CodedException'
 import { parsePrefixedAddress } from 'src/utils/prefixedAddress'
 
@@ -55,7 +55,8 @@ const AddressInput = ({
 
   // Internal validators + externally passed validators
   const allValidators = useMemo(
-    () => composeValidators(required, mustBeEthereumAddress, sanitizedValidators),
+    // () => composeValidators(required, mustBeEthereumAddress, sanitizedValidators),
+    () => composeValidators(required, sanitizedValidators),
     [sanitizedValidators],
   )
 
@@ -70,7 +71,7 @@ const AddressInput = ({
         setResolutions((prev) => ({ ...prev, [rawVal]: '' }))
         getAddressFromDomain(address)
           .then((resolverAddr) => {
-            const formattedAddress = checksumAddress(resolverAddr)
+            const formattedAddress = resolverAddr
             setResolutions((prev) => ({ ...prev, [rawVal]: formattedAddress }))
           })
           .catch((err) => {
@@ -81,7 +82,7 @@ const AddressInput = ({
         // A regular address hash
         if (!mustBeEthereumAddress(address)) {
           const parsed = parsePrefixedAddress(address)
-          const checkedAddress = checksumAddress(parsed.address) || parsed.address
+          const checkedAddress = parsed.address || parsed.address
 
           // Field mutator (parent component) always gets an unprefixed address
           fieldMutator(checkedAddress)

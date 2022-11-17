@@ -5,9 +5,11 @@ import { updateSafe } from 'src/logic/safe/store/actions/updateSafe'
 import { SafeRecordProps } from 'src/logic/safe/store/models/safe'
 import { getLocalSafe } from 'src/logic/safe/utils'
 import { getSafeInfo } from 'src/logic/safe/utils/safeInformation'
-import { SafeInfo } from '@gnosis.pm/safe-react-gateway-sdk'
-import { checksumAddress } from 'src/utils/checksumAddress'
-import { buildSafeOwners, extractRemoteSafeInfo } from './utils'
+// import { SafeInfo } from '@gnosis.pm/safe-react-gateway-sdk'
+import { SafeInfoHydra } from 'src/logic/hydra/utils'
+
+// import { checksumAddress } from 'src/utils/checksumAddress'
+import { buildSafeOracle, buildSafeOwners, extractRemoteSafeInfo } from './utils'
 import { AppReduxState, store } from 'src/store'
 import { currentSafeWithNames } from '../selectors'
 import fetchTransactions from './transactions/fetchTransactions'
@@ -25,17 +27,16 @@ import { fetchSafeTokens } from 'src/logic/tokens/store/actions/fetchSafeTokens'
  * @param {string} safeAddress
  * @returns Promise<SafeRecordProps>
  */
-export const buildSafe = async (safeAddress: string): Promise<SafeRecordProps> => {
-  const address = checksumAddress(safeAddress)
+export const buildSafe = async (safeAddress: string, dispatch: Dispatch): Promise<SafeRecordProps> => {
+  const address = safeAddress
   // setting `loadedViaUrl` to false, as `buildSafe` is called on safe Load or Open flows
   const safeInfo: Partial<SafeRecordProps> = { address, loadedViaUrl: false }
 
   const local = getLocalSafe(safeAddress)
-  const remote = await getSafeInfo(safeAddress).catch((err) => {
+  const remote = await getSafeInfo(safeAddress, dispatch).catch((err) => {
     err.log()
     return null
   })
-
   // remote (client-gateway)
   const remoteSafeInfo = remote ? await extractRemoteSafeInfo(remote) : {}
   // local
@@ -43,8 +44,9 @@ export const buildSafe = async (safeAddress: string): Promise<SafeRecordProps> =
 
   // update owner's information
   const owners = buildSafeOwners(remote?.owners, localSafeInfo.owners)
+  const oracle = buildSafeOracle(remote?.oracle, localSafeInfo.oracle)
 
-  return { ...localSafeInfo, ...safeInfo, ...remoteSafeInfo, owners } as SafeRecordProps
+  return { ...localSafeInfo, ...safeInfo, ...remoteSafeInfo, owners, oracle } as SafeRecordProps
 }
 
 /**
@@ -57,16 +59,16 @@ export const buildSafe = async (safeAddress: string): Promise<SafeRecordProps> =
  */
 export const fetchSafe =
   (safeAddress: string, isInitialLoad = false) =>
-  async (dispatch: Dispatch<any>): Promise<Action<Partial<SafeRecordProps>> | void> => {
+  async (dispatch: Dispatch<any>, getState: () => AppReduxState): Promise<Action<Partial<SafeRecordProps>> | void> => {
     const dispatchPromises: ((dispatch: Dispatch, getState: () => AppReduxState) => Promise<void> | void)[] = []
 
-    const address = checksumAddress(safeAddress)
+    const address = safeAddress
 
     let safeInfo: Partial<SafeRecordProps> = {}
-    let remoteSafeInfo: SafeInfo | null = null
+    let remoteSafeInfo: SafeInfoHydra | null = null
 
     try {
-      remoteSafeInfo = await getSafeInfo(address)
+      remoteSafeInfo = await getSafeInfo(address, dispatch, getState())
     } catch (err) {
       err.log()
     }
@@ -83,7 +85,6 @@ export const fetchSafe =
       }
 
       safeInfo = await extractRemoteSafeInfo(remoteSafeInfo)
-
       // If these polling timestamps have changed, fetch again
       const { collectiblesTag, txQueuedTag, txHistoryTag } = currentSafeWithNames(state)
 
@@ -107,8 +108,9 @@ export const fetchSafe =
     }
 
     const owners = buildSafeOwners(remoteSafeInfo?.owners || [])
+    const oracle = buildSafeOracle(remoteSafeInfo?.oracle || [])
 
     await Promise.all(dispatchPromises)
 
-    return dispatch(updateSafe({ address, ...safeInfo, owners, loaded: true }))
+    return dispatch(updateSafe({ address, ...safeInfo, owners, oracle, loaded: true }))
   }

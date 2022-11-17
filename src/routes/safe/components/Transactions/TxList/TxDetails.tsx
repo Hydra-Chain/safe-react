@@ -92,6 +92,8 @@ type TxDetailsProps = {
 }
 
 export const TxDetails = ({ transaction }: TxDetailsProps): ReactElement => {
+  console.log('TxDetails')
+
   const { txLocation } = useContext(TxLocationContext)
   const { data, loading } = useTransactionDetails(transaction.id, transaction.txDetails)
   const txStatus = useTxStatus(transaction)

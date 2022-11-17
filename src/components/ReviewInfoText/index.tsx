@@ -1,5 +1,5 @@
 import { ReactElement } from 'react'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import styled from 'styled-components'
 
 import Paragraph from 'src/components/layout/Paragraph'
@@ -30,9 +30,10 @@ export const ReviewInfoText = ({
   testId,
   txEstimationExecutionStatus,
 }: ReviewInfoTextProps): ReactElement => {
+  const dispatch = useDispatch()
   const safeTxNonce = parseInt(safeNonce, 10)
   const { address: safeAddress } = useSelector(currentSafeWithNames)
-  const recommendedNonce = useRecommendedNonce(safeAddress)
+  const recommendedNonce = useRecommendedNonce(safeAddress, dispatch)
 
   const isTxNonceOutOfOrder = () => {
     // safeNonce can be undefined while waiting for the request.

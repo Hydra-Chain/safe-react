@@ -42,10 +42,10 @@ type ProcessTransactionAction = ThunkAction<Promise<void | string>, AppReduxStat
 export const processTransaction = (props: ProcessTransactionArgs): ProcessTransactionAction => {
   return async (dispatch: Dispatch, getState: () => AppReduxState): Promise<void> => {
     const sender = new TxSender()
+    console.log('processTransaction')
 
     // Selectors
     const state = getState()
-
     const { tx, approveAndExecute } = props
 
     // Set specific transaction being finalised
@@ -90,6 +90,6 @@ export const processTransaction = (props: ProcessTransactionArgs): ProcessTransa
 
     sender.safeTxHash = tx.safeTxHash
 
-    sender.submitTx()
+    sender.submitTx(dispatch)
   }
 }

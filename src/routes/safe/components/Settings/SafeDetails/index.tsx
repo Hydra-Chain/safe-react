@@ -120,7 +120,7 @@ const SafeDetails = (): ReactElement => {
   useEffect(() => {
     const getMasterCopyInfo = async () => {
       const masterCopies = await fetchMasterCopies()
-      const masterCopyAddress = await getMasterCopyAddressFromProxyAddress(safeAddress)
+      const masterCopyAddress = await getMasterCopyAddressFromProxyAddress(safeAddress, dispatch)
       const masterCopy = masterCopies?.find((mc) => sameAddress(mc.address, masterCopyAddress))
       setSafeInfo(masterCopy)
     }
@@ -128,7 +128,7 @@ const SafeDetails = (): ReactElement => {
     if (safeAddress) {
       getMasterCopyInfo()
     }
-  }, [safeAddress])
+  }, [safeAddress, dispatch])
 
   return (
     <GnoForm onSubmit={handleSubmit}>

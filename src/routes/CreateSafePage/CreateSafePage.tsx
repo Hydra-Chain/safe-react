@@ -36,9 +36,10 @@ import ReviewNewSafeStep, { reviewNewSafeStepLabel } from './steps/ReviewNewSafe
 import { loadFromStorage, saveToStorage } from 'src/utils/storage'
 import SafeCreationProcess from './components/SafeCreationProcess'
 import SelectWalletAndNetworkStep, { selectWalletAndNetworkStepLabel } from './steps/SelectWalletAndNetworkStep'
-import { reverseENSLookup } from 'src/logic/wallets/getWeb3'
+// import { reverseENSLookup } from 'src/logic/wallets/getWeb3'
 import { CREATE_SAFE_CATEGORY, CREATE_SAFE_EVENTS } from 'src/utils/events/createLoadSafe'
 import { trackEvent } from 'src/utils/googleTagManager'
+import { hydraToHexAddress } from 'src/logic/hydra/utils'
 
 function CreateSafePage(): ReactElement {
   const [safePendingToBeCreated, setSafePendingToBeCreated] = useState<CreateSafeFormValues>()
@@ -187,20 +188,19 @@ async function getInitialValues(userAddress, addressBook, location, suggestedSaf
     [FIELD_SAFE_OWNER_ENS_LIST]: (
       await Promise.all(
         owners.map(async (address) => {
-          return { [address]: await reverseENSLookup(address) }
+          return { [address]: hydraToHexAddress(address, true) }
         }),
       )
     ).reduce((acc, owner) => {
       return { ...acc, ...owner }
     }, {}),
     // we set owners address values as owner-address-${index} format in the form state
-    ...owners.reduce(
-      (ownerAddressFields, ownerAddress, index) => ({
+    ...owners.reduce((ownerAddressFields, ownerAddress, index) => {
+      return {
         ...ownerAddressFields,
-        [`owner-address-${index}`]: ownerAddress,
-      }),
-      {},
-    ),
+        [`owner-address-${index}`]: hydraToHexAddress(ownerAddress, true),
+      }
+    }, {}),
     // we set owners name values as owner-name-${index} format in the form state
     ...ownerNames.reduce(
       (ownerNameFields, ownerName, index) => ({

@@ -5,9 +5,9 @@ import { Transaction } from 'src/logic/safe/store/models/types/gateway.d'
 import { TransactionDetailsPayload } from 'src/logic/safe/store/reducer/gatewayTransactions'
 import { getTransactionByAttribute } from 'src/logic/safe/store/selectors/gatewayTransactions'
 import { AppReduxState } from 'src/store'
-import { fetchSafeTransaction } from 'src/logic/safe/transactions/api/fetchSafeTransaction'
 import { currentChainId } from 'src/logic/config/store/selectors'
 import { currentSafeAddress } from 'src/logic/currentSession/store/selectors'
+import { fetchSafeTransactionDetails } from 'src/logic/hydra/api/explorer'
 
 export const UPDATE_TRANSACTION_DETAILS = 'UPDATE_TRANSACTION_DETAILS'
 const updateTransactionDetails = createAction<TransactionDetailsPayload>(UPDATE_TRANSACTION_DETAILS)
@@ -21,7 +21,6 @@ export const fetchTransactionDetails =
       attributeValue: transactionId,
       attributeName: 'id',
     })
-
     const safeAddress = currentSafeAddress(state)
     const chainId = currentChainId(state)
 
@@ -35,7 +34,9 @@ export const fetchTransactionDetails =
     }
 
     try {
-      const transactionDetails = await fetchSafeTransaction(transactionId)
+      const transactionDetails = await fetchSafeTransactionDetails(transactionId, dispatch, safeAddress)
+
+      // const transactionDetails = await fetchSafeTransaction(transactionId)
 
       dispatch(updateTransactionDetails({ chainId, transactionId, safeAddress, value: transactionDetails }))
       return transactionDetails

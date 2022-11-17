@@ -5,6 +5,7 @@ import { ChainId } from 'src/config/chain.d'
 import { BalanceRecord } from 'src/logic/tokens/store/actions/fetchSafeTokens'
 
 export type SafeOwner = string
+export type SafeOracle = string
 
 export type ModulePair = [
   // previous module
@@ -35,6 +36,7 @@ export type SafeRecordProps = {
   balances: BalanceRecord[]
   loaded: boolean
   nonce: number
+  oracle: SafeOracle[]
   recurringUser?: boolean
   currentVersion: string
   needsUpdate: boolean
@@ -44,6 +46,7 @@ export type SafeRecordProps = {
   collectiblesTag: string
   txQueuedTag: string
   txHistoryTag: string
+  thresholdPercentage: number
 }
 
 /**
@@ -61,6 +64,7 @@ const makeSafe = Record<SafeRecordProps>({
   balances: [],
   loaded: false,
   nonce: 0,
+  oracle: [],
   recurringUser: undefined,
   currentVersion: '',
   needsUpdate: false,
@@ -70,6 +74,7 @@ const makeSafe = Record<SafeRecordProps>({
   collectiblesTag: '0',
   txQueuedTag: '0',
   txHistoryTag: '0',
+  thresholdPercentage: 0,
 })
 
 export type SafeRecord = RecordOf<SafeRecordProps>
