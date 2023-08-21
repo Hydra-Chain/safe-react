@@ -4,20 +4,72 @@ import { setWeb3ReadOnly } from 'src/logic/wallets/getWeb3'
 // Cache is required as loading Redux store directly is an anit-pattern
 let chains: ChainInfo[] = []
 
+const mockChain = {
+  chainId: '1',
+  chainName: 'HYDRA',
+  description: 'The main HYDRA network',
+  l2: false,
+  nativeCurrency: {
+    name: 'Hydra',
+    symbol: 'HYDRA',
+    decimals: 8,
+    logoUri: 'https://safe-transaction-assets.safe.global/chains/1/currency_logo.png',
+  },
+  transactionService: 'https://safe-transaction-mainnet.safe.global',
+  blockExplorerUriTemplate: {
+    address: 'https://etherscan.io/address/{{address}}',
+    txHash: 'https://etherscan.io/tx/{{txHash}}',
+    api: 'https://api.etherscan.io/api?module={{module}}&action={{action}}&address={{address}}&apiKey={{apiKey}}',
+  },
+  disabledWallets: ['NONE', 'walletConnect'],
+  ensRegistryAddress: '0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e',
+  features: [
+    'CONTRACT_INTERACTION',
+    'DEFAULT_TOKENLIST',
+    'DOMAIN_LOOKUP',
+    'EIP1271',
+    'EIP1559',
+    'ERC721',
+    'MOONPAY_MOBILE',
+    'RISK_MITIGATION',
+    'SAFE_APPS',
+    'SAFE_TX_GAS_OPTIONAL',
+    'SPENDING_LIMIT',
+    'TX_SIMULATION',
+  ],
+  gasPrice: [
+    {
+      type: 'oracle',
+      uri: 'https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=JNFAU892RF9TJWBU3EV7DJCPIWZY8KEMY1',
+      gasParameter: 'FastGasPrice',
+      gweiFactor: '1000000000.000000000',
+    },
+  ],
+  publicRpcUri: {
+    authentication: 'NO_AUTHENTICATION',
+    value: 'https://cloudflare-eth.com',
+  },
+  rpcUri: {
+    authentication: 'API_KEY_PATH',
+    value: 'https://mainnet.infura.io/v3/',
+  },
+  safeAppsRpcUri: {
+    authentication: 'API_KEY_PATH',
+    value: 'https://mainnet.infura.io/v3/',
+  },
+  shortName: 'eth',
+  theme: {
+    textColor: '#001428',
+    backgroundColor: '#DDDDDD',
+  },
+}
+
 export const getChains = (): ChainInfo[] => chains
 
 export const loadChains = async () => {
-  console.log('loadChains')
-
-  const { results = [] } = await getChainsConfig()
-  console.log('results', results)
-
-  results.forEach((chain) => {
-    if (chain.chainId === '1') {
-      chain.shortName = 'hyd'
-    }
-  })
-  chains = results
+  // const { results = [] } = await getChainsConfig()
+  const results = mockChain as ChainInfo
+  chains = [results]
   // Set the initail web3 provider after loading chains
   setWeb3ReadOnly()
 }
