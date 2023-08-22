@@ -48,6 +48,8 @@ export const loadHistoryTransactions = async (
   const chainId = _getChainId()
 
   try {
+    console.log('loadHistoryTransactions')
+
     const { results, next, previous } = await fetchContractTransactions(safeAddress, dispatch)
 
     // const { results, next, previous } = await getTransactionHistory(chainId, safeAddress)

@@ -15,7 +15,7 @@ const useSidebarItems = (): ListItemType[] => {
   const featuresEnabled = useSelector(currentSafeFeaturesEnabled)
   // const safeAppsEnabled = hasFeature(FEATURES.SAFE_APPS)
   const isCollectiblesEnabled = hasFeature(FEATURES.ERC721)
-  const isSpendingLimitEnabled = hasFeature(FEATURES.SPENDING_LIMIT)
+  // const isSpendingLimitEnabled = hasFeature(FEATURES.SPENDING_LIMIT)
   const { needsUpdate } = useSelector(currentSafeWithNames)
   const { shortName, safeAddress } = useSafeAddress()
   const granted = useSelector(grantedSelector)
@@ -100,12 +100,12 @@ const useSidebarItems = (): ListItemType[] => {
         iconType: 'requiredConfirmations',
         href: currentSafeRoutes.SETTINGS_POLICIES,
       }),
-      makeEntryItem({
-        disabled: !isSpendingLimitEnabled,
-        label: 'Spending Limit',
-        iconType: 'fuelIndicator',
-        href: currentSafeRoutes.SETTINGS_SPENDING_LIMIT,
-      }),
+      // makeEntryItem({
+      //   disabled: !isSpendingLimitEnabled,
+      //   label: 'Spending Limit',
+      //   iconType: 'fuelIndicator',
+      //   href: currentSafeRoutes.SETTINGS_SPENDING_LIMIT,
+      // }),
       makeEntryItem({
         label: 'Advanced',
         iconType: 'settingsTool',
@@ -153,7 +153,7 @@ const useSidebarItems = (): ListItemType[] => {
     featuresEnabled,
     granted,
     isCollectiblesEnabled,
-    isSpendingLimitEnabled,
+    // isSpendingLimitEnabled,
     makeEntryItem,
     matchSafe,
     matchSafeWithSidebarSection,

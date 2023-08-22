@@ -12,7 +12,6 @@ import { Dispatch } from 'src/logic/safe/store/actions/types'
 import { ZERO_ADDRESS } from 'src/logic/wallets/ethAddresses'
 import { Log } from 'web3-core'
 import {
-  // addOracle,
   addOwner,
   creation,
   getTransactionItemList,
@@ -20,13 +19,11 @@ import {
   removeOwner,
   transfer,
   transferHydra,
-  // changeThresholdPercentage,
   changeThreshold,
   executionFailure,
 } from '../transformTransaction'
 import { getItemEmpty, getSafeLogs, getTransactionListPageEmpty } from '../utils'
 import { SAFE_PROXY_FACTORY_ADDRESS } from '../contracts'
-// import { getGnosisProxyOracle, sendWithState } from '../contractInteractions/utils'
 
 export const API_BASE = 'https://explorer.hydrachain.org/api/'
 
@@ -57,15 +54,36 @@ export async function fetchTransaction(hash: string): Promise<any> {
   }
 }
 
-export async function fetchTransactions(hashes: string[]): Promise<any> {
+async function _fetchTransactions(hashes: string[]): Promise<any> {
   if (hashes.length <= 0) return
   try {
     let url = API_BASE + 'txs/'
     hashes.forEach((hash, i, arr) => (url += hash + (i !== arr.length - 1 ? ',' : '')))
+    console.log('url', url)
+
     return await (await fetch(url)).json()
   } catch (e) {
     throw e
   }
+}
+
+const LIMIT_TXs = 30
+
+function isOverLimit(hashes: Array<string>): boolean {
+  return hashes?.length > LIMIT_TXs
+}
+
+export async function fetchTransactions(hashes: Array<string>) {
+  const promises: any[] = []
+  if (!isOverLimit(hashes)) {
+    return await _fetchTransactions(hashes)
+  }
+
+  while (hashes.length > 0) {
+    promises.push(_fetchTransactions(hashes.splice(0, LIMIT_TXs)))
+  }
+  const result = (await Promise.all(promises)).flat()
+  return result
 }
 
 export async function fetchAddressInfo(address: string): Promise<any> {
@@ -182,101 +200,135 @@ export async function fetchBalances(address: string): Promise<SafeBalanceRespons
 
 export async function fetchContractTransactions(address: string, dispatch: Dispatch): Promise<TransactionListPage> {
   try {
-    const [info, safeTxHashes, factoryTxs] = await Promise.all([
+    const [safeInf, facInfo] = await Promise.all([
       fetchContractInfo(address),
-      fetchContractTxHashes(address),
-      fetchContractTxHashes(SAFE_PROXY_FACTORY_ADDRESS),
+      fetchContractInfo(SAFE_PROXY_FACTORY_ADDRESS),
     ])
+    const totalSafeTxsCount = safeInf.transactionCount
+    const totalFactoryTxsCount = facInfo.transactionCount
+    const safeAddressHydra = safeInf.address
+    const safeAddressHex = safeInf.addressHex
+    const storageTxCountChecked = getLocalStorageLatestTxCountChecked()
+    let page = 0
+    const safeBatchTxsPromises: any[] = []
+    const factoryBatchTxsPromises: any[] = []
 
-    const safeAddressHydra = info.address
-    const safeAddressHex = info.addressHex
-    const [txs = [], txsFactory = []] = await Promise.all([
-      // dispatch(sendWithState(getGnosisProxyOracle, { safeAddress: safeAddressHex })),
-      fetchTransactions(safeTxHashes.transactions),
-      fetchTransactions(factoryTxs.transactions),
-    ])
-
-    // const oracleTxHashes = await fetchContractTxHashes(oracle)
-    // const oracleTxs = await fetchTransactions(oracleTxHashes.transactions)
     const tlp = getTransactionListPageEmpty()
     tlp.next = ''
     tlp.previous = ''
-    let isCreationFound = false
-    for (const t of txsFactory) {
-      if (isCreationFound) continue
-      const _tli = await getTransactionItemList(t, (tli: Transaction, receipt: any) => {
-        const logs = getSafeLogs(receipt.logs as Log[])
-        logs.forEach((l) => {
-          if (l.name === 'ProxyCreation') {
-            l.events.forEach((e) => {
-              if (e.value === '0x' + safeAddressHex) {
-                tli = creation(t, tli, receipt)
-                isCreationFound = true
-              }
-            })
-          }
+
+    // scan factory
+    if (!storageTxCountChecked.isCreationFound) {
+      let txCopy = totalFactoryTxsCount
+      while (txCopy > 0) {
+        txCopy -= 1000
+        factoryBatchTxsPromises.push(fetchContractTxHashes(SAFE_PROXY_FACTORY_ADDRESS, `page=${page}&pageSize=1000`))
+        page++
+      }
+      page = 0
+      const factoryTxsHashes = (await Promise.all(factoryBatchTxsPromises)).map((r) => r.transactions).flat()
+      const txsFactory = ([] = await fetchTransactions(factoryTxsHashes))
+      let isCreationFound = false
+      for (const t of txsFactory) {
+        if (isCreationFound) continue
+        const _tli = await getTransactionItemList(t, (tli: Transaction, receipt: any) => {
+          const logs = getSafeLogs(receipt.logs as Log[])
+          logs.forEach((l) => {
+            if (l.name === 'ProxyCreation') {
+              l.events.forEach((e) => {
+                if (e.value === '0x' + safeAddressHex) {
+                  tli = creation(t, tli, receipt)
+                  isCreationFound = true
+                  setLocalStorageLatestTxCountChecked({
+                    ...getLocalStorageLatestTxCountChecked(),
+                    factory: totalFactoryTxsCount,
+                    isCreationFound,
+                  })
+                }
+              })
+            }
+          })
+          return tli
         })
-        return tli
-      })
-      if (_tli?.transaction?.txInfo) tlp.results.push(_tli)
+        if (_tli?.transaction?.txInfo) {
+          tlp.results.push(_tli)
+          setLocalStorageLatestTxCountChecked({
+            ...getLocalStorageLatestTxCountChecked(),
+            safeLastHistoryTLP: tlp,
+          })
+        }
+      }
     }
 
-    // for (const t of oracleTxs) {
-    //   const _tli = await getTransactionItemList(t, (tli: Transaction, receipt: any) => {
-    //     const logs = getSafeLogs(receipt.logs as Log[])
-    //     return changeThresholdPercentage(tli, logs)
-    //   })
-    //   if (_tli?.transaction?.txInfo) tlp.results.push(_tli)
-    // }
-
-    for (const t of txs) {
-      await getTransactionItemList(t, async (tli: Transaction, receipt: any) => {
-        const logs = getSafeLogs(receipt.logs as Log[])
-        // if (t.id === '868a96a3e0e063ca90d3ca416ddd7012a3339754bb7d63719b3aeb05aa6b4be1') {
-        //   console.log('logs', logs)
-        // }
-        const ht = transferHydra(t, address, safeAddressHydra, receipt, logs, true)
-        if (ht) {
-          tlp.results.push(ht)
-          return null
-        }
-        if (logs?.length <= 0) return null
-        for (const log of logs) {
-          // tli.transaction.txInfo = {} as TransactionInfo
-          switch (log.name) {
-            case 'Transfer':
-              tli = transfer(t, tli, log, address)
-              if (tli?.transaction?.txInfo) tlp.results.push(tli)
-              break
-            case 'AddedOwner':
-              tli = await addOwner(tli, address, dispatch, log)
-              if (tli?.transaction?.txInfo) tlp.results.push(tli)
-              break
-            // case 'AddedOracle':
-            //   tli = addOracle(tli, log, address)
-            //   if (tli?.transaction?.txInfo) tlp.results.push(tli)
-            //   break
-            case 'RemovedOwner':
-              tli = removeOwner(tli, logs)
-              if (tli?.transaction?.txInfo) tlp.results.push(tli)
-              break
-            case 'ChangedThreshold':
-              tli = await changeThreshold(tli, address, dispatch, logs)
-              if (tli?.transaction?.txInfo) tlp.results.push(tli)
-              break
-            case 'ExecutionFailure':
-              tli = executionFailure(tli, logs)
-              if (tli?.transaction?.txInfo) tlp.results.push(tli)
-              break
+    // scan safe
+    if (!storageTxCountChecked.safeHistory || storageTxCountChecked.safeHistory < totalSafeTxsCount) {
+      let txCopy = totalSafeTxsCount
+      while (txCopy > 0) {
+        txCopy -= 1000
+        safeBatchTxsPromises.push(fetchContractTxHashes(address, `page=${page}&pageSize=1000`))
+        page++
+      }
+      const safeTxHashes = (await Promise.all(safeBatchTxsPromises)).map((r) => r.transactions).flat()
+      page = 0
+      const txs = ([] = await fetchTransactions(safeTxHashes))
+      for (const t of txs) {
+        await getTransactionItemList(t, async (tli: Transaction, receipt: any) => {
+          const logs = getSafeLogs(receipt.logs as Log[])
+          const ht = transferHydra(t, address, safeAddressHydra, receipt, logs, true)
+          if (ht) {
+            tlp.results.push(ht)
+            return null
           }
-        }
-        return tli
+          if (logs?.length <= 0) return null
+          for (const log of logs) {
+            // tli.transaction.txInfo = {} as TransactionInfo
+            switch (log.name) {
+              case 'Transfer':
+                tli = transfer(t, tli, log, address)
+                if (tli?.transaction?.txInfo) tlp.results.push(tli)
+                break
+              case 'AddedOwner':
+                tli = await addOwner(tli, address, dispatch, log)
+                if (tli?.transaction?.txInfo) tlp.results.push(tli)
+                break
+              case 'RemovedOwner':
+                tli = removeOwner(tli, logs)
+                if (tli?.transaction?.txInfo) tlp.results.push(tli)
+                break
+              case 'ChangedThreshold':
+                tli = await changeThreshold(tli, address, dispatch, logs)
+                if (tli?.transaction?.txInfo) tlp.results.push(tli)
+                break
+              case 'ExecutionFailure':
+                tli = executionFailure(tli, logs)
+                if (tli?.transaction?.txInfo) tlp.results.push(tli)
+                break
+            }
+          }
+          return tli
+        })
+      }
+      setLocalStorageLatestTxCountChecked({
+        ...getLocalStorageLatestTxCountChecked(),
+        safeHistory: totalSafeTxsCount,
+        safeLastHistoryTLP: tlp,
       })
+    } else {
+      return getLocalStorageLatestTxCountChecked().safeLastHistoryTLP
     }
     return tlp
   } catch (e) {
     throw e
   }
+}
+
+export const setLocalStorageLatestTxCountChecked = (value) => {
+  localStorage.setItem('latestTxCountChecked', JSON.stringify(value))
+}
+
+export const getLocalStorageLatestTxCountChecked = () => {
+  const latestTxCountChecked = localStorage.getItem('latestTxCountChecked')
+  return latestTxCountChecked ? JSON.parse(latestTxCountChecked) : {}
 }
 
 export const setLocalStorageApprovedTransactionSchema = (value) => {
@@ -289,21 +341,26 @@ export const getLocalStorageApprovedTransactionSchema = () => {
 }
 
 export const fetchQueedTransactionsHydra = async (address: string, dispatch: Dispatch) => {
-  const [respTxHashes] = await Promise.all([
-    // fetchContractInfo(address),
-    fetch(API_BASE + 'contract/' + (address.length === 42 ? address.substring(address.length - 40) : address) + '/txs'),
-  ])
-  // const safeAddressHydra = info.address
-  const txs = await fetchTransactions((await respTxHashes.json()).transactions)
+  const safeInf = await fetchContractInfo(address)
+  const totalSafeTxsCount = safeInf.transactionCount
+  // const storageTxCountChecked = getLocalStorageLatestTxCountChecked()
+  let page = 0
+  const safeBatchTxsPromises: any[] = []
   const tlp = getTransactionListPageEmpty()
   tlp.next = ''
   tlp.previous = ''
+  // if (!storageTxCountChecked.safeQuued || storageTxCountChecked.safeQuued < totalSafeTxsCount) {
+  let txCopy = totalSafeTxsCount
+  while (txCopy > 0) {
+    txCopy -= 1000
+    safeBatchTxsPromises.push(fetchContractTxHashes(address, `page=${page}&pageSize=1000`))
+    page++
+  }
+  const safeTxHashes = (await Promise.all(safeBatchTxsPromises)).map((r) => r.transactions).flat()
+  const txs = await fetchTransactions(safeTxHashes)
   if (txs) {
     for (let i = txs.length - 1; i >= 0; i--) {
       const t = txs[i]
-      // if (t.id === 'ecc34967ff63d13613c5dbbd31887fb79110b7f8207e6d3acbcb72167bc4da39') {
-      //   console.log('transaction', t)
-      // }
       const _tli = await approvedHash(address, t, dispatch)
       if (_tli.transaction) {
         const safeTxHash = (_tli as any).transaction.executionInfo.safeTxHash
@@ -324,6 +381,14 @@ export const fetchQueedTransactionsHydra = async (address: string, dispatch: Dis
       }
     }
   }
+  setLocalStorageLatestTxCountChecked({
+    ...getLocalStorageLatestTxCountChecked(),
+    safeQuued: totalSafeTxsCount,
+    safeLastQueedTLP: tlp,
+  })
+  // } else {
+  //   return getLocalStorageLatestTxCountChecked().safeLastQueedTLP
+  // }
   return tlp
 }
 
@@ -332,7 +397,6 @@ export const fetchSafeTransactionDetails = async (
   dispatch: Dispatch,
   safeAddress: string,
 ): Promise<TransactionDetails | undefined> => {
-  // await new Promise(r => setTimeout(r, 10000));
   const txHash = transactionId.split('_')[2]
   const [tx, info] = await Promise.all([fetchTransaction(txHash.substring(2)), fetchContractInfo(safeAddress)])
 
@@ -342,15 +406,10 @@ export const fetchSafeTransactionDetails = async (
     const _receipt = Object.assign({}, receipt)
     const logs = getSafeLogs(receipt.logs as Log[])
     const ht = transferHydra(_tx, safeAddress, safeAddressHydra, _receipt, logs, true)
-    // if (tx.id === 'c64e9657afbb5a663c14d0a883dd0b4aa2ff92f7382d477d4d2cf0cf2cd225c5') {
-    //   console.log('ht', ht);
-
-    // }
     if (ht) return ht
     tli.transaction.txStatus === TransactionStatus.FAILED
     if (logs?.length <= 0) return null
     for (const log of logs) {
-      // tli.transaction.txInfo = {} as TransactionInfo
       switch (log.name) {
         case 'Transfer':
           tli = transfer(_tx, tli, log, safeAddress)
@@ -358,9 +417,6 @@ export const fetchSafeTransactionDetails = async (
         case 'AddedOwner':
           tli = await addOwner(tli, safeAddress, dispatch, log)
           break
-        // case 'AddedOracle':
-        //   tli = addOracle(tli, log, safeAddress)
-        //   break
         case 'RemovedOwner':
           tli = removeOwner(tli, logs)
           break
@@ -373,9 +429,6 @@ export const fetchSafeTransactionDetails = async (
         case 'ExecutionFailure':
           tli = executionFailure(tli, logs)
           break
-        // case 'ThresholdPercentageChanged':
-        //   tli = changeThresholdPercentage(tli, logs)
-        //   break
       }
     }
     return tli
@@ -383,9 +436,6 @@ export const fetchSafeTransactionDetails = async (
   const _transactionDetails = {} as TransactionDetails
   if (!_tli?.transaction?.txInfo) return undefined
   _transactionDetails.txId = transactionId
-
-  // td.executedAt = tx.timestamp * 1000
-  // td.txStatus = transaction?.txDetails?.txStatus ?? 'AWAITING_CONFIRMATIONS'
   _transactionDetails.txStatus = _tli.transaction.txStatus
   _transactionDetails.txInfo = _tli.transaction.txInfo
   _transactionDetails.detailedExecutionInfo = _tli.transaction.executionInfo as unknown as DetailedExecutionInfo

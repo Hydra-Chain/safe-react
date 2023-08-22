@@ -18,7 +18,7 @@ import Track from 'src/components/Track'
 import useSafeAddress from 'src/logic/currentSession/hooks/useSafeAddress'
 
 const Advanced = lazy(() => import('./Advanced'))
-const SpendingLimitSettings = lazy(() => import('./SpendingLimit'))
+// const SpendingLimitSettings = lazy(() => import('./SpendingLimit'))
 const ManageOwners = lazy(() => import('./ManageOwners'))
 const RemoveSafeModal = lazy(() => import('./RemoveSafeModal'))
 const SafeDetails = lazy(() => import('./SafeDetails'))
@@ -63,9 +63,9 @@ const Settings = (): React.ReactElement => {
     case currentSafeRoutes.SETTINGS_POLICIES:
       settingsSection = 'Policies'
       break
-    case currentSafeRoutes.SETTINGS_SPENDING_LIMIT:
-      settingsSection = 'Spending Limit'
-      break
+    // case currentSafeRoutes.SETTINGS_SPENDING_LIMIT:
+    //   settingsSection = 'Spending Limit'
+    //   break
     case currentSafeRoutes.SETTINGS_ADVANCED:
       settingsSection = 'Advanced'
       break
@@ -130,7 +130,7 @@ const Settings = (): React.ReactElement => {
                 exact
                 render={() => <ManageOracle granted={granted} oracle={oracle} />}
               /> */}
-              <Route path={SAFE_ROUTES.SETTINGS_SPENDING_LIMIT} exact render={() => <SpendingLimitSettings />} />
+              {/* <Route path={SAFE_ROUTES.SETTINGS_SPENDING_LIMIT} exact render={() => <SpendingLimitSettings />} /> */}
               <Route path={SAFE_ROUTES.SETTINGS_ADVANCED} exact render={() => <Advanced />} />
               <Redirect to={SAFE_ROUTES.SETTINGS_DETAILS} />
             </Switch>

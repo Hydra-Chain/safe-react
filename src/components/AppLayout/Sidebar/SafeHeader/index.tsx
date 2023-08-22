@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import {
   Icon,
   FixedIcon,
@@ -35,6 +35,7 @@ import { trackEvent } from 'src/utils/googleTagManager'
 import useSafeAddress from 'src/logic/currentSession/hooks/useSafeAddress'
 import { Box } from '@material-ui/core'
 import { currentSafe } from 'src/logic/safe/store/selectors'
+import { setShowShortName } from 'src/logic/appearance/actions/setShowShortName'
 
 export const TOGGLE_SIDEBAR_BTN_TESTID = 'TOGGLE_SIDEBAR_BTN'
 
@@ -212,6 +213,9 @@ const SafeHeader = ({
   const { owners, threshold } = useSelector(currentSafe)
   const copyChainPrefix = useSelector(copyShortNameSelector)
   const { shortName } = useSafeAddress()
+  const dispatch = useDispatch()
+  dispatch(setShowShortName({ showShortName: false }))
+  console.log('ADDRESS', address)
 
   const hasSafeOpen = useRouteMatch(ADDRESSED_ROUTE)
 
