@@ -2,7 +2,7 @@ import { makeStyles } from '@material-ui/core/styles'
 import cn from 'classnames'
 import * as React from 'react'
 import { useDispatch } from 'react-redux'
-import AppstoreButton from 'src/components/AppstoreButton'
+// import AppstoreButton from 'src/components/AppstoreButton'
 
 import GnoButtonLink from 'src/components/layout/ButtonLink'
 import Link from 'src/components/layout/Link'
@@ -45,7 +45,7 @@ const useStyles = makeStyles({
 } as any)
 
 const Footer = (): React.ReactElement => {
-  const appVersion = process.env.REACT_APP_APP_VERSION ? `v${process.env.REACT_APP_APP_VERSION} ` : 'Versions'
+  // const appVersion = process.env.REACT_APP_APP_VERSION ? `v${process.env.REACT_APP_APP_VERSION} ` : 'Versions'
   const date = new Date()
   const classes = useStyles()
   const dispatch = useDispatch()
@@ -56,25 +56,25 @@ const Footer = (): React.ReactElement => {
 
   return (
     <footer className={classes.footer}>
-      <span className={classes.item}>©{date.getFullYear()} Gnosis</span>
+      <span className={classes.item}>©{date.getFullYear()} HydraChain Gnosis</span>
       <span className={classes.sep}>|</span>
-      <Link className={cn(classes.item, classes.link)} target="_blank" to="https://gnosis-safe.io/terms">
+      <Link className={cn(classes.item, classes.link)} target="_blank" to="https://hydrachain.org/">
         Terms
       </Link>
       <span className={classes.sep}>|</span>
-      <Link className={cn(classes.item, classes.link)} target="_blank" to="https://gnosis-safe.io/privacy">
+      <Link className={cn(classes.item, classes.link)} target="_blank" to="https://hydrachain.org/">
         Privacy
       </Link>
       <span className={classes.sep}>|</span>
-      <Link className={cn(classes.item, classes.link)} target="_blank" to="https://gnosis-safe.io/licenses">
+      <Link className={cn(classes.item, classes.link)} target="_blank" to="https://hydrachain.org/">
         Licenses
       </Link>
       <span className={classes.sep}>|</span>
-      <Link className={cn(classes.item, classes.link)} target="_blank" to="https://gnosis-safe.io/imprint">
+      <Link className={cn(classes.item, classes.link)} target="_blank" to="https://hydrachain.org/">
         Imprint
       </Link>
       <span className={classes.sep}>|</span>
-      <Link className={cn(classes.item, classes.link)} target="_blank" to="https://gnosis-safe.io/cookie">
+      <Link className={cn(classes.item, classes.link)} target="_blank" to="https://hydrachain.org/">
         Cookie Policy
       </Link>
       <span className={classes.sep}>-</span>
@@ -82,15 +82,15 @@ const Footer = (): React.ReactElement => {
         Preferences
       </GnoButtonLink>
       <span className={classes.sep}>|</span>
-      <Link
+      {/* <Link
         className={cn(classes.item, classes.link)}
         target="_blank"
         to="https://github.com/gnosis/safe-react/releases"
       >
         {appVersion}
-      </Link>
-      <span className={classes.sep}>|</span>
-      <AppstoreButton light placement="footer" />
+      </Link> */}
+      {/* <span className={classes.sep}>|</span> */}
+      {/* <AppstoreButton light placement="footer" /> */}
     </footer>
   )
 }

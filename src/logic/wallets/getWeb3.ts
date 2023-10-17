@@ -1,9 +1,9 @@
 import semverSatisfies from 'semver/functions/satisfies'
 import Web3 from 'web3'
-import { Contract } from 'web3-eth-contract'
+// import { Contract } from 'web3-eth-contract'
 import { provider as Provider } from 'web3-core'
 import { ContentHash } from 'web3-eth-ens'
-import { namehash } from '@ethersproject/hash'
+// import { namehash } from '@ethersproject/hash'
 import Safe from '@gnosis.pm/safe-core-sdk'
 import Web3Adapter from '@gnosis.pm/safe-web3-lib'
 import { FEATURES } from '@gnosis.pm/safe-react-gateway-sdk'
@@ -123,28 +123,28 @@ export const reverseENSLookup = async (address: string): Promise<string> => {
   if (!address || !hasFeature(FEATURES.DOMAIN_LOOKUP) || !isValidAddressHydra(address)) {
     return ''
   }
+  return address
+  //   const web3 = getWeb3ReadOnly()
+  //   const lookup = address.toLowerCase().substr(2) + '.addr.reverse'
+  //   const nh = namehash(lookup)
 
-  const web3 = getWeb3ReadOnly()
-  const lookup = address.toLowerCase().substr(2) + '.addr.reverse'
-  const nh = namehash(lookup)
+  //   let ResolverContract: Contract
+  //   let name = ''
+  //   try {
+  //     ResolverContract = await web3.eth.ens.getResolver(lookup)
+  //   } catch (err) {
+  //     return ''
+  //   }
 
-  let ResolverContract: Contract
-  let name = ''
-  try {
-    ResolverContract = await web3.eth.ens.getResolver(lookup)
-  } catch (err) {
-    return ''
-  }
+  //   let verifiedAddress = ''
+  //   try {
+  //     name = await ResolverContract.methods.name(nh).call()
+  //     verifiedAddress = await web3.eth.ens.getAddress(name)
+  //   } catch (err) {
+  //     return ''
+  //   }
 
-  let verifiedAddress = ''
-  try {
-    name = await ResolverContract.methods.name(nh).call()
-    verifiedAddress = await web3.eth.ens.getAddress(name)
-  } catch (err) {
-    return ''
-  }
-
-  return verifiedAddress === address ? name : ''
+  //   return verifiedAddress === address ? name : ''
 }
 
 export const getContentFromENS = (name: string): Promise<ContentHash> => web3.eth.ens.getContenthash(name)

@@ -12,6 +12,8 @@ import { isValidEnsName, isValidCryptoDomainName } from 'src/logic/wallets/ethAd
 // import { checksumAddress } from 'src/utils/checksumAddress'
 import { Errors, logError } from 'src/logic/exceptions/CodedException'
 import { parsePrefixedAddress } from 'src/utils/prefixedAddress'
+// import { isValidAddressHydraHex } from 'src/utils/isValidAddress'
+// import { addressRemovePrefix } from 'src/logic/hydra/utils'
 
 export interface AddressInputProps {
   fieldMutator: (address: string) => void
@@ -43,6 +45,7 @@ const AddressInput = ({
   const [resolutions, setResolutions] = useState<Record<string, string | undefined>>({})
   const resolvedAddress = resolutions[currentInput]
   const isResolving = resolvedAddress === ''
+  // console.log('addressInput1', currentInput);
 
   // External validators must receive an unprefixed address
   const sanitizedValidators = useCallback(
@@ -55,8 +58,7 @@ const AddressInput = ({
 
   // Internal validators + externally passed validators
   const allValidators = useMemo(
-    // () => composeValidators(required, mustBeEthereumAddress, sanitizedValidators),
-    () => composeValidators(required, sanitizedValidators),
+    () => composeValidators(required, mustBeEthereumAddress, sanitizedValidators),
     [sanitizedValidators],
   )
 

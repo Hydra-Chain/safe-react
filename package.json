@@ -19,6 +19,7 @@
   "scripts": {
     "analyze": "source-map-explorer 'build/static/js/*.js'",
     "build": "cross-env REACT_APP_APP_VERSION=$npm_package_version rescripts --max-old-space-size=8192 build",
+    "build-4gb": "cross-env REACT_APP_APP_VERSION=$npm_package_version rescripts --max-old-space-size=4096 build",
     "eject": "rescripts eject",
     "format:staged": "lint-staged",
     "generate-types": "yarn generate-types:spendingLimit && yarn generate-types:safeDeployments && yarn generate-types:erc20 && yarn generate-types:erc721",

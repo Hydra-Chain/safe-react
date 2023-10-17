@@ -215,7 +215,6 @@ const SafeHeader = ({
   const { shortName } = useSafeAddress()
   const dispatch = useDispatch()
   dispatch(setShowShortName({ showShortName: false }))
-  console.log('ADDRESS', address)
 
   const hasSafeOpen = useRouteMatch(ADDRESSED_ROUTE)
 

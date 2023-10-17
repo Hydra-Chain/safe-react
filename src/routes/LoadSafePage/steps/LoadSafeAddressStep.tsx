@@ -32,6 +32,7 @@ import { trackEvent } from 'src/utils/googleTagManager'
 import { LOAD_SAFE_EVENTS } from 'src/utils/events/createLoadSafe'
 import { providerHydraSdkSelector, userAccountSelector } from 'src/logic/wallets/store/selectors'
 import { Dispatch } from 'src/logic/safe/store/actions/types'
+import { isValidAddressHydraHex } from 'src/utils/isValidAddress'
 
 export const loadSafeAddressStepLabel = 'Name and address'
 
@@ -62,8 +63,7 @@ function LoadSafeAddressStep(): ReactElement {
 
   useEffect(() => {
     const checkSafeAddress = async () => {
-      const isValidSafeAddress =
-        safeAddress && hydraSdk.utils.isHydraAddress(hydraSdk.decoder.toHydraAddress(safeAddress))
+      const isValidSafeAddress = safeAddress && isValidAddressHydraHex(safeAddress)
       if (!isValidSafeAddress) {
         return
       }

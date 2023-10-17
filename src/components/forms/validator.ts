@@ -70,6 +70,9 @@ export const mustBeHexData = (data: string): ValidatorReturnType => {
 
 export const mustBeAddressHash = memoize((address: string): ValidatorReturnType => {
   const errorMessage = 'Must be a valid address'
+  if (address.startsWith('0x')) {
+    address = address.replace('0x', '')
+  }
   return isValidAddressHydraHex(address) ? undefined : errorMessage
 })
 
@@ -84,7 +87,8 @@ const mustHaveValidPrefix = (prefix: string): ValidatorReturnType => {
 }
 
 export const mustBeEthereumAddress = (fullAddress: string): ValidatorReturnType => {
-  const errorMessage = 'Must be a valid address, ENS or Unstoppable domain'
+  // const errorMessage = 'Must be a valid address, ENS or Unstoppable domain'
+  const errorMessage = 'Must be a valid HYDRA address, 0x prefix accepted as well'
   const { address, prefix } = parsePrefixedAddress(fullAddress)
 
   const prefixError = mustHaveValidPrefix(prefix)

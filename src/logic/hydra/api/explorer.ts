@@ -59,8 +59,6 @@ async function _fetchTransactions(hashes: string[]): Promise<any> {
   try {
     let url = API_BASE + 'txs/'
     hashes.forEach((hash, i, arr) => (url += hash + (i !== arr.length - 1 ? ',' : '')))
-    console.log('url', url)
-
     return await (await fetch(url)).json()
   } catch (e) {
     throw e
@@ -200,6 +198,8 @@ export async function fetchBalances(address: string): Promise<SafeBalanceRespons
 
 export async function fetchContractTransactions(address: string, dispatch: Dispatch): Promise<TransactionListPage> {
   try {
+    // console.log('in fetchContractTransactions');
+
     const [safeInf, facInfo] = await Promise.all([
       fetchContractInfo(address),
       fetchContractInfo(SAFE_PROXY_FACTORY_ADDRESS),
@@ -208,7 +208,7 @@ export async function fetchContractTransactions(address: string, dispatch: Dispa
     const totalFactoryTxsCount = facInfo.transactionCount
     const safeAddressHydra = safeInf.address
     const safeAddressHex = safeInf.addressHex
-    const storageTxCountChecked = getLocalStorageLatestTxCountChecked()
+    let storageTxCountChecked = getLocalStorageLatestTxCountChecked()
     let page = 0
     const safeBatchTxsPromises: any[] = []
     const factoryBatchTxsPromises: any[] = []
@@ -230,8 +230,8 @@ export async function fetchContractTransactions(address: string, dispatch: Dispa
       const txsFactory = ([] = await fetchTransactions(factoryTxsHashes))
       let isCreationFound = false
       for (const t of txsFactory) {
-        if (isCreationFound) continue
-        const _tli = await getTransactionItemList(t, (tli: Transaction, receipt: any) => {
+        if (isCreationFound) break
+        await getTransactionItemList(t, (tli: Transaction, receipt: any) => {
           const logs = getSafeLogs(receipt.logs as Log[])
           logs.forEach((l) => {
             if (l.name === 'ProxyCreation') {
@@ -239,10 +239,13 @@ export async function fetchContractTransactions(address: string, dispatch: Dispa
                 if (e.value === '0x' + safeAddressHex) {
                   tli = creation(t, tli, receipt)
                   isCreationFound = true
+                  tlp.results.push(tli)
                   setLocalStorageLatestTxCountChecked({
                     ...getLocalStorageLatestTxCountChecked(),
+                    createTLI: tli,
                     factory: totalFactoryTxsCount,
                     isCreationFound,
+                    safeLastHistoryTLP: tlp,
                   })
                 }
               })
@@ -250,18 +253,21 @@ export async function fetchContractTransactions(address: string, dispatch: Dispa
           })
           return tli
         })
-        if (_tli?.transaction?.txInfo) {
-          tlp.results.push(_tli)
-          setLocalStorageLatestTxCountChecked({
-            ...getLocalStorageLatestTxCountChecked(),
-            safeLastHistoryTLP: tlp,
-          })
-        }
       }
+    } else if (storageTxCountChecked.createTLI) {
+      storageTxCountChecked.safeLastHistoryTLP.results.unshift(storageTxCountChecked.createTLI)
     }
-
+    storageTxCountChecked = getLocalStorageLatestTxCountChecked()
     // scan safe
-    if (!storageTxCountChecked.safeHistory || storageTxCountChecked.safeHistory < totalSafeTxsCount) {
+    console.log('BEFORE SCAN SAFE', storageTxCountChecked, totalSafeTxsCount)
+
+    if (
+      !storageTxCountChecked.safeHistory ||
+      storageTxCountChecked.safeHistory < totalSafeTxsCount ||
+      storageTxCountChecked.safeHistory < storageTxCountChecked.safeQuued
+    ) {
+      console.log('IN SCAN SAFE')
+
       let txCopy = totalSafeTxsCount
       while (txCopy > 0) {
         txCopy -= 1000
@@ -308,15 +314,18 @@ export async function fetchContractTransactions(address: string, dispatch: Dispa
           return tli
         })
       }
-      setLocalStorageLatestTxCountChecked({
-        ...getLocalStorageLatestTxCountChecked(),
-        safeHistory: totalSafeTxsCount,
-        safeLastHistoryTLP: tlp,
-      })
-    } else {
-      return getLocalStorageLatestTxCountChecked().safeLastHistoryTLP
+
+      tlp.results.unshift(storageTxCountChecked.createTLI)
+      if (tlp.results.length > getLocalStorageLatestTxCountChecked().safeLastHistoryTLP.results.length) {
+        setLocalStorageLatestTxCountChecked({
+          ...getLocalStorageLatestTxCountChecked(),
+          safeHistory: totalSafeTxsCount,
+          safeLastHistoryTLP: tlp,
+        })
+      }
     }
-    return tlp
+
+    return getLocalStorageLatestTxCountChecked().safeLastHistoryTLP
   } catch (e) {
     throw e
   }

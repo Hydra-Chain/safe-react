@@ -257,6 +257,7 @@ export const getSafeDeploymentTransaction = (
   numConfirmations: number,
   safeCreationSalt: number,
 ) => {
+  safeAccounts = safeAccounts.map((addr) => (!addr.startsWith('0x') ? `0x${addr}` : addr))
   const gnosisSafeData = safeMaster.methods
     .setup(
       safeAccounts,

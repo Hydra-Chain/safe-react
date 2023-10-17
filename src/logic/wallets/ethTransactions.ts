@@ -76,9 +76,9 @@ export const calculateGasOf = async (txConfig: EthAdapterTransaction): Promise<n
 }
 
 export const getUserNonce = async (userAddress: string): Promise<number> => {
+  // const web3 = getWeb3ReadOnly()
   console.log(userAddress)
 
-  // const web3 = getWeb3ReadOnly()
   try {
     // return await web3.eth.getTransactionCount(userAddress, 'pending')
     return 0

@@ -198,7 +198,7 @@ async function getInitialValues(userAddress, addressBook, location, suggestedSaf
     ...owners.reduce((ownerAddressFields, ownerAddress, index) => {
       return {
         ...ownerAddressFields,
-        [`owner-address-${index}`]: hydraToHexAddress(ownerAddress, true),
+        [`owner-address-${index}`]: hydraToHexAddress(ownerAddress, false),
       }
     }, {}),
     // we set owners name values as owner-name-${index} format in the form state

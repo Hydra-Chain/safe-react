@@ -129,7 +129,8 @@ const createNewSafe = (
     //   ethGasPriceInGWei: gasPrice,
     //   ethMaxPrioFeeInGWei: gasMaxPrioFee.toString(),
     // })
-    // console.log('deploymentTx', deploymentTx.encodeABI());
+    // console.log('deploymentTx', deploymentTx);
+    // console.log('deploymentTx.encodeABI()', deploymentTx.encodeABI());
 
     const tx = await dispatch(sendWithState(deploySafeWithNonce, { deploymentTx }))
     // console.log('tx', tx)
