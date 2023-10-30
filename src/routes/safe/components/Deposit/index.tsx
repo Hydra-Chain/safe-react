@@ -141,7 +141,7 @@ const Deposit = (): ReactElement => {
                       name="amount"
                       placeholder="Amount"
                       type="text"
-                      validate={composeValidators(mustBeFloat, minValue(0.01))}
+                      validate={composeValidators(mustBeFloat, minValue(1))}
                     />
                   </Col>
                 </Row>
