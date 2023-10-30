@@ -37,11 +37,23 @@ import {
   getERC20Symbol,
   // getGnosisProxyOracle,
 } from './contractInteractions/utils'
-import { SAFE_PROXY_FACTORY_ADDRESS, SAFE_SINGLETON_ADDRESS } from './contracts'
+import { DEPOSIT_TO_SAFE_CONTRACT_ADDRESS, SAFE_PROXY_FACTORY_ADDRESS, SAFE_SINGLETON_ADDRESS } from './contracts'
 import { decodeMethod, getSafeLogs, hydraToHexAddress, isHashConsumed } from './utils'
 
 export const getTransactionItemList = async (transaction: any, callback: any): Promise<Transaction | null> => {
   let tli: Transaction | null = null
+  for (let i = 0; i < transaction.inputs.length; i++) {
+    const input = transaction.inputs[i]
+    if (input.addressHex !== DEPOSIT_TO_SAFE_CONTRACT_ADDRESS) continue
+    tli = {} as Transaction
+    tli.conflictType = 'None'
+    tli.type = 'TRANSACTION'
+    tli.transaction = {} as TransactionSummary
+    tli.transaction.id = 'multisig_' + '0x' + DEPOSIT_TO_SAFE_CONTRACT_ADDRESS + '_0x' + transaction.id
+    tli.transaction.timestamp = transaction.timestamp * 1000
+    tli.transaction.txStatus = TransactionStatus.SUCCESS
+    tli = await callback(tli, undefined, i, input)
+  }
   for (let i = 0; i < transaction.outputs.length; i++) {
     const output = transaction.outputs[i]
     const receipt = output.receipt
@@ -72,7 +84,6 @@ export const addOwner = async (
   log?: any,
   params?: any,
 ): Promise<Transaction> => {
-  console.log('addowner!!')
   const threshold = !params
     ? log?.events?.find((e) => e.name === '_threshold')?.value
     : params?.find((p) => p.name === '_threshold')?.value
@@ -222,21 +233,23 @@ export const transferHydra = (
   receipt: any,
   logsDecoded: any,
   isConfimations: boolean,
+  input: any,
 ): Transaction | undefined => {
   if (isConfimations && t.confirmations === 0) return
 
   const isReceiveHydra =
-    receipt.logs?.length === 0 &&
-    t.contractSpends?.length > 0 &&
-    receipt.excepted === 'None' &&
-    !t.qrc20TokenTransfers &&
-    receipt.contractAddress === safeAddrHydra
+    input ||
+    (receipt?.logs?.length === 0 &&
+      t.contractSpends?.length > 0 &&
+      receipt?.excepted === 'None' &&
+      !t.qrc20TokenTransfers &&
+      receipt?.contractAddress === safeAddrHydra)
 
   const isSentHydra =
     t.contractSpends?.length > 0 &&
     !logsDecoded[1]?.events?.find((e) => e.name === 'data')?.value &&
     logsDecoded[0]?.name === 'ExecutionSuccess' &&
-    receipt.excepted === 'None' &&
+    receipt?.excepted === 'None' &&
     !t.qrc20TokenTransfers
 
   if (!isSentHydra && !isReceiveHydra) return
@@ -245,13 +258,13 @@ export const transferHydra = (
   tli.conflictType = 'None'
   tli.type = 'TRANSACTION'
   tli.transaction = {} as TransactionSummary
-  tli.transaction.id = (isReceiveHydra ? 'hydra' : 'multisig') + '_0x' + safeAddress + '_0x' + t.id
   tli.transaction.timestamp = t.timestamp * 1000
+  tli.transaction.id = (isReceiveHydra ? 'hydra' : 'multisig') + '_0x' + safeAddress + '_0x' + t.id
   tli.transaction.txStatus = TransactionStatus.SUCCESS
   tli.transaction.txInfo = (tli.transaction.txInfo ?? {}) as Transfer
   tli.transaction.txInfo.type = 'Transfer'
   tli.transaction.txInfo.sender = {
-    value: hydraToHexAddress(isSentHydra ? safeAddrHydra : receipt.sender),
+    value: hydraToHexAddress(isSentHydra ? safeAddrHydra : input ? DEPOSIT_TO_SAFE_CONTRACT_ADDRESS : receipt?.sender),
   } as AddressEx
   tli.transaction.txInfo.recipient = {
     value: hydraToHexAddress(isReceiveHydra ? safeAddrHydra : logsDecoded[1].events.find((e) => e.name === 'to').value),
@@ -260,7 +273,9 @@ export const transferHydra = (
   tli.transaction.txInfo.transferInfo = (tli.transaction.txInfo.transferInfo ?? {
     type: TransactionTokenType.NATIVE_COIN,
     value: isReceiveHydra
-      ? t.outputs.find((o) => o.address === safeAddrHydra).value
+      ? input
+        ? input.value
+        : t.outputs.find((o) => o.address === safeAddrHydra).value
       : t.contractSpends[0].outputs.find((o) => o.addressHex !== safeAddress).value,
   }) as Erc20Transfer
   return tli

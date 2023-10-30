@@ -2,8 +2,8 @@ import { Dispatch } from 'redux'
 import { ProposeTxBody } from 'src/logic/safe/transactions'
 import { AppReduxState } from 'src/store'
 import { NonPayableTransactionObject, PayableTx } from 'src/types/contracts/types'
-import { ERC20, GnosisSafe, SnapshotOracle } from '../abis'
-import { SAFE_PROXY_FACTORY_ADDRESS } from '../contracts'
+import { DepositHydraToSafe, ERC20, GnosisSafe, SnapshotOracle } from '../abis'
+import { DEPOSIT_TO_SAFE_CONTRACT_ADDRESS, SAFE_PROXY_FACTORY_ADDRESS } from '../contracts'
 import { contractCall, contractSend, getContract } from './core'
 import { Decoder } from 'hydraweb3-js'
 import { addressRemovePrefix, hydraToHexAddress } from '../utils'
@@ -387,4 +387,27 @@ export const getSnapshotOracleThresholdPercentage = async (
   )
 
   return thresholdPercentage.value[0].toString()
+}
+
+export const sendDepositHydraToSafe = async (
+  state: AppReduxState,
+  {
+    safeAddress,
+    amount,
+  }: {
+    safeAddress: string
+    amount: string
+  },
+): Promise<any> => {
+  const { sdk, address } = _getSdkAccount(state)
+  const sendTx = await contractSend(
+    getContract(sdk, DEPOSIT_TO_SAFE_CONTRACT_ADDRESS, DepositHydraToSafe),
+    'depositAndTransfer',
+    [safeAddress],
+    address,
+    60000,
+    parseFloat(amount),
+  )
+
+  return sendTx
 }

@@ -37,6 +37,7 @@ import { hydraToHexAddress, setCurrentTxWaitingExecutionDetails } from 'src/logi
 import {
   getGnosisProxyTransactionHash,
   safeGnosisSendAsset,
+  sendDepositHydraToSafe,
   sendWithState,
   setGnosisProxyOracle,
 } from 'src/logic/hydra/contractInteractions/utils'
@@ -210,36 +211,46 @@ export class TxSender {
     confirmCallback?: ConfirmEventHandler,
     oracle?: { currentOracle: string; newOracle: string; gasLimit?: string },
     sentTx?: any,
+    depositHydra?: any,
   ): Promise<void> {
     const { txArgs, isFinalization, from, safeTxHash, txProps } = this
     console.log('txArgs', txArgs)
 
-    const tx = isFinalization
-      ? getExecutionTransaction(txArgs)
-      : getApprovalTransaction(this.safeInstance, safeTxHash, txArgs)
-    const sendParams = createSendParams(from, txProps.ethParameters || {})
-    console.log('oracle', oracle)
-    console.log('isFinalization', isFinalization)
-    console.log('tx', tx)
+    let tx0: any
 
-    const tx0 =
-      sentTx ??
-      (oracle
-        ? await dispatch(
-            sendWithState(setGnosisProxyOracle, {
-              safeAddress: txProps.safeAddress,
-              oracle: oracle.newOracle,
-              gasLimit: oracle.gasLimit,
-            }),
-          )
-        : await dispatch(sendWithState(safeGnosisSendAsset, { tx, sendParams, safeAddress: txProps.safeAddress })))
-
-    this.txHash = '0x' + tx0.id
-    const approvedTransactionSchema = getLocalStorageApprovedTransactionSchema()
-    if (approvedTransactionSchema[safeTxHash]) {
-      approvedTransactionSchema[safeTxHash][this.txHash] = 0
-      setLocalStorageApprovedTransactionSchema(approvedTransactionSchema)
+    if (depositHydra) {
+      tx0 = await dispatch(
+        sendWithState(sendDepositHydraToSafe, {
+          safeAddress: depositHydra.recepient,
+          amount: depositHydra.amount,
+        }),
+      )
+      this.txHash = '0x' + tx0.id
+    } else {
+      const tx = isFinalization
+        ? getExecutionTransaction(txArgs)
+        : getApprovalTransaction(this.safeInstance, safeTxHash, txArgs)
+      console.log('tx', tx)
+      const sendParams = createSendParams(from, txProps.ethParameters || {})
+      tx0 =
+        sentTx ??
+        (oracle
+          ? await dispatch(
+              sendWithState(setGnosisProxyOracle, {
+                safeAddress: txProps.safeAddress,
+                oracle: oracle.newOracle,
+                gasLimit: oracle.gasLimit,
+              }),
+            )
+          : await dispatch(sendWithState(safeGnosisSendAsset, { tx, sendParams, safeAddress: txProps.safeAddress })))
+      this.txHash = '0x' + tx0.id
+      const approvedTransactionSchema = getLocalStorageApprovedTransactionSchema()
+      if (approvedTransactionSchema[safeTxHash]) {
+        approvedTransactionSchema[safeTxHash][this.txHash] = 0
+        setLocalStorageApprovedTransactionSchema(approvedTransactionSchema)
+      }
     }
+
     if (isFinalization) {
       aboutToExecuteTx.setNonce(txArgs.nonce)
     }
@@ -267,6 +278,7 @@ export class TxSender {
     errorCallback?: ErrorEventHandler,
     oracle?: { currentOracle: string; newOracle: string; gasLimit?: string },
     sentTx?: any,
+    depositHydra?: any,
   ): Promise<string | undefined> {
     // const isOffchain = await this.canSignOffchain()
     const isOffchain = false
@@ -291,7 +303,7 @@ export class TxSender {
 
     // On-chain signature or execution
     try {
-      await this.sendTx(dispatch, confirmCallback, oracle, sentTx)
+      await this.sendTx(dispatch, confirmCallback, oracle, sentTx, depositHydra)
     } catch (err) {
       logError(Errors._803, err.message)
       this.onError(err, errorCallback)
@@ -336,6 +348,7 @@ export const createTransaction = (
   errorCallback?: ErrorEventHandler,
   oracle?: { currentOracle: string; newOracle: string; gasLimit?: string },
   sentTx?: any,
+  depositHydra?: any,
 ): CreateTransactionAction => {
   return async (dispatch: Dispatch, getState: () => AppReduxState): Promise<void> => {
     const sender = new TxSender()
@@ -389,28 +402,30 @@ export const createTransaction = (
 
     // SafeTxHash acts as the unique ID of a tx throughout the app
 
-    const safeTxHash = await dispatch(
-      sendWithState(getGnosisProxyTransactionHash, {
-        safeInstance: sender.safeInstance,
-        to: sender.txArgs.to,
-        value: sender.txArgs.valueInWei,
-        data: sender.txArgs.data,
-        operation: sender.txArgs.operation,
-        nonce: sender.txArgs.nonce,
-        safeTxGas: sender.txArgs.safeTxGas,
-        baseGas: sender.txArgs.baseGas,
-        gasPrice: sender.txArgs.gasPrice,
-        gasToken: sender.txArgs.gasToken,
-        refundReceiver: sender.txArgs.refundReceiver,
-        sender: sender.txArgs.sender,
-        origin: '',
-        signature: '',
-      }),
-    )
+    const safeTxHash = !depositHydra
+      ? await dispatch(
+          sendWithState(getGnosisProxyTransactionHash, {
+            safeInstance: sender.safeInstance,
+            to: sender.txArgs.to,
+            value: sender.txArgs.valueInWei,
+            data: sender.txArgs.data,
+            operation: sender.txArgs.operation,
+            nonce: sender.txArgs.nonce,
+            safeTxGas: sender.txArgs.safeTxGas,
+            baseGas: sender.txArgs.baseGas,
+            gasPrice: sender.txArgs.gasPrice,
+            gasToken: sender.txArgs.gasToken,
+            refundReceiver: sender.txArgs.refundReceiver,
+            sender: sender.txArgs.sender,
+            origin: '',
+            signature: '',
+          }),
+        )
+      : ''
     // sender.safeTxHash = generateSafeTxHash(txProps.safeAddress, sender.safeVersion, sender.txArgs)
     sender.safeTxHash = safeTxHash
 
     // Start the creation
-    sender.submitTx(dispatch, confirmCallback, errorCallback, oracle, sentTx)
+    sender.submitTx(dispatch, confirmCallback, errorCallback, oracle, sentTx, depositHydra)
   }
 }

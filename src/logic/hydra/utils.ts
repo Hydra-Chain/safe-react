@@ -42,7 +42,7 @@ export const getSafeLogs = (logs: Log[]): any => {
       _logs[i].topics[y] = logs[i].topics[y].startsWith('0x') ? logs[i].topics[y] : '0x' + logs[i].topics[y]
     }
   }
-  return abiDecoder.decodeLogs(_logs)
+  return _logs.length > 0 ? abiDecoder.decodeLogs(_logs) : _logs
 }
 
 export const getTransactionListPageEmpty = (): TransactionListPage => {

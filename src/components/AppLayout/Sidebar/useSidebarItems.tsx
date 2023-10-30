@@ -148,6 +148,11 @@ const useSidebarItems = (): ListItemType[] => {
         href: currentSafeRoutes.SETTINGS_DETAILS,
         subItems: settingsSubItems,
       }),
+      makeEntryItem({
+        label: 'Deposit',
+        iconType: 'paymentToken',
+        href: currentSafeRoutes.DEPOSIT_HYDRA,
+      }),
     ]
   }, [
     featuresEnabled,

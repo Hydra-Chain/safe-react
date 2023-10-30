@@ -3,7 +3,7 @@ import memoize from 'lodash/memoize'
 import { sameAddress } from 'src/logic/wallets/ethAddresses'
 import { getWeb3 } from 'src/logic/wallets/getWeb3'
 import { getShortName } from 'src/config'
-import { isValidAddressHydraHex } from 'src/utils/isValidAddress'
+import { isValidAddressHydra, isValidAddressHydraHex } from 'src/utils/isValidAddress'
 import { ADDRESS_BOOK_INVALID_NAMES, isValidAddressBookName } from 'src/logic/addressBook/utils'
 import { FEATURES } from '@gnosis.pm/safe-react-gateway-sdk'
 import { isValidPrefix, parsePrefixedAddress } from 'src/utils/prefixedAddress'
@@ -86,9 +86,15 @@ const mustHaveValidPrefix = (prefix: string): ValidatorReturnType => {
   }
 }
 
+const mustBeValidHydraAddress = (address: string): ValidatorReturnType => {
+  if (!isValidAddressHydra(address)) {
+    return 'Not valid HYDRA non-EVM adress'
+  }
+}
+
 export const mustBeEthereumAddress = (fullAddress: string): ValidatorReturnType => {
   // const errorMessage = 'Must be a valid address, ENS or Unstoppable domain'
-  const errorMessage = 'Must be a valid HYDRA address, 0x prefix accepted as well'
+  const errorMessage = 'Must be a valid HYDRA EVM address'
   const { address, prefix } = parsePrefixedAddress(fullAddress)
 
   const prefixError = mustHaveValidPrefix(prefix)
@@ -98,6 +104,13 @@ export const mustBeEthereumAddress = (fullAddress: string): ValidatorReturnType 
   if (result !== undefined && hasFeature(FEATURES.DOMAIN_LOOKUP)) {
     return errorMessage
   }
+  return result
+}
+
+export const mustBeHydraAddress = (fullAddress: string): ValidatorReturnType => {
+  const result = mustBeValidHydraAddress(fullAddress)
+  if (result) return result
+
   return result
 }
 

@@ -5,7 +5,13 @@ import InputAdornment from '@material-ui/core/InputAdornment'
 import CircularProgress from '@material-ui/core/CircularProgress'
 
 import TextField from 'src/components/forms/TextField'
-import { Validator, composeValidators, mustBeEthereumAddress, required } from 'src/components/forms/validator'
+import {
+  Validator,
+  composeValidators,
+  mustBeEthereumAddress,
+  mustBeHydraAddress,
+  required,
+} from 'src/components/forms/validator'
 import { trimSpaces } from 'src/utils/strings'
 import { getAddressFromDomain } from 'src/logic/wallets/getWeb3'
 import { isValidEnsName, isValidCryptoDomainName } from 'src/logic/wallets/ethAddresses'
@@ -27,6 +33,7 @@ export interface AddressInputProps {
   disabled?: boolean
   spellCheck?: boolean
   className?: string
+  isHydraAddress?: boolean
 }
 
 const AddressInput = ({
@@ -40,6 +47,7 @@ const AddressInput = ({
   validators = [],
   defaultValue,
   disabled,
+  isHydraAddress,
 }: AddressInputProps): React.ReactElement => {
   const [currentInput, setCurrentInput] = useState<string>('')
   const [resolutions, setResolutions] = useState<Record<string, string | undefined>>({})
@@ -58,8 +66,8 @@ const AddressInput = ({
 
   // Internal validators + externally passed validators
   const allValidators = useMemo(
-    () => composeValidators(required, mustBeEthereumAddress, sanitizedValidators),
-    [sanitizedValidators],
+    () => composeValidators(required, isHydraAddress ? mustBeHydraAddress : mustBeEthereumAddress, sanitizedValidators),
+    [sanitizedValidators, isHydraAddress],
   )
 
   const onValueChange = useCallback(

@@ -6,7 +6,6 @@ import {
   TransactionData,
   TransactionDetails,
   TransactionListPage,
-  TransactionStatus,
 } from '@gnosis.pm/safe-react-gateway-sdk'
 import { Dispatch } from 'src/logic/safe/store/actions/types'
 import { ZERO_ADDRESS } from 'src/logic/wallets/ethAddresses'
@@ -259,15 +258,14 @@ export async function fetchContractTransactions(address: string, dispatch: Dispa
     }
     storageTxCountChecked = getLocalStorageLatestTxCountChecked()
     // scan safe
-    console.log('BEFORE SCAN SAFE', storageTxCountChecked, totalSafeTxsCount)
+    console.log('storageTxCountChecked', storageTxCountChecked)
+    console.log('totalSafeTxsCount', totalSafeTxsCount)
 
     if (
       !storageTxCountChecked.safeHistory ||
       storageTxCountChecked.safeHistory < totalSafeTxsCount ||
       storageTxCountChecked.safeHistory < storageTxCountChecked.safeQuued
     ) {
-      console.log('IN SCAN SAFE')
-
       let txCopy = totalSafeTxsCount
       while (txCopy > 0) {
         txCopy -= 1000
@@ -276,11 +274,13 @@ export async function fetchContractTransactions(address: string, dispatch: Dispa
       }
       const safeTxHashes = (await Promise.all(safeBatchTxsPromises)).map((r) => r.transactions).flat()
       page = 0
+      console.log('safeTxHashes', safeTxHashes)
+
       const txs = ([] = await fetchTransactions(safeTxHashes))
       for (const t of txs) {
-        await getTransactionItemList(t, async (tli: Transaction, receipt: any) => {
-          const logs = getSafeLogs(receipt.logs as Log[])
-          const ht = transferHydra(t, address, safeAddressHydra, receipt, logs, true)
+        await getTransactionItemList(t, async (tli: Transaction, receipt: any, index: number, input: any) => {
+          const logs = getSafeLogs((receipt?.logs as Log[]) ?? [])
+          const ht = transferHydra(t, address, safeAddressHydra, receipt, logs, true, input)
           if (ht) {
             tlp.results.push(ht)
             return null
@@ -315,10 +315,13 @@ export async function fetchContractTransactions(address: string, dispatch: Dispa
         })
       }
 
-      tlp.results.unshift(storageTxCountChecked.createTLI)
-      if (tlp.results.length > getLocalStorageLatestTxCountChecked().safeLastHistoryTLP.results.length) {
+      // tlp.results.unshift(storageTxCountChecked.createTLI)
+      console.log('tlp.results.length', tlp.results.length)
+      console.log('storageTxCountChecked', storageTxCountChecked)
+
+      if (tlp?.results?.length > 0) {
         setLocalStorageLatestTxCountChecked({
-          ...getLocalStorageLatestTxCountChecked(),
+          ...storageTxCountChecked,
           safeHistory: totalSafeTxsCount,
           safeLastHistoryTLP: tlp,
         })
@@ -367,26 +370,24 @@ export const fetchQueedTransactionsHydra = async (address: string, dispatch: Dis
   }
   const safeTxHashes = (await Promise.all(safeBatchTxsPromises)).map((r) => r.transactions).flat()
   const txs = await fetchTransactions(safeTxHashes)
-  if (txs) {
-    for (let i = txs.length - 1; i >= 0; i--) {
-      const t = txs[i]
-      const _tli = await approvedHash(address, t, dispatch)
-      if (_tli.transaction) {
-        const safeTxHash = (_tli as any).transaction.executionInfo.safeTxHash
-        const txHash = _tli.transaction.id.split('_')[2]
-        const approvedTransactionSchema = getLocalStorageApprovedTransactionSchema()
-        if (!approvedTransactionSchema[safeTxHash]) {
-          approvedTransactionSchema[safeTxHash] = {}
-        }
-        approvedTransactionSchema[safeTxHash][txHash] = 1
-        setLocalStorageApprovedTransactionSchema(approvedTransactionSchema)
-        if (
-          !tlp.results.find((__tli: any) => {
-            return __tli.transaction.executionInfo.safeTxHash === (_tli as any).transaction.executionInfo.safeTxHash
-          })
-        ) {
-          tlp.results.push(_tli)
-        }
+  for (let i = txs?.length - 1; i >= 0; i--) {
+    const t = txs[i]
+    const _tli = await approvedHash(address, t, dispatch)
+    if (_tli.transaction) {
+      const safeTxHash = (_tli as any).transaction.executionInfo.safeTxHash
+      const txHash = _tli.transaction.id.split('_')[2]
+      const approvedTransactionSchema = getLocalStorageApprovedTransactionSchema()
+      if (!approvedTransactionSchema[safeTxHash]) {
+        approvedTransactionSchema[safeTxHash] = {}
+      }
+      approvedTransactionSchema[safeTxHash][txHash] = 1
+      setLocalStorageApprovedTransactionSchema(approvedTransactionSchema)
+      if (
+        !tlp.results.find((__tli: any) => {
+          return __tli.transaction.executionInfo.safeTxHash === (_tli as any).transaction.executionInfo.safeTxHash
+        })
+      ) {
+        tlp.results.push(_tli)
       }
     }
   }
@@ -410,13 +411,12 @@ export const fetchSafeTransactionDetails = async (
   const [tx, info] = await Promise.all([fetchTransaction(txHash.substring(2)), fetchContractInfo(safeAddress)])
 
   const safeAddressHydra = info.address
-  const _tli = await getTransactionItemList(tx, async (tli: Transaction, receipt: any) => {
+  const _tli = await getTransactionItemList(tx, async (tli: Transaction, receipt: any, index: number, input: any) => {
     const _tx = Object.assign({}, tx)
     const _receipt = Object.assign({}, receipt)
-    const logs = getSafeLogs(receipt.logs as Log[])
-    const ht = transferHydra(_tx, safeAddress, safeAddressHydra, _receipt, logs, true)
+    const logs = getSafeLogs((receipt?.logs as Log[]) ?? [])
+    const ht = transferHydra(_tx, safeAddress, safeAddressHydra, _receipt, logs, true, input)
     if (ht) return ht
-    tli.transaction.txStatus === TransactionStatus.FAILED
     if (logs?.length <= 0) return null
     for (const log of logs) {
       switch (log.name) {

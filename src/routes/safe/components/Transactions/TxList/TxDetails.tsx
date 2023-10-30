@@ -1,6 +1,6 @@
 import { Icon, Link, Loader, Text } from '@gnosis.pm/safe-react-components'
 import cn from 'classnames'
-import { ReactElement, useContext } from 'react'
+import { ReactElement, useContext, useEffect, useState } from 'react'
 import styled from 'styled-components'
 
 import {
@@ -30,6 +30,10 @@ import TxModuleInfo from './TxModuleInfo'
 import Track from 'src/components/Track'
 import { TX_LIST_EVENTS } from 'src/utils/events/txList'
 import TxShareButton from './TxShareButton'
+import { DEPOSIT_TO_SAFE_CONTRACT_ADDRESS } from 'src/logic/hydra/contracts'
+import { useHistory } from 'react-router-dom'
+import { SAFE_ROUTES } from 'src/routes/routes'
+import { fetchTransaction } from 'src/logic/hydra/api/explorer'
 
 const NormalBreakingText = styled(Text)`
   line-break: normal;
@@ -91,9 +95,17 @@ type TxDetailsProps = {
   transaction: Transaction
 }
 
-export const TxDetails = ({ transaction }: TxDetailsProps): ReactElement => {
-  console.log('TxDetails')
+const isDepositConfirmedCheck = async ({ transaction }: TxDetailsProps) => {
+  const tx = await fetchTransaction((transaction?.txDetails as any).txHash.replace('0x', ''))
+  return tx.confirmations > 0
+}
 
+export const TxDetails = ({ transaction }: TxDetailsProps): ReactElement => {
+  const sender = (transaction.txInfo as any)?.to?.value
+  const isDeposit = sender === '0x' + DEPOSIT_TO_SAFE_CONTRACT_ADDRESS
+  const history = useHistory()
+
+  const [isDepositConfirmed, setIsDepositConfirmed] = useState(false)
   const { txLocation } = useContext(TxLocationContext)
   const { data, loading } = useTransactionDetails(transaction.id, transaction.txDetails)
   const txStatus = useTxStatus(transaction)
@@ -102,6 +114,22 @@ export const TxDetails = ({ transaction }: TxDetailsProps): ReactElement => {
   const currentUser = useSelector(userAccountSelector)
   const isMultiSend = data && isMultiSendTxInfo(data.txInfo)
   const shouldShowStepper = data?.detailedExecutionInfo && isMultiSigExecutionDetails(data.detailedExecutionInfo)
+
+  if (isDepositConfirmed) {
+    history.push(SAFE_ROUTES.TRANSACTIONS_HISTORY)
+  }
+
+  useEffect(() => {
+    ;(async () => {
+      if (!isDeposit) return
+      const isDepositConfed = await isDepositConfirmedCheck({ transaction })
+      setIsDepositConfirmed(isDepositConfed)
+    })()
+
+    return () => {
+      setIsDepositConfirmed(false)
+    }
+  }, [transaction, isDeposit])
 
   // To avoid prop drilling into TxDataGroup, module details are positioned here accordingly
   const getModuleDetails = () => {

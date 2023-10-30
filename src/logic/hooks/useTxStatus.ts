@@ -15,7 +15,7 @@ const useTxStatus = (transaction: Transaction): TransactionStatus => {
     if (storedStatus) {
       setLocalStatus(storedStatus)
     }
-  }, 100)
+  }, 500)
 
   return localStatus
 }

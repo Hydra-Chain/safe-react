@@ -28,6 +28,7 @@ const Settings = lazy(() => import('src/routes/safe/components/Settings'))
 const Balances = lazy(() => import('src/routes/safe/components/Balances'))
 const TxList = lazy(() => import('src/routes/safe/components/Transactions/TxList'))
 const AddressBookTable = lazy(() => import('src/routes/safe/components/AddressBook'))
+const Deposit = lazy(() => import('src/routes/safe/components/Deposit'))
 
 const Container = (): React.ReactElement => {
   const featuresEnabled = useSelector(currentSafeFeaturesEnabled)
@@ -128,6 +129,7 @@ const Container = (): React.ReactElement => {
           }}
         />
         <Route path={SAFE_ROUTES.SETTINGS} render={() => wrapInSuspense(<Settings />)} />
+        <Route path={SAFE_ROUTES.DEPOSIT_HYDRA} render={() => wrapInSuspense(<Deposit />)} />
         <Redirect to={SAFE_ROUTES.ASSETS_BALANCES} />
       </Switch>
       {modal.isOpen && <GenericModal {...modal} onClose={closeGenericModal} />}
