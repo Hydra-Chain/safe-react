@@ -131,7 +131,7 @@ const Deposit = (): ReactElement => {
                   <Col xs={8} style={{ display: 'flex', flexDirection: 'column' }}>
                     <Paragraph color="disabled" noMargin size="md">
                       Amount
-                      <span>(Min amount to deposit is 10 HYDRA)</span>
+                      <span>(Min amount to deposit is 1 HYDRA)</span>
                     </Paragraph>
                     <Field
                       component={TextField}
