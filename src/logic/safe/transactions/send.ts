@@ -37,7 +37,7 @@ export const getApprovalTransaction = (
     return encodeMethodWithParams(GnosisSafeABI, 'approveHash', [
       txHash,
       to,
-      valueInWei,
+      valueInWei ?? '0',
       data,
       operation,
       safeTxGas,
@@ -71,7 +71,7 @@ export const getExecutionTransaction = ({
   try {
     return encodeMethodWithParams(GnosisSafeABI, 'execTransaction', [
       to,
-      valueInWei,
+      valueInWei ?? '0',
       data,
       operation,
       safeTxGas,

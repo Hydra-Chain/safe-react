@@ -159,12 +159,11 @@ export class TxSender {
       notifications.showOnRejection(err)
       return
     }
-
     const executeData = isFinalization
       ? safeInstance.methods
           .execTransaction(
             txProps.to,
-            txProps.valueInWei,
+            txProps.valueInWei ?? '0',
             txProps.txData,
             txProps.operation,
             0,
@@ -186,7 +185,6 @@ export class TxSender {
       from,
       data: executeData,
     })
-
     if (contractErrorMessage) {
       logError(Errors._803, contractErrorMessage)
       notifications.showOnError(err, contractErrorMessage)

@@ -7,6 +7,7 @@ import {
   Custom,
   DataDecoded,
   Erc20Transfer,
+  ExecutionInfo,
   // ExecutionInfo,
   MultisigExecutionInfo,
   Parameter,
@@ -51,7 +52,7 @@ export const getTransactionItemList = async (transaction: any, callback: any): P
     tli.transaction = {} as TransactionSummary
     tli.transaction.id = 'multisig_' + '0x' + DEPOSIT_TO_SAFE_CONTRACT_ADDRESS + '_0x' + transaction.id
     tli.transaction.timestamp = transaction.timestamp * 1000
-    tli.transaction.txStatus = TransactionStatus.SUCCESS
+    // tli.transaction.txStatus = TransactionStatus.SUCCESS
     tli = await callback(tli, undefined, i, input)
   }
   for (let i = 0; i < transaction.outputs.length; i++) {
@@ -64,7 +65,7 @@ export const getTransactionItemList = async (transaction: any, callback: any): P
     tli.transaction = {} as TransactionSummary
     tli.transaction.id = 'multisig_' + '0x' + receipt.contractAddressHex + '_0x' + transaction.id
     tli.transaction.timestamp = transaction.timestamp * 1000
-    tli.transaction.txStatus = receipt.excepted === 'None' ? TransactionStatus.SUCCESS : TransactionStatus.FAILED
+    // tli.transaction.txStatus = receipt.excepted === 'None' ? TransactionStatus.SUCCESS : TransactionStatus.FAILED
     tli = await callback(tli, receipt, i)
   }
   return tli
@@ -85,7 +86,7 @@ export const addOwner = async (
   params?: any,
 ): Promise<Transaction> => {
   const threshold = !params
-    ? log?.events?.find((e) => e.name === '_threshold')?.value
+    ? log?.params?.find((e) => e.name === '_threshold')?.value
     : params?.find((p) => p.name === '_threshold')?.value
   const owner = params?.find((p) => p.name === 'owner')?.value
   tli.transaction.txInfo = (tli.transaction.txInfo ?? {}) as SettingsChange
@@ -93,41 +94,40 @@ export const addOwner = async (
   tli.transaction.txInfo.settingsInfo = (tli.transaction.txInfo.settingsInfo ?? {}) as AddOwner
   tli.transaction.txInfo.settingsInfo.type = SettingsInfoType.ADD_OWNER
   tli.transaction.txInfo.settingsInfo.owner = (tli.transaction.txInfo.settingsInfo.owner ?? {}) as AddressEx
-  tli.transaction.txInfo.settingsInfo.owner.value = owner ?? log.events.find((e) => e.name === 'owner').value
-  tli.transaction.txInfo.settingsInfo.threshold =
-    threshold ?? (await dispatch(sendWithState(getGnosisProxyThreshold, { safeAddress })))
+  tli.transaction.txInfo.settingsInfo.owner.value = owner ?? log.params.find((e) => e.name === 'owner').value
+  tli.transaction.txInfo.settingsInfo.threshold = Number(threshold)
   tli.transaction.txInfo.dataDecoded = (tli.transaction.txInfo.dataDecoded ?? {}) as DataDecoded
   tli.transaction.txInfo.dataDecoded.method = 'addOwnerWithThreshold'
   tli.transaction.txInfo.dataDecoded.parameters = (tli.transaction.txInfo.dataDecoded.parameters ?? []) as Parameter[]
   if (!threshold) {
-    log.events.push({
+    log.params.push({
       name: '_threshold',
       type: 'uint256',
       value: tli.transaction.txInfo.settingsInfo.threshold.toString(),
     })
   }
-  tli.transaction.txInfo.dataDecoded.parameters = log?.events ?? params
+  tli.transaction.txInfo.dataDecoded.parameters = !params ? log.events : params
   return tli
 }
 
 export const removeOwner = (tli: Transaction, logs?: any, params?: any): Transaction => {
-  const threshold = logs
-    ? logs?.find((e) => e.name === 'ChangedThreshold')?.events?.[0].value
-    : params?.find((p) => p.name === '_threshold')?.value
-  const owner = logs
+  const owner = !params
     ? logs?.find((e) => e.name === 'RemovedOwner')?.events?.[0].value
     : params?.find((p) => p.name === 'owner')?.value
+  const threshold = !params
+    ? logs?.find((e) => e.name === 'ChangedThreshold')?.events?.[0].value
+    : params?.find((p) => p.name === '_threshold')?.value
   tli.transaction.txInfo = (tli.transaction.txInfo ?? {}) as SettingsChange
   tli.transaction.txInfo.type = 'SettingsChange'
   tli.transaction.txInfo.settingsInfo = (tli.transaction.txInfo.settingsInfo ?? {}) as RemoveOwner
   tli.transaction.txInfo.settingsInfo.type = SettingsInfoType.REMOVE_OWNER
+  tli.transaction.txInfo.settingsInfo.threshold = Number(threshold)
   tli.transaction.txInfo.settingsInfo.owner = (tli.transaction.txInfo.settingsInfo.owner ?? {}) as AddressEx
   tli.transaction.txInfo.settingsInfo.owner.value = owner
-  tli.transaction.txInfo.settingsInfo.threshold = threshold
   tli.transaction.txInfo.dataDecoded = (tli.transaction.txInfo.dataDecoded ?? {}) as DataDecoded
   tli.transaction.txInfo.dataDecoded.method = 'removeOwner'
   tli.transaction.txInfo.dataDecoded.parameters = (tli.transaction.txInfo.dataDecoded.parameters ?? []) as Parameter[]
-  tli.transaction.txInfo.dataDecoded.parameters = logs ? logs.events : params
+  tli.transaction.txInfo.dataDecoded.parameters = !params ? logs.events : params
   return tli
 }
 
@@ -151,22 +151,43 @@ export const changeThreshold = async (
   tli.transaction.txInfo.type = 'SettingsChange'
   tli.transaction.txInfo.settingsInfo = (tli.transaction.txInfo.settingsInfo ?? {}) as ChangeThreshold
   tli.transaction.txInfo.settingsInfo.type = SettingsInfoType.CHANGE_THRESHOLD
-  tli.transaction.txInfo.settingsInfo.threshold = threshold
+  tli.transaction.txInfo.settingsInfo.threshold = Number(threshold)
   tli.transaction.txInfo.dataDecoded = (tli.transaction.txInfo.dataDecoded ?? {}) as DataDecoded
   tli.transaction.txInfo.dataDecoded.method = 'changeThreshold'
   tli.transaction.txInfo.dataDecoded.parameters = (tli.transaction.txInfo.dataDecoded.parameters ?? []) as Parameter[]
-  tli.transaction.txInfo.dataDecoded.parameters = logs.events
+  tli.transaction.txInfo.dataDecoded.parameters = !params ? logs.events : params
   return tli
 }
 
 export const executionFailure = (tli: Transaction, logs: any): Transaction => {
-  const to = logs.find((e) => e.name === 'ExecutionParams')?.events?.find((e) => e.name === 'to').value
+  const executionParams = logs.find((e) => e.name === 'ExecutionParams')
+  const to = executionParams?.events?.find((e) => e.name === 'to').value
   const payment = logs.find((l) => l.name === '"ExecutionFailure"')?.events?.find((e) => e.name === 'payment')?.value
-  tli.transaction.executionInfo
   tli.transaction.txStatus = TransactionStatus.FAILED
   tli.transaction.txInfo = (tli.transaction.txInfo ?? {}) as Custom
   tli.transaction.txInfo.type = 'Custom'
   tli.transaction.txInfo.methodName = 'ExecutionFailure'
+  tli.transaction.txInfo.actionCount = 1
+  tli.transaction.txInfo.to = (tli.transaction.txInfo.to ?? {}) as AddressEx
+  tli.transaction.txInfo.to.value = to
+  tli.transaction.txInfo.value = payment
+  const executionInfo = { hydraExecution: { data: '' } } as any
+  executionInfo.hydraExecution.data = executionParams?.events?.find((e) => e.name === 'data')?.value
+  return tli
+}
+
+export const executionCustom = (tli: Transaction, logs: any): Transaction => {
+  const executionParams = logs.find((e) => e.name === 'ExecutionParams')
+  const to = executionParams?.events?.find((e) => e.name === 'to').value
+  const payment = logs.find((l) => l.name === 'ExecutionSuccess')?.events?.find((e) => e.name === 'payment')?.value
+  const executionInfo = { hydraExecution: { data: '', to: { value: '' } } } as any
+  executionInfo.hydraExecution.data = executionParams.events.find((e) => e.name === 'data')?.value
+  executionInfo.hydraExecution.to = executionParams.events.find((e) => e.name === 'to')?.value
+  executionInfo.hydraExecution.value = executionParams.events.find((e) => e.name === 'value')?.value
+  tli.transaction.executionInfo = executionInfo as ExecutionInfo
+  tli.transaction.txInfo = (tli.transaction.txInfo ?? {}) as Custom
+  tli.transaction.txInfo.type = 'Custom'
+  tli.transaction.txInfo.methodName = 'Custom'
   tli.transaction.txInfo.actionCount = 1
   tli.transaction.txInfo.to = (tli.transaction.txInfo.to ?? {}) as AddressEx
   tli.transaction.txInfo.to.value = to
@@ -209,20 +230,23 @@ export const addOracle = (tli: Transaction, log: any, safeAddress: string): Tran
 export const transfer = (t: any, tli: Transaction, log: any, safeAddress: string): Transaction => {
   tli.transaction.txInfo = (tli.transaction.txInfo ?? {}) as Transfer
   tli.transaction.txInfo.type = 'Transfer'
-  const sender = log.events.find((e) => e.name === 'from').value
-  tli.transaction.txInfo.sender = { value: sender } as AddressEx
-  tli.transaction.txInfo.recipient = { value: log.events.find((e) => e.name === 'to').value } as AddressEx
+  const from = log.params.find((e) => e.name === 'from')?.value ?? '0x' + safeAddress
+  const to = log.params.find((e) => e.name === 'to').value
+  const value = log.params.find((e) => e.name === 'value').value
+  tli.transaction.txInfo.sender = { value: from } as AddressEx
+  tli.transaction.txInfo.recipient = { value: to } as AddressEx
   tli.transaction.txInfo.direction =
-    sender.substring(2) === safeAddress ? TransferDirection.OUTGOING : TransferDirection.INCOMING
+    from.substring(2) === safeAddress ? TransferDirection.OUTGOING : TransferDirection.INCOMING
   tli.transaction.txInfo.transferInfo = (tli.transaction.txInfo.transferInfo ?? {}) as Erc20Transfer
   const token = t.qrc20TokenTransfers[0]
   tli.transaction.txInfo.transferInfo.decimals = token.decimals
   tli.transaction.txInfo.transferInfo.tokenAddress = '0x' + token.addressHex
   tli.transaction.txInfo.transferInfo.tokenName = token.name
   tli.transaction.txInfo.transferInfo.tokenSymbol = token.symbol
-  tli.transaction.txInfo.transferInfo.value = log.events.find((e) => e.name === 'value').value
+  tli.transaction.txInfo.transferInfo.value = value
   tli.transaction.txInfo.transferInfo.logoUri = ''
   tli.transaction.txInfo.transferInfo.type = TransactionTokenType.ERC20
+
   return tli
 }
 
@@ -301,11 +325,11 @@ export const approvedHash = async (safeAddress: string, transaction: any, dispat
     if (!receipt) continue
     const logs = getSafeLogs(receipt.logs as Log[])
     const logApprovedHash = logs.find((log) => log.name === 'ApproveHash')
-    const logExecutionParams = logs.find((log) => log.name === 'ExecutionParams')
     if (!logApprovedHash) continue
+    const logExecutionParams = logs.find((log) => log.name === 'ExecutionParams')
     const _isHashConsumed = await isHashConsumed(safeAddress, logApprovedHash, dispatch)
+    const safeTxHash = logApprovedHash.events.find((e) => e.name === 'approvedHash').value
     if (_isHashConsumed) {
-      const safeTxHash = logApprovedHash.events.find((e) => e.name === 'approvedHash').value
       const approvedTransactionSchema = getLocalStorageApprovedTransactionSchema()
       if (approvedTransactionSchema[safeTxHash]) {
         delete approvedTransactionSchema[safeTxHash]
@@ -322,7 +346,6 @@ export const approvedHash = async (safeAddress: string, transaction: any, dispat
     if (Number(nonce) > logExecutionParams.events.find((e) => e.name === '_nonce').value) {
       continue
     }
-    const safeTxHash = logApprovedHash.events.find((e) => e.name === 'approvedHash').value
     const ownerApproved = logApprovedHash.events.find((e) => e.name === 'owner').value
     const approvedOwnersHashPromises = owners[0]
       .map((o) => {
@@ -445,6 +468,12 @@ export const approvedHash = async (safeAddress: string, transaction: any, dispat
           transferInfo.value = logExecutionParams.events.find((e) => e.name === 'value').value
           transferInfo.type = TransactionTokenType.NATIVE_COIN
           tli.transaction.txInfo.transferInfo = transferInfo as NativeCoinTransfer
+        } else {
+          tli = executionCustom(tli, logs)
+          tli.transaction.executionInfo = {
+            ...executionInfo,
+            ...tli.transaction.executionInfo,
+          } as MultisigExecutionInfo
         }
         break
     }
