@@ -195,6 +195,21 @@ export const executionCustom = (tli: Transaction, logs: any): Transaction => {
   return tli
 }
 
+export const executionRejection = (tli: Transaction, logs: any, actionCount: 0 | null): Transaction => {
+  const executionParams = logs.find((e) => e.name === 'ExecutionParams')
+  const to = executionParams?.events?.find((e) => e.name === 'to').value
+  tli.transaction.txInfo = (tli.transaction.txInfo ?? {}) as Custom
+  tli.transaction.txInfo.type = 'Custom'
+  tli.transaction.txInfo.actionCount = actionCount ?? null
+  tli.transaction.txInfo.dataSize = '0'
+  tli.transaction.txInfo.isCancellation = true
+  tli.transaction.txInfo.to = (tli.transaction.txInfo.to ?? {}) as AddressEx
+  tli.transaction.txInfo.to.value = to
+  tli.transaction.txInfo.value = '0'
+  tli.transaction.executionInfo = { type: 'MULTISIG' } as ExecutionInfo
+  return tli
+}
+
 export const changeThresholdPercentage = (tli: Transaction, logs: any): Transaction => {
   const thresholdPercentage = logs.find((e) => e.name === 'ThresholdPercentageChanged')?.events?.[2].value
   if (!thresholdPercentage) return tli
@@ -343,6 +358,7 @@ export const approvedHash = async (safeAddress: string, transaction: any, dispat
       dispatch(sendWithState(getGnosisProxyNonce, { safeAddress })),
       dispatch(sendWithState(getGnosisProxyOwners, { safeAddress })),
     ])
+
     if (Number(nonce) > logExecutionParams.events.find((e) => e.name === '_nonce').value) {
       continue
     }
@@ -404,7 +420,9 @@ export const approvedHash = async (safeAddress: string, transaction: any, dispat
       }
       executionInfo[e.name] = e.value
     })
-    const isNativeTransfer = !executionInfo.hydraExecution.data || executionInfo.hydraExecution.data === '0x'
+    const isNativeTransfer =
+      (!executionInfo.hydraExecution.data || executionInfo.hydraExecution.data === '0x') &&
+      executionInfo.hydraExecution.value !== '0'
     let decoded
     const data = logExecutionParams.events.find((e) => e.name === 'data').value
     const dataDecoded = decodeMethod(data ?? '0x')
@@ -414,15 +432,24 @@ export const approvedHash = async (safeAddress: string, transaction: any, dispat
     switch (dataDecoded?.name) {
       case 'addOwnerWithThreshold':
         tli = await addOwner(tli, safeAddress, dispatch, undefined, dataDecoded.params)
-        tli.transaction.executionInfo = executionInfo as MultisigExecutionInfo
+        tli.transaction.executionInfo = {
+          ...executionInfo,
+          ...tli.transaction.executionInfo,
+        } as MultisigExecutionInfo
         break
       case 'removeOwner':
         tli = removeOwner(tli, undefined, dataDecoded.params)
-        tli.transaction.executionInfo = executionInfo as MultisigExecutionInfo
+        tli.transaction.executionInfo = {
+          ...executionInfo,
+          ...tli.transaction.executionInfo,
+        } as MultisigExecutionInfo
         break
       case 'changeThreshold':
         tli = await changeThreshold(tli, safeAddress, dispatch, logs, dataDecoded.params)
-        tli.transaction.executionInfo = executionInfo as MultisigExecutionInfo
+        tli.transaction.executionInfo = {
+          ...executionInfo,
+          ...tli.transaction.executionInfo,
+        } as MultisigExecutionInfo
         break
       case 'transfer':
         const data = executionInfo.hydraExecution.data.slice(0, 2) + executionInfo.hydraExecution.data.slice(10)
@@ -469,11 +496,23 @@ export const approvedHash = async (safeAddress: string, transaction: any, dispat
           transferInfo.type = TransactionTokenType.NATIVE_COIN
           tli.transaction.txInfo.transferInfo = transferInfo as NativeCoinTransfer
         } else {
-          tli = executionCustom(tli, logs)
-          tli.transaction.executionInfo = {
-            ...executionInfo,
-            ...tli.transaction.executionInfo,
-          } as MultisigExecutionInfo
+          if (
+            (!executionInfo.hydraExecution.data || executionInfo.hydraExecution.data === '0x') &&
+            executionInfo.hydraExecution.value === '0'
+          ) {
+            // rejection tx
+            tli = executionRejection(tli, logs, 0)
+            tli.transaction.executionInfo = {
+              ...executionInfo,
+              ...tli.transaction.executionInfo,
+            } as MultisigExecutionInfo
+          } else {
+            tli = executionCustom(tli, logs)
+            tli.transaction.executionInfo = {
+              ...executionInfo,
+              ...tli.transaction.executionInfo,
+            } as MultisigExecutionInfo
+          }
         }
         break
     }

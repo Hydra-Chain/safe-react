@@ -34,6 +34,7 @@ import { DEPOSIT_TO_SAFE_CONTRACT_ADDRESS } from 'src/logic/hydra/contracts'
 import { useHistory } from 'react-router-dom'
 import { SAFE_ROUTES } from 'src/routes/routes'
 import { fetchTransaction } from 'src/logic/hydra/api/explorer'
+import { TransactionDetails } from '@gnosis.pm/safe-react-gateway-sdk'
 
 const NormalBreakingText = styled(Text)`
   line-break: normal;
@@ -113,7 +114,9 @@ export const TxDetails = ({ transaction }: TxDetailsProps): ReactElement => {
   const isPending = txStatus === LocalTransactionStatus.PENDING
   const currentUser = useSelector(userAccountSelector)
   const isMultiSend = data && isMultiSendTxInfo(data.txInfo)
-  const shouldShowStepper = data?.detailedExecutionInfo && isMultiSigExecutionDetails(data.detailedExecutionInfo)
+  const shouldShowStepper =
+    (data?.detailedExecutionInfo as any)?.safeTxHash &&
+    isMultiSigExecutionDetails((data as TransactionDetails).detailedExecutionInfo)
 
   if (isDepositConfirmed) {
     history.push(SAFE_ROUTES.TRANSACTIONS_HISTORY)
@@ -173,7 +176,7 @@ export const TxDetails = ({ transaction }: TxDetailsProps): ReactElement => {
   }
 
   const customTxNoData = isCustomTxInfo(data.txInfo) && !data.txInfo.methodName && !parseInt(data.txInfo.dataSize, 10)
-  const onChainRejection = isCancelTxDetails(data.txInfo) && isMultiSigExecutionDetails(data.detailedExecutionInfo)
+  const onChainRejection = isCancelTxDetails(data.txInfo)
   const noTxDataBlock = customTxNoData && !onChainRejection
   const txData = () =>
     isMultiSend ? (
@@ -224,7 +227,8 @@ export const TxDetails = ({ transaction }: TxDetailsProps): ReactElement => {
           >
             <TxOwners txDetails={data} isPending={isPending} />
           </div>
-          {!isPending && !data.executedAt && txLocation !== 'history' && !!currentUser && (
+          {/* {!isPending && !data.executedAt && txLocation !== 'history' && !!currentUser && ( */}
+          {!isPending && txLocation !== 'history' && !!currentUser && (
             <div className={cn('tx-details-actions', { 'will-be-replaced': willBeReplaced })}>
               <TxExpandedActions transaction={transaction} />
             </div>

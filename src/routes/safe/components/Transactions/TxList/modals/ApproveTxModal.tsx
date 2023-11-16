@@ -72,7 +72,6 @@ const useTxInfo = (transaction: Props['transaction']) => {
         : List([]),
     [],
   )
-  console.log('t approve', transaction)
 
   const data = useMemo(() => t.current.txDetails.txData?.hexData ?? EMPTY_DATA, [])
 

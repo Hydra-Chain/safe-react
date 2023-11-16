@@ -53,7 +53,6 @@ const AddressInput = ({
   const [resolutions, setResolutions] = useState<Record<string, string | undefined>>({})
   const resolvedAddress = resolutions[currentInput]
   const isResolving = resolvedAddress === ''
-  // console.log('addressInput1', currentInput);
 
   // External validators must receive an unprefixed address
   const sanitizedValidators = useCallback(

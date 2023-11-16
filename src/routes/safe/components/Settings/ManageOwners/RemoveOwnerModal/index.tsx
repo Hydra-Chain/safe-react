@@ -36,18 +36,11 @@ export const sendRemoveOwner = async (
   connectedWalletAddress: string,
   delayExecution: boolean,
 ): Promise<void> => {
-  console.log(
-    'connectedWalletAddress, ownerAddressToRemove, values',
-    connectedWalletAddress,
-    ownerAddressToRemove,
-    values,
-  )
   const txData = encodeMethodWithParams(GnosisSafe, 'removeOwner', [
     connectedWalletAddress,
     '0x' + ownerAddressToRemove,
     values.threshold,
   ])
-  console.log('txData', txData)
   // const sentTx = await dispatch(sendWithState(sendRemoveExistingOwner, { safeAddress, ownerAddress: ownerAddressToRemove, threshold: 1 }))
 
   // const oracleAddress = await dispatch(

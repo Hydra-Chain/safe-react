@@ -212,7 +212,6 @@ export class TxSender {
     depositHydra?: any,
   ): Promise<void> {
     const { txArgs, isFinalization, from, safeTxHash, txProps } = this
-    console.log('txArgs', txArgs)
 
     let tx0: any
 
@@ -228,7 +227,6 @@ export class TxSender {
       const tx = isFinalization
         ? getExecutionTransaction(txArgs)
         : getApprovalTransaction(this.safeInstance, safeTxHash, txArgs)
-      console.log('tx', tx)
       const sendParams = createSendParams(from, txProps.ethParameters || {})
       tx0 =
         sentTx ??

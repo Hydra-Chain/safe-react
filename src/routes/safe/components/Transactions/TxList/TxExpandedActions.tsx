@@ -23,6 +23,7 @@ export const TxExpandedActions = ({ transaction }: TxExpandedActionsProps): Reac
     isPending,
     disabledActions,
   } = useActionButtonsHandlers(transaction)
+
   const nonce = useSelector(currentSafeNonce)
   const txStatus = useTxStatus(transaction)
 
@@ -65,7 +66,7 @@ export const TxExpandedActions = ({ transaction }: TxExpandedActionsProps): Reac
         <Tooltip title="Reject" placement="top">
           <span>
             <Button size="md" color="error" onClick={handleCancelButtonClick} className="error" disabled={isPending}>
-              Reject
+              Reject1
             </Button>
           </span>
         </Tooltip>

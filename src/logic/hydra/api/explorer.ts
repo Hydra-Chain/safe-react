@@ -21,6 +21,7 @@ import {
   transferHydra,
   changeThreshold,
   executionCustom,
+  executionRejection,
 } from '../transformTransaction'
 import { decodeMethod, getItemEmpty, getSafeLogs, getTransactionListPageEmpty } from '../utils'
 import { SAFE_PROXY_FACTORY_ADDRESS } from '../contracts'
@@ -302,11 +303,15 @@ export async function fetchContractTransactions(address: string, dispatch: Dispa
           }
           for (const log of logs) {
             let executionParams
+            let executionDataHex
+            let executionValue
             let dataDecoded
             switch (log.name) {
               case 'ExecutionSuccess':
                 executionParams = logs.find((l) => l.name === 'ExecutionParams')
-                dataDecoded = decodeMethod(executionParams?.events?.find((p) => p.name === 'data')?.value ?? '0x')
+                executionDataHex = executionParams?.events?.find((p) => p.name === 'data')?.value
+                executionValue = executionParams?.events?.find((p) => p.name === 'value')?.value
+                dataDecoded = decodeMethod(executionDataHex ?? '0x')
                 tli.transaction.txStatus = TransactionStatus.SUCCESS
                 switch (dataDecoded?.name) {
                   case 'transfer':
@@ -322,14 +327,19 @@ export async function fetchContractTransactions(address: string, dispatch: Dispa
                     tli = await changeThreshold(tli, safeAddressHex, dispatch, logs)
                     break
                   default:
-                    tli = executionCustom(tli, logs)
+                    if (!executionDataHex && executionValue === '0') {
+                      tli = executionRejection(tli, logs, null)
+                    } else {
+                      tli = executionCustom(tli, logs)
+                    }
                     break
                 }
                 if (tli?.transaction?.txInfo) tlp.results.push(tli)
                 break
               case 'ExecutionFailure':
                 executionParams = logs.find((l) => l.name === 'ExecutionParams')
-                dataDecoded = decodeMethod(executionParams?.events?.find((p) => p.name === 'data')?.value ?? '0x')
+                executionDataHex = executionParams?.events?.find((p) => p.name === 'data')?.value
+                dataDecoded = dataDecoded = decodeMethod(executionDataHex ?? '0x')
                 tli.transaction.txStatus = TransactionStatus.FAILED
                 switch (dataDecoded?.name) {
                   case 'transfer':
@@ -345,7 +355,11 @@ export async function fetchContractTransactions(address: string, dispatch: Dispa
                     tli = await changeThreshold(tli, safeAddressHex, dispatch, logs)
                     break
                   default:
-                    tli = executionCustom(tli, logs)
+                    if (!executionDataHex && executionValue === '0') {
+                      tli = executionRejection(tli, logs, null)
+                    } else {
+                      tli = executionCustom(tli, logs)
+                    }
                     break
                 }
                 if (tli?.transaction?.txInfo) tlp.results.push(tli)
@@ -426,7 +440,6 @@ export const fetchSafeTransactionDetails = async (
 ): Promise<TransactionDetails | undefined> => {
   const txHash = transactionId.split('_')[2]
   const [tx, info] = await Promise.all([fetchTransaction(txHash.substring(2)), fetchContractInfo(safeAddress)])
-
   const safeAddressHydra = info.address
   const safeAddressHex = info.addressHex
   const _tli = await getTransactionItemList(tx, async (tli: Transaction, receipt: any, index: number, input: any) => {
@@ -437,11 +450,15 @@ export const fetchSafeTransactionDetails = async (
     if (ht) return ht
     for (const log of logs) {
       let executionParams
+      let executionDataHex
+      let executionValue
       let dataDecoded
       switch (log.name) {
         case 'ExecutionSuccess':
           executionParams = logs.find((l) => l.name === 'ExecutionParams')
-          dataDecoded = decodeMethod(executionParams?.events?.find((p) => p.name === 'data')?.value ?? '0x')
+          executionDataHex = executionParams?.events?.find((p) => p.name === 'data')?.value
+          executionValue = executionParams?.events?.find((p) => p.name === 'value')?.value
+          dataDecoded = dataDecoded = decodeMethod(executionDataHex ?? '0x')
           tli.transaction.txStatus = TransactionStatus.SUCCESS
           switch (dataDecoded?.name) {
             case 'transfer':
@@ -457,7 +474,11 @@ export const fetchSafeTransactionDetails = async (
               tli = await changeThreshold(tli, safeAddress, dispatch, logs, dataDecoded.params)
               break
             default:
-              tli = executionCustom(tli, logs)
+              if (!executionDataHex && executionValue === '0') {
+                tli = executionRejection(tli, logs, null)
+              } else {
+                tli = executionCustom(tli, logs)
+              }
               break
           }
           break
@@ -466,7 +487,9 @@ export const fetchSafeTransactionDetails = async (
           break
         case 'ExecutionFailure':
           executionParams = logs.find((l) => l.name === 'ExecutionParams')
-          dataDecoded = decodeMethod(executionParams?.events?.find((p) => p.name === 'data')?.value ?? '0x')
+          executionDataHex = executionParams?.events?.find((p) => p.name === 'data')?.value
+          executionValue = executionParams?.events?.find((p) => p.name === 'value')?.value
+          dataDecoded = dataDecoded = decodeMethod(executionDataHex ?? '0x')
           tli.transaction.txStatus = TransactionStatus.FAILED
           switch (dataDecoded?.name) {
             case 'transfer':
@@ -482,7 +505,11 @@ export const fetchSafeTransactionDetails = async (
               tli = await changeThreshold(tli, safeAddressHex, dispatch, logs, dataDecoded.params)
               break
             default:
-              tli = executionCustom(tli, logs)
+              if (!executionDataHex && executionValue === '0') {
+                tli = executionRejection(tli, logs, null)
+              } else {
+                tli = executionCustom(tli, logs)
+              }
               break
           }
           break
@@ -504,8 +531,5 @@ export const fetchSafeTransactionDetails = async (
   _transactionDetails.txData.value = (_tli?.transaction?.executionInfo as any)?.hydraExecution?.value ?? ''
   _transactionDetails.executedAt = tx.timestamp * 1000
   _transactionDetails.txData.hexData = (_tli?.transaction?.executionInfo as any)?.hydraExecution?.data
-
-  console.log('_transactionDetails', _transactionDetails)
-
   return _transactionDetails
 }

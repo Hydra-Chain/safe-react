@@ -14,7 +14,17 @@ const calculateVotes = (executionInfo: MultisigExecutionInfo, isPending: boolean
   if (!executionInfo) return
 
   const submitted = executionInfo.confirmationsSubmitted
-  const required = executionInfo.confirmationsRequired
+  let required = executionInfo.confirmationsRequired
+
+  if (!required || required === 0) {
+    let current = localStorage.getItem('_immortal|v2_MAINNET__CURRENT_SESSION')
+    current = JSON.parse(current ?? '')
+    current = current?.['currentSafeAddress']
+    let safes = localStorage.getItem('_immortal|v2_MAINNET__SAFES')
+    safes = JSON.parse(safes ?? '')
+    const safe = safes?.[current ?? ''] ?? {}
+    required = safe.threshold
+  }
 
   if (isPending && submitted < required) return
 
