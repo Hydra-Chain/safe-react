@@ -78,13 +78,7 @@ const getPreValidatedSignatures = (from: string, initialString: string = EMPTY_D
   )}000000000000000000000000000000000000000000000000000000000000000001`
 }
 
-export const addOwner = async (
-  tli: Transaction,
-  safeAddress: string,
-  dispatch: Dispatch,
-  log?: any,
-  params?: any,
-): Promise<Transaction> => {
+export const addOwner = async (tli: Transaction, log?: any, params?: any): Promise<Transaction> => {
   const threshold = !params
     ? log?.params?.find((e) => e.name === '_threshold')?.value
     : params?.find((p) => p.name === '_threshold')?.value
@@ -131,19 +125,12 @@ export const removeOwner = (tli: Transaction, logs?: any, params?: any): Transac
   return tli
 }
 
-export const changeThreshold = async (
-  tli: Transaction,
-  safeAddress: string,
-  dispatch: Dispatch,
-  logs?: any,
-  params?: any,
-): Promise<Transaction> => {
+export const changeThreshold = async (tli: Transaction, logs?: any, params?: any): Promise<Transaction> => {
   let threshold = 0
   if (logs) {
     const addedOwner = logs.find((e) => e.name === 'AddedOwner')
     const _removeOwner = logs.find((e) => e.name === 'RemovedOwner')
-    if (addedOwner || _removeOwner)
-      return addedOwner ? await addOwner(tli, safeAddress, dispatch, addedOwner ?? removeOwner) : removeOwner(tli, logs)
+    if (addedOwner || _removeOwner) return addedOwner ? await addOwner(tli, addedOwner) : removeOwner(tli, logs)
     threshold = logs.find((e) => e.name === 'ChangedThreshold')?.events?.[0].value
   }
   threshold = threshold === 0 ? params.find((p) => p.name === '_threshold')?.value : threshold
@@ -333,8 +320,13 @@ export const creation = (t: any, tli: Transaction, receipt: any): Transaction =>
   return tli
 }
 
-export const approvedHash = async (safeAddress: string, transaction: any, dispatch: Dispatch): Promise<Transaction> => {
+export const approvedHash = async (
+  safeAddress: string,
+  transaction: any,
+  dispatch: Dispatch,
+): Promise<{ tli: Transaction; _isHashConsumed: boolean }> => {
   let tli = {} as Transaction
+  let _isHashConsumed
   for (const output of transaction.outputs) {
     const receipt = output.receipt
     if (!receipt) continue
@@ -342,7 +334,7 @@ export const approvedHash = async (safeAddress: string, transaction: any, dispat
     const logApprovedHash = logs.find((log) => log.name === 'ApproveHash')
     if (!logApprovedHash) continue
     const logExecutionParams = logs.find((log) => log.name === 'ExecutionParams')
-    const _isHashConsumed = await isHashConsumed(safeAddress, logApprovedHash, dispatch)
+    _isHashConsumed = await isHashConsumed(safeAddress, logApprovedHash, dispatch)
     const safeTxHash = logApprovedHash.events.find((e) => e.name === 'approvedHash').value
     if (_isHashConsumed) {
       const approvedTransactionSchema = getLocalStorageApprovedTransactionSchema()
@@ -350,7 +342,8 @@ export const approvedHash = async (safeAddress: string, transaction: any, dispat
         delete approvedTransactionSchema[safeTxHash]
         setLocalStorageApprovedTransactionSchema(approvedTransactionSchema)
       }
-      continue
+      return { tli, _isHashConsumed }
+      // continue
     }
     let confirmationsSubmitted = 1
     const [threshold, nonce, owners] = await Promise.all([
@@ -431,7 +424,7 @@ export const approvedHash = async (safeAddress: string, transaction: any, dispat
     // console.log('to, oracle', to, oracle)
     switch (dataDecoded?.name) {
       case 'addOwnerWithThreshold':
-        tli = await addOwner(tli, safeAddress, dispatch, undefined, dataDecoded.params)
+        tli = await addOwner(tli, undefined, dataDecoded.params)
         tli.transaction.executionInfo = {
           ...executionInfo,
           ...tli.transaction.executionInfo,
@@ -445,7 +438,7 @@ export const approvedHash = async (safeAddress: string, transaction: any, dispat
         } as MultisigExecutionInfo
         break
       case 'changeThreshold':
-        tli = await changeThreshold(tli, safeAddress, dispatch, logs, dataDecoded.params)
+        tli = await changeThreshold(tli, logs, dataDecoded.params)
         tli.transaction.executionInfo = {
           ...executionInfo,
           ...tli.transaction.executionInfo,
@@ -553,5 +546,5 @@ export const approvedHash = async (safeAddress: string, transaction: any, dispat
     //     tli.transaction.txInfo.transferInfo = transferInfo as Erc20Transfer | NativeCoinTransfer
     //   }
   }
-  return tli
+  return { tli, _isHashConsumed }
 }

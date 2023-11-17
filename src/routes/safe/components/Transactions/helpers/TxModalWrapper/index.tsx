@@ -120,6 +120,7 @@ export const TxModalWrapper = ({
   const isOffChainSignature = checkIfOffChainSignatureIsPossible(doExecute, isSmartContract, safeVersion)
   const approvalAndExecution = isApproveAndExecute(Number(threshold), confirmationsLen, preApprovingOwner)
   const dispatch = useDispatch<Dispatch>()
+  // console.log('txValue', txValue)
 
   if (manualGasLimit) {
   }

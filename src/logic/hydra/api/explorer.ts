@@ -215,7 +215,7 @@ export async function fetchBalances(address: string): Promise<SafeBalanceRespons
   return balances
 }
 
-export async function fetchContractTransactions(address: string, dispatch: Dispatch): Promise<TransactionListPage> {
+export async function fetchContractTransactions(address: string): Promise<TransactionListPage> {
   try {
     const [safeInf, facInfo] = await Promise.all([
       fetchContractInfo(address),
@@ -318,13 +318,13 @@ export async function fetchContractTransactions(address: string, dispatch: Dispa
                     tli = transfer(t, tli, dataDecoded, safeAddressHex)
                     break
                   case 'addOwnerWithThreshold':
-                    tli = await addOwner(tli, safeAddressHex, dispatch, logs, dataDecoded.params)
+                    tli = await addOwner(tli, logs, dataDecoded.params)
                     break
                   case 'removeOwner':
                     tli = removeOwner(tli, logs, dataDecoded.params)
                     break
                   case 'changeThreshold':
-                    tli = await changeThreshold(tli, safeAddressHex, dispatch, logs)
+                    tli = await changeThreshold(tli, logs)
                     break
                   default:
                     if (!executionDataHex && executionValue === '0') {
@@ -346,13 +346,13 @@ export async function fetchContractTransactions(address: string, dispatch: Dispa
                     tli = transfer(t, tli, dataDecoded, safeAddressHex)
                     break
                   case 'addOwnerWithThreshold':
-                    tli = await addOwner(tli, safeAddressHex, dispatch, logs, dataDecoded.params)
+                    tli = await addOwner(tli, logs, dataDecoded.params)
                     break
                   case 'removeOwner':
                     tli = removeOwner(tli, logs, dataDecoded.params)
                     break
                   case 'changeThreshold':
-                    tli = await changeThreshold(tli, safeAddressHex, dispatch, logs)
+                    tli = await changeThreshold(tli, logs)
                     break
                   default:
                     if (!executionDataHex && executionValue === '0') {
@@ -402,9 +402,10 @@ export const fetchQueedTransactionsHydra = async (address: string, dispatch: Dis
   }
   const safeTxHashes = (await Promise.all(safeBatchTxsPromises)).map((r) => r.transactions).flat()
   const txs = await fetchTransactions(safeTxHashes)
-  for (let i = txs?.length - 1; i >= 0; i--) {
+  for (let i = 0; i < txs?.length; i++) {
     const t = txs[i]
-    const _tli = await approvedHash(safeAddressHex, t, dispatch)
+    const { tli: _tli, _isHashConsumed } = await approvedHash(safeAddressHex, t, dispatch)
+    if (_isHashConsumed) break
     if (_tli.transaction) {
       const safeTxHash = (_tli as any).transaction.executionInfo.safeTxHash
       const txHash = _tli.transaction.id.split('_')[2]
@@ -465,13 +466,13 @@ export const fetchSafeTransactionDetails = async (
               tli = transfer(_tx, tli, dataDecoded, safeAddressHex)
               break
             case 'addOwnerWithThreshold':
-              tli = await addOwner(tli, safeAddressHex, dispatch, logs, dataDecoded.params)
+              tli = await addOwner(tli, logs, dataDecoded.params)
               break
             case 'removeOwner':
               tli = removeOwner(tli, logs, dataDecoded.params)
               break
             case 'changeThreshold':
-              tli = await changeThreshold(tli, safeAddress, dispatch, logs, dataDecoded.params)
+              tli = await changeThreshold(tli, logs, dataDecoded.params)
               break
             default:
               if (!executionDataHex && executionValue === '0') {
@@ -483,7 +484,8 @@ export const fetchSafeTransactionDetails = async (
           }
           break
         case 'ApproveHash':
-          tli = await approvedHash(safeAddressHex, _tx, dispatch)
+          const { tli: _tli } = await approvedHash(safeAddressHex, _tx, dispatch)
+          tli = _tli
           break
         case 'ExecutionFailure':
           executionParams = logs.find((l) => l.name === 'ExecutionParams')
@@ -496,13 +498,13 @@ export const fetchSafeTransactionDetails = async (
               tli = transfer(_tx, tli, dataDecoded, safeAddressHex)
               break
             case 'addOwnerWithThreshold':
-              tli = await addOwner(tli, safeAddressHex, dispatch, logs, dataDecoded.params)
+              tli = await addOwner(tli, logs, dataDecoded.params)
               break
             case 'removeOwner':
               tli = removeOwner(tli, logs, dataDecoded.params)
               break
             case 'changeThreshold':
-              tli = await changeThreshold(tli, safeAddressHex, dispatch, logs, dataDecoded.params)
+              tli = await changeThreshold(tli, logs, dataDecoded.params)
               break
             default:
               if (!executionDataHex && executionValue === '0') {

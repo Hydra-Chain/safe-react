@@ -134,11 +134,11 @@ const useTxInfo = (transaction: Props['transaction']) => {
           return t.current.txDetails.txData?.value ?? '0'
         }
       case 'Custom':
-        return t.current.txInfo.value
+        return t.current.txInfo.value ?? (t.current.executionInfo as any).value
       case 'Creation':
       case 'SettingsChange':
       default:
-        return '0'
+        return (t.current.executionInfo as any).value ?? '0'
     }
   }, [])
 

@@ -47,11 +47,13 @@ export const loadHistoryTransactions = async (
 ): Promise<HistoryGatewayResponse['results']> => {
   const chainId = _getChainId()
   try {
-    const { results, next, previous } = await fetchContractTransactions(safeAddress, dispatch)
+    const { results, next, previous } = await fetchContractTransactions(safeAddress)
 
     // const { results, next, previous } = await getTransactionHistory(chainId, safeAddress)
 
     if (!historyPointers[chainId]) {
+      if (!dispatch) {
+      }
       historyPointers[chainId] = {}
     }
 
