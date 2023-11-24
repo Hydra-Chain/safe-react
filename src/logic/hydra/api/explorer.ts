@@ -302,33 +302,31 @@ export async function fetchContractTransactions(address: string): Promise<Transa
             return null
           }
           for (const log of logs) {
-            let executionParams
-            let executionDataHex
-            let executionValue
-            let dataDecoded
+            let executionParams, executionDataHex, executionValue, nonce, dataDecoded
             switch (log.name) {
               case 'ExecutionSuccess':
                 executionParams = logs.find((l) => l.name === 'ExecutionParams')
                 executionDataHex = executionParams?.events?.find((p) => p.name === 'data')?.value
                 executionValue = executionParams?.events?.find((p) => p.name === 'value')?.value
+                nonce = executionParams?.events?.find((p) => p.name === '_nonce')?.value
                 dataDecoded = decodeMethod(executionDataHex ?? '0x')
                 tli.transaction.txStatus = TransactionStatus.SUCCESS
                 switch (dataDecoded?.name) {
                   case 'transfer':
-                    tli = transfer(t, tli, dataDecoded, safeAddressHex)
+                    tli = transfer(t, tli, dataDecoded, safeAddressHex, executionParams)
                     break
                   case 'addOwnerWithThreshold':
-                    tli = await addOwner(tli, logs, dataDecoded.params)
+                    tli = await addOwner(tli, dataDecoded.params, nonce)
                     break
                   case 'removeOwner':
-                    tli = removeOwner(tli, logs, dataDecoded.params)
+                    tli = removeOwner(tli, dataDecoded.params, nonce)
                     break
                   case 'changeThreshold':
-                    tli = await changeThreshold(tli, logs)
+                    tli = await changeThreshold(tli, logs, dataDecoded.params, nonce)
                     break
                   default:
                     if (!executionDataHex && executionValue === '0') {
-                      tli = executionRejection(tli, logs, null)
+                      tli = executionRejection(tli, executionParams, null)
                     } else {
                       tli = executionCustom(tli, logs)
                     }
@@ -339,24 +337,25 @@ export async function fetchContractTransactions(address: string): Promise<Transa
               case 'ExecutionFailure':
                 executionParams = logs.find((l) => l.name === 'ExecutionParams')
                 executionDataHex = executionParams?.events?.find((p) => p.name === 'data')?.value
+                nonce = executionParams?.events?.find((p) => p.name === '_nonce')?.value
                 dataDecoded = dataDecoded = decodeMethod(executionDataHex ?? '0x')
                 tli.transaction.txStatus = TransactionStatus.FAILED
                 switch (dataDecoded?.name) {
                   case 'transfer':
-                    tli = transfer(t, tli, dataDecoded, safeAddressHex)
+                    tli = transfer(t, tli, dataDecoded, safeAddressHex, executionParams)
                     break
                   case 'addOwnerWithThreshold':
-                    tli = await addOwner(tli, logs, dataDecoded.params)
+                    tli = await addOwner(tli, dataDecoded.params, nonce)
                     break
                   case 'removeOwner':
-                    tli = removeOwner(tli, logs, dataDecoded.params)
+                    tli = removeOwner(tli, dataDecoded.params, nonce)
                     break
                   case 'changeThreshold':
-                    tli = await changeThreshold(tli, logs)
+                    tli = await changeThreshold(tli, logs, dataDecoded.params)
                     break
                   default:
                     if (!executionDataHex && executionValue === '0') {
-                      tli = executionRejection(tli, logs, null)
+                      tli = executionRejection(tli, executionParams, null)
                     } else {
                       tli = executionCustom(tli, logs)
                     }
@@ -450,33 +449,31 @@ export const fetchSafeTransactionDetails = async (
     const ht = transferHydra(_tx, safeAddressHex, safeAddressHydra, _receipt, logs, true, input)
     if (ht) return ht
     for (const log of logs) {
-      let executionParams
-      let executionDataHex
-      let executionValue
-      let dataDecoded
+      let executionParams, executionDataHex, executionValue, dataDecoded, nonce
       switch (log.name) {
         case 'ExecutionSuccess':
           executionParams = logs.find((l) => l.name === 'ExecutionParams')
           executionDataHex = executionParams?.events?.find((p) => p.name === 'data')?.value
           executionValue = executionParams?.events?.find((p) => p.name === 'value')?.value
+          nonce = executionParams?.events?.find((p) => p.name === '_nonce')?.value
           dataDecoded = dataDecoded = decodeMethod(executionDataHex ?? '0x')
           tli.transaction.txStatus = TransactionStatus.SUCCESS
           switch (dataDecoded?.name) {
             case 'transfer':
-              tli = transfer(_tx, tli, dataDecoded, safeAddressHex)
+              tli = transfer(_tx, tli, dataDecoded, safeAddressHex, executionParams)
               break
             case 'addOwnerWithThreshold':
-              tli = await addOwner(tli, logs, dataDecoded.params)
+              tli = await addOwner(tli, dataDecoded.params, nonce)
               break
             case 'removeOwner':
-              tli = removeOwner(tli, logs, dataDecoded.params)
+              tli = removeOwner(tli, dataDecoded.params, nonce)
               break
             case 'changeThreshold':
               tli = await changeThreshold(tli, logs, dataDecoded.params)
               break
             default:
               if (!executionDataHex && executionValue === '0') {
-                tli = executionRejection(tli, logs, null)
+                tli = executionRejection(tli, executionParams, null)
               } else {
                 tli = executionCustom(tli, logs)
               }
@@ -491,24 +488,25 @@ export const fetchSafeTransactionDetails = async (
           executionParams = logs.find((l) => l.name === 'ExecutionParams')
           executionDataHex = executionParams?.events?.find((p) => p.name === 'data')?.value
           executionValue = executionParams?.events?.find((p) => p.name === 'value')?.value
+          nonce = executionParams?.events?.find((p) => p.name === '_nonce')?.value
           dataDecoded = dataDecoded = decodeMethod(executionDataHex ?? '0x')
           tli.transaction.txStatus = TransactionStatus.FAILED
           switch (dataDecoded?.name) {
             case 'transfer':
-              tli = transfer(_tx, tli, dataDecoded, safeAddressHex)
+              tli = transfer(_tx, tli, dataDecoded, safeAddressHex, executionParams)
               break
             case 'addOwnerWithThreshold':
-              tli = await addOwner(tli, logs, dataDecoded.params)
+              tli = await addOwner(tli, dataDecoded.params, nonce)
               break
             case 'removeOwner':
-              tli = removeOwner(tli, logs, dataDecoded.params)
+              tli = removeOwner(tli, dataDecoded.params, nonce)
               break
             case 'changeThreshold':
               tli = await changeThreshold(tli, logs, dataDecoded.params)
               break
             default:
               if (!executionDataHex && executionValue === '0') {
-                tli = executionRejection(tli, logs, null)
+                tli = executionRejection(tli, executionParams, null)
               } else {
                 tli = executionCustom(tli, logs)
               }

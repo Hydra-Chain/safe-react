@@ -32,6 +32,7 @@ import { currentCurrencySelector } from 'src/logic/currencyValues/store/selector
 import { trackEvent } from 'src/utils/googleTagManager'
 import { ASSETS_EVENTS } from 'src/utils/events/assets'
 import Track from 'src/components/Track'
+import { currentSafeWithNames } from 'src/logic/safe/store/selectors'
 
 const StyledButton = styled(Button)`
   &&.MuiButton-root {
@@ -81,6 +82,7 @@ const Coins = (props: Props): React.ReactElement => {
   const selectedCurrency = useSelector(currentCurrencySelector)
   const safeTokens = useSelector(extendedSafeTokensSelector)
   const granted = useSelector(grantedSelector)
+  const { address: safeAddress } = useSelector(currentSafeWithNames)
 
   const differingTokens = useMemo(() => safeTokens.size, [safeTokens])
   useEffect(() => {
@@ -106,7 +108,7 @@ const Coins = (props: Props): React.ReactElement => {
                 let cellItem
                 switch (id) {
                   case BALANCE_TABLE_ASSET_ID: {
-                    cellItem = <AssetTableCell asset={row[id]} />
+                    cellItem = <AssetTableCell asset={row[id]} safeAddress={safeAddress} />
                     break
                   }
                   case BALANCE_TABLE_BALANCE_ID: {

@@ -35,6 +35,7 @@ import { useHistory } from 'react-router-dom'
 import { SAFE_ROUTES } from 'src/routes/routes'
 import { fetchTransaction } from 'src/logic/hydra/api/explorer'
 import { TransactionDetails } from '@gnosis.pm/safe-react-gateway-sdk'
+import { currentSafeWithNames } from 'src/logic/safe/store/selectors'
 
 const NormalBreakingText = styled(Text)`
   line-break: normal;
@@ -105,7 +106,6 @@ export const TxDetails = ({ transaction }: TxDetailsProps): ReactElement => {
   const sender = (transaction.txInfo as any)?.to?.value
   const isDeposit = sender === '0x' + DEPOSIT_TO_SAFE_CONTRACT_ADDRESS
   const history = useHistory()
-
   const [isDepositConfirmed, setIsDepositConfirmed] = useState(false)
   const { txLocation } = useContext(TxLocationContext)
   const { data, loading } = useTransactionDetails(transaction.id, transaction.txDetails)
@@ -113,6 +113,10 @@ export const TxDetails = ({ transaction }: TxDetailsProps): ReactElement => {
   const willBeReplaced = txStatus === LocalTransactionStatus.WILL_BE_REPLACED
   const isPending = txStatus === LocalTransactionStatus.PENDING
   const currentUser = useSelector(userAccountSelector)
+  const { owners } = useSelector(currentSafeWithNames)
+  const isOwner = owners.find(
+    (o) => o.address === (currentUser.startsWith('0x') ? currentUser.substring(2) : currentUser),
+  )
   const isMultiSend = data && isMultiSendTxInfo(data.txInfo)
   const shouldShowStepper =
     (data?.detailedExecutionInfo as any)?.safeTxHash &&
@@ -228,7 +232,7 @@ export const TxDetails = ({ transaction }: TxDetailsProps): ReactElement => {
             <TxOwners txDetails={data} isPending={isPending} />
           </div>
           {/* {!isPending && !data.executedAt && txLocation !== 'history' && !!currentUser && ( */}
-          {!isPending && txLocation !== 'history' && !!currentUser && (
+          {!isPending && txLocation !== 'history' && !!currentUser && isOwner && (
             <div className={cn('tx-details-actions', { 'will-be-replaced': willBeReplaced })}>
               <TxExpandedActions transaction={transaction} />
             </div>
