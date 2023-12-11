@@ -30,27 +30,28 @@ import {
   setLocalStorageApprovedTransactionSchema,
 } from './api/explorer'
 import {
+  decodeMethodWithParams,
+  getGnosisProxyApprovedHash,
+  getGnosisProxyNonce,
   getGnosisProxyOwners,
   getGnosisProxyThreshold,
   sendWithState,
-  getGnosisProxyApprovedHash,
-  getGnosisProxyNonce,
-  decodeMethodWithParams,
-  // getGnosisProxyOracle,
 } from './contractInteractions/utils'
-import { DEPOSIT_TO_SAFE_CONTRACT_ADDRESS, SAFE_PROXY_FACTORY_ADDRESS, SAFE_SINGLETON_ADDRESS } from './contracts'
+import { getDepositToSafeAddress, getProxyFactorynAddress, getSingletonAddress } from './contracts'
 import { decodeMethod, getSafeLogs, hydraToHexAddress, isHashConsumed } from './utils'
+import { _getChainId } from '../../config'
 
 export const getTransactionItemList = async (transaction: any, callback: any): Promise<Transaction | null> => {
   let tli: Transaction | null = null
+  const depositToSafeAddress = getDepositToSafeAddress(_getChainId())
   for (let i = 0; i < transaction.inputs.length; i++) {
     const input = transaction.inputs[i]
-    if (input.addressHex !== DEPOSIT_TO_SAFE_CONTRACT_ADDRESS) continue
+    if (input.addressHex !== depositToSafeAddress) continue
     tli = {} as Transaction
     tli.conflictType = 'None'
     tli.type = 'TRANSACTION'
     tli.transaction = {} as TransactionSummary
-    tli.transaction.id = 'multisig_' + '0x' + DEPOSIT_TO_SAFE_CONTRACT_ADDRESS + '_0x' + transaction.id
+    tli.transaction.id = 'multisig_' + '0x' + depositToSafeAddress + '_0x' + transaction.id
     tli.transaction.timestamp = transaction.timestamp * 1000
     tli = await callback(tli, undefined, i, input)
   }
@@ -337,7 +338,9 @@ export const transferHydra = (
   tli.transaction.txInfo = (tli.transaction.txInfo ?? {}) as Transfer
   tli.transaction.txInfo.type = 'Transfer'
   tli.transaction.txInfo.sender = {
-    value: hydraToHexAddress(isSentHydra ? safeAddrHydra : input ? DEPOSIT_TO_SAFE_CONTRACT_ADDRESS : receipt?.sender),
+    value: hydraToHexAddress(
+      isSentHydra ? safeAddrHydra : input ? getDepositToSafeAddress(_getChainId()) : receipt?.sender,
+    ),
   } as AddressEx
   tli.transaction.txInfo.recipient = {
     value: hydraToHexAddress(isReceiveHydra ? safeAddrHydra : logsDecoded[1].events.find((e) => e.name === 'to').value),
@@ -355,14 +358,15 @@ export const transferHydra = (
 }
 
 export const creation = (t: any, tli: Transaction, receipt: any): Transaction => {
+  const chaidId = _getChainId()
   tli.transaction.txInfo = {} as Creation
   tli.transaction.txInfo.creator = {} as AddressEx
   tli.transaction.txInfo.factory = {} as AddressEx
   tli.transaction.txInfo.implementation = {} as AddressEx
   tli.transaction.txInfo.type = 'Creation'
   tli.transaction.txInfo.creator.value = hydraToHexAddress(receipt.sender, true)
-  tli.transaction.txInfo.factory.value = SAFE_PROXY_FACTORY_ADDRESS
-  tli.transaction.txInfo.implementation.value = SAFE_SINGLETON_ADDRESS
+  tli.transaction.txInfo.factory.value = getProxyFactorynAddress(chaidId)
+  tli.transaction.txInfo.implementation.value = getSingletonAddress(chaidId)
   tli.transaction.txInfo.transactionHash = '0x' + t.id
   return tli
 }

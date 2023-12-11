@@ -1,4 +1,4 @@
-import { ReactElement, useState, useEffect } from 'react'
+import { ReactElement, useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { backOff } from 'exponential-backoff'
 import { TransactionReceipt } from 'web3-core'
@@ -12,15 +12,15 @@ import { SafeDeployment } from 'src/routes/opening'
 import { loadFromStorage, removeFromStorage, saveToStorage } from 'src/utils/storage'
 import { addOrUpdateSafe } from 'src/logic/safe/store/actions/addOrUpdateSafe'
 import {
-  SAFE_PENDING_CREATION_STORAGE_KEY,
   CreateSafeFormValues,
-  FIELD_NEW_SAFE_THRESHOLD,
-  FIELD_SAFE_OWNERS_LIST,
-  FIELD_NEW_SAFE_CREATION_TX_HASH,
-  FIELD_CREATE_SUGGESTED_SAFE_NAME,
   FIELD_CREATE_CUSTOM_SAFE_NAME,
+  FIELD_CREATE_SUGGESTED_SAFE_NAME,
+  FIELD_NEW_SAFE_CREATION_TX_HASH,
   FIELD_NEW_SAFE_PROXY_SALT,
+  FIELD_NEW_SAFE_THRESHOLD,
   FIELD_SAFE_OWNER_ENS_LIST,
+  FIELD_SAFE_OWNERS_LIST,
+  SAFE_PENDING_CREATION_STORAGE_KEY,
 } from '../fields/createSafeFields'
 import { getSafeInfo } from 'src/logic/safe/utils/safeInformation'
 import { buildSafe } from 'src/logic/safe/store/actions/fetchSafe'
@@ -30,7 +30,7 @@ import Paragraph from 'src/components/layout/Paragraph'
 import NetworkLabel from 'src/components/NetworkLabel/NetworkLabel'
 import Button from 'src/components/layout/Button'
 import { boldFont } from 'src/theme/variables'
-import { WELCOME_ROUTE, history, generateSafeRoute, SAFE_ROUTES } from 'src/routes/routes'
+import { ADDRESSED_ROUTE, generateSafeRoute, history, SAFE_ROUTES, WELCOME_ROUTE } from 'src/routes/routes'
 import { getExplorerInfo, getShortName } from 'src/config'
 import { currentChainId } from 'src/logic/config/store/selectors'
 import PrefixedEthHashInfo from 'src/components/PrefixedEthHashInfo'
@@ -38,7 +38,6 @@ import { trackEvent } from 'src/utils/googleTagManager'
 import { CREATE_SAFE_EVENTS } from 'src/utils/events/createLoadSafe'
 import Track from 'src/components/Track'
 import { useQuery } from 'src/logic/hooks/useQuery'
-import { ADDRESSED_ROUTE } from 'src/routes/routes'
 import { SAFE_APPS_EVENTS } from 'src/utils/events/safeApps'
 import { deploySafeWithNonce, sendWithState } from 'src/logic/hydra/contractInteractions/utils'
 import { Dispatch } from 'src/logic/safe/store/actions/types'

@@ -3,7 +3,7 @@ import styled from 'styled-components'
 import { ChainInfo } from '@gnosis.pm/safe-react-gateway-sdk'
 
 import { getChainInfo } from 'src/config'
-import { border, extraSmallFontSize, sm, xs, fontColor } from 'src/theme/variables'
+import { border, extraSmallFontSize, fontColor, sm, xs } from 'src/theme/variables'
 
 type Props = {
   networkInfo?: ChainInfo
@@ -15,7 +15,7 @@ type Props = {
 function NetworkLabel(props: Props): ReactElement {
   const { networkInfo, onClick, flexGrow } = props
   const selectedNetwork = networkInfo || getChainInfo()
-  selectedNetwork.chainName = 'HydraChain'
+  // selectedNetwork.chainName = 'HydraChain'
   return (
     <StyledLabel onClick={onClick} flexGrow={flexGrow} {...selectedNetwork.theme} data-testid={props['data-testid']}>
       {selectedNetwork.chainName}

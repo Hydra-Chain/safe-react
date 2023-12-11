@@ -13,20 +13,25 @@ import { ZERO_ADDRESS } from 'src/logic/wallets/ethAddresses'
 import { Log } from 'web3-core'
 import {
   addOwner,
-  creation,
-  getTransactionItemList,
   approvedHash,
+  changeThreshold,
+  creation,
+  executionCustom,
+  executionRejection,
+  getTransactionItemList,
   removeOwner,
   transfer,
   transferHydra,
-  changeThreshold,
-  executionCustom,
-  executionRejection,
 } from '../transformTransaction'
 import { decodeMethod, getItemEmpty, getSafeLogs, getTransactionListPageEmpty } from '../utils'
-import { SAFE_PROXY_FACTORY_ADDRESS } from '../contracts'
+import { getProxyFactorynAddress } from '../contracts'
+import { _getChainId } from '../../../config'
 
-export const API_BASE = 'https://explorer.hydrachain.org/api/'
+// const API_BASE = `https://${_getChainId()! === '2' ? 'test' : ''}explorer.hydrachain.org/api/`
+
+export const getApiBase = (chainId: string) => {
+  return `https://${chainId === '2' ? 'test' : ''}explorer.hydrachain.org/api/`
+}
 
 export const setLocalStorageLatestTxCountChecked = (value) => {
   localStorage.setItem('latestTxCountChecked', JSON.stringify(value))
@@ -48,7 +53,7 @@ export const getLocalStorageApprovedTransactionSchema = () => {
 
 export async function fetchGeneralInfo(): Promise<any> {
   try {
-    const resp = await fetch(API_BASE + 'info')
+    const resp = await fetch(getApiBase(_getChainId()) + 'info')
     return await resp.json()
   } catch (e) {
     throw e
@@ -57,7 +62,7 @@ export async function fetchGeneralInfo(): Promise<any> {
 
 export async function fetchBlock(hashOrNumber: string | number): Promise<any> {
   try {
-    const resp = await fetch(API_BASE + 'block/' + hashOrNumber)
+    const resp = await fetch(getApiBase(_getChainId()) + 'block/' + hashOrNumber)
     return await resp.json()
   } catch (e) {
     throw e
@@ -66,7 +71,7 @@ export async function fetchBlock(hashOrNumber: string | number): Promise<any> {
 
 export async function fetchTransaction(hash: string): Promise<any> {
   try {
-    const resp = await fetch(API_BASE + 'tx/' + hash)
+    const resp = await fetch(getApiBase(_getChainId()) + 'tx/' + hash)
     return await resp.json()
   } catch (e) {
     throw e
@@ -76,7 +81,7 @@ export async function fetchTransaction(hash: string): Promise<any> {
 async function _fetchTransactions(hashes: string[]): Promise<any> {
   if (hashes.length <= 0) return
   try {
-    let url = API_BASE + 'txs/'
+    let url = getApiBase(_getChainId()) + 'txs/'
     hashes.forEach((hash, i, arr) => (url += hash + (i !== arr.length - 1 ? ',' : '')))
     return await (await fetch(url)).json()
   } catch (e) {
@@ -105,7 +110,7 @@ export async function fetchTransactions(hashes: Array<string>) {
 
 export async function fetchAddressInfo(address: string): Promise<any> {
   try {
-    const url = API_BASE + 'address/' + address
+    const url = getApiBase(_getChainId()) + 'address/' + address
     return await (await fetch(url)).json()
   } catch (e) {
     throw e
@@ -117,7 +122,7 @@ export async function fetchContractInfo(address: string): Promise<any> {
     if (address.length === 42) {
       address = address.substring(address.length - 40)
     }
-    const url = API_BASE + 'contract/' + address
+    const url = getApiBase(_getChainId()) + 'contract/' + address
     const result = await (await fetch(url)).json()
     return result
   } catch (e) {
@@ -130,7 +135,7 @@ export async function fetchContractTxHashes(address: string, params?: string): P
     if (address.length === 42) {
       address = address.substring(address.length - 40)
     }
-    const url = API_BASE + 'contract/' + address + '/txs' + (params ? `?${params}` : '')
+    const url = getApiBase(_getChainId()) + 'contract/' + address + '/txs' + (params ? `?${params}` : '')
     return await (await fetch(url)).json()
   } catch (e) {
     throw e
@@ -219,7 +224,7 @@ export async function fetchContractTransactions(address: string): Promise<Transa
   try {
     const [safeInf, facInfo] = await Promise.all([
       fetchContractInfo(address),
-      fetchContractInfo(SAFE_PROXY_FACTORY_ADDRESS),
+      fetchContractInfo(getProxyFactorynAddress(_getChainId())),
     ])
     const totalSafeTxsCount = safeInf.transactionCount
     const totalFactoryTxsCount = facInfo.transactionCount
@@ -242,7 +247,9 @@ export async function fetchContractTransactions(address: string): Promise<Transa
       let txCopy = totalFactoryTxsCount
       while (txCopy > 0) {
         txCopy -= 1000
-        factoryBatchTxsPromises.push(fetchContractTxHashes(SAFE_PROXY_FACTORY_ADDRESS, `page=${page}&pageSize=1000`))
+        factoryBatchTxsPromises.push(
+          fetchContractTxHashes(getProxyFactorynAddress(_getChainId()), `page=${page}&pageSize=1000`),
+        )
         page++
       }
       page = 0

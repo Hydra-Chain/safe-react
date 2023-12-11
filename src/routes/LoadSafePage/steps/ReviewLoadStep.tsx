@@ -43,8 +43,7 @@ function ReviewLoadStep(): ReactElement {
       name: ownerName,
     }
   })
-
-  const isUserConnectedWalletASAfeOwner = checkIfUserAddressIsAnOwner(ownerList, userAddress)
+  const isUserConnectedWalletASAfeOwner = checkIfUserAddressIsAnOwner(ownerList, userAddress.substring(2))
 
   return (
     <Row data-testid={'load-safe-review-step'}>

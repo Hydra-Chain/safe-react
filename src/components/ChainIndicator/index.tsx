@@ -22,7 +22,7 @@ const ChainIndicator = ({ chainId, hideCircle }: Props): React.ReactElement => {
   return (
     <Wrapper>
       {!hideCircle && <CircleDot networkId={chainId} />}
-      {chainId === '1' ? 'HydraChain' : 'Unknown'}
+      HydraChain {chainId === '1' ? 'MainNet' : 'TestNet'}
     </Wrapper>
   )
 }

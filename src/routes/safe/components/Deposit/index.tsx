@@ -24,7 +24,8 @@ import { DepositHydraToSafe } from 'src/logic/hydra/abis'
 import { createTransaction } from 'src/logic/safe/store/actions/createTransaction'
 import { TX_NOTIFICATION_TYPES } from 'src/logic/safe/transactions'
 import { currentSafeWithNames } from 'src/logic/safe/store/selectors'
-import { DEPOSIT_TO_SAFE_CONTRACT_ADDRESS } from 'src/logic/hydra/contracts'
+import { getDepositToSafeAddress } from 'src/logic/hydra/contracts'
+import { _getChainId } from '../../../../config'
 
 const useStyles = makeStyles(styles)
 
@@ -65,7 +66,7 @@ const sendDeposit = ({ safeAddress, amount, dispatch, safeNonce }: SendDepositPa
     createTransaction(
       {
         safeAddress,
-        to: DEPOSIT_TO_SAFE_CONTRACT_ADDRESS,
+        to: getDepositToSafeAddress(_getChainId()),
         valueInWei: amount,
         txData,
         txNonce: safeNonce,
@@ -152,7 +153,10 @@ const Deposit = (): ReactElement => {
               <Hairline />
               <Row align="center" className={classes.buttonRow}>
                 <Modal.Footer.Buttons
-                  cancelButtonProps={{ onClick: () => {}, text: 'Cancel' }}
+                  cancelButtonProps={{
+                    onClick: () => {},
+                    text: 'Cancel',
+                  }}
                   confirmButtonProps={{
                     type: 'submit',
                     text: 'Submit',

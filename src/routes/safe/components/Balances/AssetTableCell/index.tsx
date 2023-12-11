@@ -8,6 +8,7 @@ import Paragraph from 'src/components/layout/Paragraph'
 import { setImageToPlaceholder } from 'src/routes/safe/components/Balances/utils'
 import { BalanceData } from '../dataFetcher'
 import { getNativeCurrencyAddress } from 'src/config/utils'
+import { _getChainId } from '../../../../../config'
 
 const StyledParagraph = styled(Paragraph)`
   margin-left: 10px;
@@ -16,7 +17,7 @@ const StyledParagraph = styled(Paragraph)`
 
 const AssetTableCell = ({ asset, safeAddress }: { asset: BalanceData['asset']; safeAddress: string }): ReactElement => {
   const isNativeCurrency = asset.address === getNativeCurrencyAddress()
-  const url = `https://explorer.hydrachain.org/contract/${safeAddress}`
+  const url = `https://${_getChainId()! === '2' ? 'test' : ''}explorer.hydrachain.org/contract/${safeAddress}`
   return (
     <Block justify="left">
       <Img alt={asset.name} height={26} onError={setImageToPlaceholder} src={asset.logoUri} />

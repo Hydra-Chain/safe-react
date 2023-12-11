@@ -75,7 +75,6 @@ const HeaderComponent = (): React.ReactElement => {
 
   const info = getProviderInfoBased()
   const details = getProviderDetailsBased()
-
   return (
     <>
       {isPairingSupported() && wrapInSuspense(<HidePairingModule />)}

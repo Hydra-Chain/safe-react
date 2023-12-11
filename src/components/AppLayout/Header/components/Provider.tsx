@@ -45,7 +45,6 @@ class Provider extends React.Component<any> {
 
   render() {
     const { render, classes, info, open, toggle } = this.props
-
     return (
       <>
         <div className={classes.root} ref={this.myRef}>

@@ -47,7 +47,6 @@ function CreateSafePage(): ReactElement {
   const providerName = useSelector(providerNameSelector)
   const isWrongNetwork = useSelector(shouldSwitchWalletChain)
   const provider = !!providerName && !isWrongNetwork
-
   useEffect(() => {
     const checkIfSafeIsPendingToBeCreated = async (): Promise<void> => {
       setIsLoading(true)
@@ -63,6 +62,7 @@ function CreateSafePage(): ReactElement {
       }
       setIsLoading(false)
     }
+
     checkIfSafeIsPendingToBeCreated()
   }, [provider])
 

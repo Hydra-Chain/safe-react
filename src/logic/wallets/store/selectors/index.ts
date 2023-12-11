@@ -1,5 +1,5 @@
 import { createSelector } from 'reselect'
-import { ChainId, CHAIN_ID } from 'src/config/chain.d'
+import { CHAIN_ID, ChainId } from 'src/config/chain.d'
 
 import { currentChainId } from 'src/logic/config/store/selectors'
 import { PROVIDER_REDUCER_ID, ProvidersState } from 'src/logic/wallets/store/reducer'

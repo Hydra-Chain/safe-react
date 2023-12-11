@@ -1,7 +1,7 @@
 import {
   fireEvent,
-  getByText,
   getByRole,
+  getByText,
   render,
   screen,
   waitFor,

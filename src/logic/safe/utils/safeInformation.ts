@@ -1,17 +1,15 @@
 import { AddressEx } from '@gnosis.pm/safe-react-gateway-sdk'
 
-import { Errors, CodedException } from 'src/logic/exceptions/CodedException'
+import { CodedException, Errors } from 'src/logic/exceptions/CodedException'
 import { _getChainId } from 'src/config'
-import { SAFE_SINGLETON_ADDRESS } from 'src/logic/hydra/contracts'
+import { getSingletonAddress } from 'src/logic/hydra/contracts'
 import { getSafeInfoEmpty, SafeInfoHydra } from 'src/logic/hydra/utils'
 import {
   getGnosisProxyModules,
   getGnosisProxyNonce,
-  // getGnosisProxyOracle,
   getGnosisProxyOwners,
   getGnosisProxyThreshold,
   getGnosisProxyVersion,
-  // getSnapshotOracleThresholdPercentage,
   sendWithState,
 } from 'src/logic/hydra/contractInteractions/utils'
 import { fetchContractInfo } from 'src/logic/hydra/api/explorer'
@@ -29,7 +27,6 @@ export const getSafeInfo = async (
 ): Promise<SafeInfoHydra> => {
   try {
     // console.log('safeAddress', safeAddress)
-
     const [contractInfo, modules, nonce, version, owners, threshold] = await Promise.all([
       fetchContractInfo(safeAddress),
       // fetchContractTxHashes(safeAddress, 'limit=10&offset=0'),
@@ -71,7 +68,7 @@ export const getSafeInfo = async (
     safeInfo.txQueuedTag = '0'
     safeInfo.fallbackHandler.value = '' // get
     safeInfo.guard = null as unknown as AddressEx
-    safeInfo.implementation.value = SAFE_SINGLETON_ADDRESS
+    safeInfo.implementation.value = getSingletonAddress(safeInfo.chainId)
     safeInfo.threshold = threshold
     safeInfo.nonce = Number(nonce)
     safeInfo.version = version
@@ -88,7 +85,7 @@ export const getSafeInfo = async (
       addrEx.value = m
       return addrEx
     })
-
+    console.log('safeInfo------------------', safeInfo)
     return safeInfo
   } catch (e) {
     const safeNotFound = GATEWAY_ERROR.test(e.message)

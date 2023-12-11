@@ -10,7 +10,7 @@ import { TxParameters } from 'src/routes/safe/container/hooks/useTransactionPara
 import { Dispatch, DispatchReturn } from './types'
 import { Confirmation } from 'src/logic/safe/store/models/types/confirmation'
 import { TxSender } from './createTransaction'
-import { logError, Errors } from 'src/logic/exceptions/CodedException'
+import { Errors, logError } from 'src/logic/exceptions/CodedException'
 
 interface ProcessTransactionArgs {
   approveAndExecute: boolean
@@ -42,7 +42,6 @@ type ProcessTransactionAction = ThunkAction<Promise<void | string>, AppReduxStat
 export const processTransaction = (props: ProcessTransactionArgs): ProcessTransactionAction => {
   return async (dispatch: Dispatch, getState: () => AppReduxState): Promise<void> => {
     const sender = new TxSender()
-    console.log('processTransaction')
 
     // Selectors
     const state = getState()

@@ -1,5 +1,5 @@
-import { Text, Icon, Button, Identicon } from '@gnosis.pm/safe-react-components'
-import { useEffect, useRef, ReactElement } from 'react'
+import { Button, Icon, Identicon, Text } from '@gnosis.pm/safe-react-components'
+import { ReactElement, useEffect, useRef } from 'react'
 import { useHistory } from 'react-router'
 import ListItem from '@material-ui/core/ListItem/ListItem'
 import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction/ListItemSecondaryAction'

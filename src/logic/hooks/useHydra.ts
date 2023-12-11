@@ -1,5 +1,5 @@
 import { Hydraweb3 } from 'hydraweb3-js'
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { store } from 'src/store'
 import { hydraToHexAddress } from '../hydra/utils'
 import closeSnackbar from '../notifications/store/actions/closeSnackbar'
@@ -8,6 +8,7 @@ import updateProviderHydraAccount from '../wallets/store/actions/updateProviderH
 import updateProviderHydraSDK from '../wallets/store/actions/updateProviderHydraSDK'
 import updateProviderNetwork from '../wallets/store/actions/updateProviderNetwork'
 import updateProviderWallet from '../wallets/store/actions/updateProviderWallet'
+import { setChainId } from '../config/utils'
 // import invoke from '../hydra/mobileInvoke/browser'
 
 // const rawCall = invoke.bind('rawCall')
@@ -52,13 +53,15 @@ export default function (): { account: any; hydraSDK: any; error: string } {
           // should be in state where wallet or contract functions are used
           const account = event.data.message.payload.account
           const hydraExtension = new Hydraweb3(window.hydrawallet.rpcProvider)
+          const chainId = account?.network?.toLowerCase() === 'testnet' ? '2' : '1'
           store.dispatch(updateProviderWallet(account?.name || ''))
           store.dispatch(updateProviderAccount(hydraToHexAddress(account?.address, true)))
-          store.dispatch(updateProviderNetwork(account ? '1' : ''))
+          store.dispatch(updateProviderNetwork(chainId))
           store.dispatch(closeSnackbar({ dismissAll: true }))
           store.dispatch(updateProviderHydraSDK(hydraExtension))
           store.dispatch(updateProviderHydraAccount(account))
           //   const hydraExtension = new Hydraweb3(window.ReactNativeWebView ? { rawCall } : window.hydrawallet.rpcProvider)
+          setChainId(chainId)
           setAccount(account)
           setHydraSDK(hydraExtension)
         }

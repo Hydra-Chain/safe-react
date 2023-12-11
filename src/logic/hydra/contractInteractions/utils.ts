@@ -3,11 +3,12 @@ import { ProposeTxBody } from 'src/logic/safe/transactions'
 import { AppReduxState } from 'src/store'
 import { NonPayableTransactionObject, PayableTx } from 'src/types/contracts/types'
 import { DepositHydraToSafe, ERC20, GnosisSafe, SnapshotOracle } from '../abis'
-import { DEPOSIT_TO_SAFE_CONTRACT_ADDRESS, SAFE_PROXY_FACTORY_ADDRESS } from '../contracts'
+import { getDepositToSafeAddress, getProxyFactorynAddress } from '../contracts'
 import { contractCall, contractSend, getContract } from './core'
 import { Decoder } from 'hydraweb3-js'
 import { addressRemovePrefix, hydraToHexAddress } from '../utils'
 import abi from 'ethjs-abi'
+import { _getChainId } from '../../../config'
 
 type Error = {
   message: string
@@ -244,8 +245,8 @@ export const deploySafeWithNonce = async (
   const { sdk, address } = _getSdkAccount(state)
   try {
     const result = await sdk.provider.rawCall('sendtocontract', [
-      SAFE_PROXY_FACTORY_ADDRESS.substring(2),
-      deploymentTx.encodeABI().substring(2),
+      getProxyFactorynAddress(_getChainId()).substring(2),
+      deploymentTx.toString().substring(2),
       0,
       300000,
       address,
@@ -401,7 +402,7 @@ export const sendDepositHydraToSafe = async (
 ): Promise<any> => {
   const { sdk, address } = _getSdkAccount(state)
   const sendTx = await contractSend(
-    getContract(sdk, DEPOSIT_TO_SAFE_CONTRACT_ADDRESS, DepositHydraToSafe),
+    getContract(sdk, getDepositToSafeAddress(_getChainId()), DepositHydraToSafe),
     'depositAndTransfer',
     [safeAddress],
     address,

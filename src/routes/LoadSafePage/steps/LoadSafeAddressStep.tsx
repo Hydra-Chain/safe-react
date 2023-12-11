@@ -1,4 +1,4 @@
-import { ReactElement, useState, useEffect } from 'react'
+import { ReactElement, useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useField, useForm } from 'react-final-form'
 import styled from 'styled-components'
@@ -13,7 +13,7 @@ import TextField from 'src/components/forms/TextField'
 import AddressInput from 'src/components/forms/AddressInput'
 import { ScanQRWrapper } from 'src/components/ScanQRModal/ScanQRWrapper'
 import { getSafeInfo } from 'src/logic/safe/utils/safeInformation'
-import { lg, secondary, md } from 'src/theme/variables'
+import { lg, md, secondary } from 'src/theme/variables'
 import { AddressBookEntry, makeAddressBookEntry } from 'src/logic/addressBook/model/addressBook'
 import { currentNetworkAddressBookAsMap } from 'src/logic/addressBook/store/selectors'
 import {
@@ -69,7 +69,9 @@ function LoadSafeAddressStep(): ReactElement {
       }
       setIsSafeInfoLoading(true)
       try {
+        console.log('before owners, threshold')
         const { owners, threshold } = await getSafeInfo(safeAddress, dispatch)
+        console.log('owners, threshold', owners, threshold)
         setIsSafeInfoLoading(false)
         const ownersWithName = owners.map(({ value: address }) => {
           return makeAddressBookEntry(addressBook[address] || { address, name: '', chainId })

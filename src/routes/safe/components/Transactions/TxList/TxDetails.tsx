@@ -15,7 +15,7 @@ import {
   Transaction,
 } from 'src/logic/safe/store/models/types/gateway.d'
 import { useTransactionDetails } from './hooks/useTransactionDetails'
-import { TxDetailsContainer, Centered, AlignItemsWithMargin } from './styled'
+import { AlignItemsWithMargin, Centered, TxDetailsContainer } from './styled'
 import { TxData } from './TxData'
 import { TxExpandedActions } from './TxExpandedActions'
 import { TxInfo } from './TxInfo'
@@ -30,12 +30,13 @@ import TxModuleInfo from './TxModuleInfo'
 import Track from 'src/components/Track'
 import { TX_LIST_EVENTS } from 'src/utils/events/txList'
 import TxShareButton from './TxShareButton'
-import { DEPOSIT_TO_SAFE_CONTRACT_ADDRESS } from 'src/logic/hydra/contracts'
+import { getDepositToSafeAddress } from 'src/logic/hydra/contracts'
 import { useHistory } from 'react-router-dom'
 import { SAFE_ROUTES } from 'src/routes/routes'
 import { fetchTransaction } from 'src/logic/hydra/api/explorer'
 import { TransactionDetails } from '@gnosis.pm/safe-react-gateway-sdk'
 import { currentSafeWithNames } from 'src/logic/safe/store/selectors'
+import { _getChainId } from '../../../../../config'
 
 const NormalBreakingText = styled(Text)`
   line-break: normal;
@@ -104,7 +105,7 @@ const isDepositConfirmedCheck = async ({ transaction }: TxDetailsProps) => {
 
 export const TxDetails = ({ transaction }: TxDetailsProps): ReactElement => {
   const sender = (transaction.txInfo as any)?.to?.value
-  const isDeposit = sender === '0x' + DEPOSIT_TO_SAFE_CONTRACT_ADDRESS
+  const isDeposit = sender === '0x' + getDepositToSafeAddress(_getChainId())
   const history = useHistory()
   const [isDepositConfirmed, setIsDepositConfirmed] = useState(false)
   const { txLocation } = useContext(TxLocationContext)

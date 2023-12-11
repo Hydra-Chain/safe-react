@@ -1,5 +1,5 @@
 import { isAddress, isHexStrict } from 'web3-utils'
-import { Utils, Decoder } from 'hydraweb3-js'
+import { Decoder, Utils } from 'hydraweb3-js'
 
 export const isValidAddress = (address?: string): boolean => {
   if (address) {
