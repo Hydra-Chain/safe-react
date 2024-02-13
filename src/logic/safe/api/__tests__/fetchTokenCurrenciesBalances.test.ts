@@ -15,6 +15,7 @@ describe('fetchTokenCurrenciesBalances', () => {
       safeAddress,
       excludeSpamTokens,
       selectedCurrency: 'USD',
+      chainId: '1',
     })
 
     expect(getBalances).toHaveBeenCalledWith(_getChainId(), '0xdfA693da0D16F5E7E78FdCBeDe8FC6eBEa44f1Cf', 'USD', {
