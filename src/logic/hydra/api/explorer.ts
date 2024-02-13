@@ -123,6 +123,8 @@ export async function fetchContractInfo(address: string): Promise<any> {
       address = address.substring(address.length - 40)
     }
     const url = getApiBase(_getChainId()) + 'contract/' + address
+    console.log('url', url)
+
     const result = await (await fetch(url)).json()
     return result
   } catch (e) {
@@ -172,7 +174,7 @@ const fetchTokenInfo = async (addresses: string[]) => {
   return data
 }
 
-export async function fetchBalances(address: string): Promise<SafeBalanceResponse> {
+export async function fetchBalances(address: string, chainId: string): Promise<SafeBalanceResponse> {
   const [info, hydraInfo] = await Promise.all([fetchContractInfo(address), fetchHydraPrice()])
   const priceUsd = Number(hydraInfo?.market_data?.current_price?.usd)
   const balances = {} as SafeBalanceResponse
@@ -207,16 +209,18 @@ export async function fetchBalances(address: string): Promise<SafeBalanceRespons
     }
     balances.items.push(item)
   }
-  const data = await fetchTokenInfo(addresses)
-  data.data.tokens?.forEach((token: { id: string; derivedHYDRA: string }) => {
-    balances.items.forEach((item) => {
-      if (item.tokenInfo.address.substring(2) === token.id) {
-        item.fiatConversion = Number(token.derivedHYDRA) * priceUsd + ''
-        item.fiatBalance = Number(item.fiatConversion) * (Number(item.balance) / 10 ** item.tokenInfo.decimals) + ''
-        balances.fiatTotal = +balances.fiatTotal + +item.fiatBalance + ''
-      }
+  if (chainId === '1') {
+    const data = await fetchTokenInfo(addresses)
+    data.data.tokens?.forEach((token: { id: string; derivedHYDRA: string }) => {
+      balances.items.forEach((item) => {
+        if (item.tokenInfo.address.substring(2) === token.id) {
+          item.fiatConversion = Number(token.derivedHYDRA) * priceUsd + ''
+          item.fiatBalance = Number(item.fiatConversion) * (Number(item.balance) / 10 ** item.tokenInfo.decimals) + ''
+          balances.fiatTotal = +balances.fiatTotal + +item.fiatBalance + ''
+        }
+      })
     })
-  })
+  }
   return balances
 }
 

@@ -77,16 +77,16 @@ export const getItemEmpty = (): {
   }
 }
 
-export const hydraToHexAddress = (address: string, withPrefix = false): string => {
+export const hydraToHexAddress = (address: string, chainId: string, withPrefix = false): string => {
   if (!address) return ''
-  const addressHex = Encoder.addressToHex(address)
+  const addressHex = Encoder.addressToHex(address, chainId === '1')
   const addr = addressHex.substr(addressHex.length - 40)
   return withPrefix ? '0x' + addr : addr
 }
 
-export const hydraFromHexAddress = (address: string): string => {
+export const hydraFromHexAddress = (address: string, chainId: string): string => {
   if (!address) return ''
-  const addressHex = Decoder.toHydraAddress(address)
+  const addressHex = Decoder.toHydraAddress(address, chainId === '1')
   return addressHex
 }
 

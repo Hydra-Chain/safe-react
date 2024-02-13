@@ -3,6 +3,7 @@ import { SafeRecord } from 'src/logic/safe/store/models/safe'
 import { sameString } from 'src/utils/strings'
 import { EMPTY_DATA } from 'src/logic/wallets/ethTransactions'
 import { hydraToHexAddress } from '../hydra/utils'
+import { _getChainId } from 'src/config'
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 
 export const sameAddress = (firstAddress: string | undefined, secondAddress: string | undefined): boolean => {
@@ -41,7 +42,7 @@ export const isUserAnOwner = (safe: SafeRecord, userAccount: string): boolean =>
     return false
   }
 
-  return owners.find((address) => sameAddress(address, hydraToHexAddress(userAccount))) !== undefined
+  return owners.find((address) => sameAddress(address, hydraToHexAddress(userAccount, _getChainId()))) !== undefined
 }
 
 export const isUserAnOwnerOfAnySafe = (safes: List<SafeRecord> | SafeRecord[], userAccount: string): boolean =>

@@ -252,6 +252,8 @@ export const loadSafeAddressStepValidations = (values: {
 
   // check that the address is actually a Safe (must have owners)
   const ownerList = values[FIELD_SAFE_OWNER_LIST]
+  console.log('ownerList', ownerList)
+
   const isValidSafeAddress = ownerList.length > 0
   if (!isValidSafeAddress) {
     errors = {

@@ -26,7 +26,7 @@ export const getSafeInfo = async (
   state?: AppReduxState,
 ): Promise<SafeInfoHydra> => {
   try {
-    // console.log('safeAddress', safeAddress)
+    console.log('safeAddres1s', safeAddress)
     const [contractInfo, modules, nonce, version, owners, threshold] = await Promise.all([
       fetchContractInfo(safeAddress),
       // fetchContractTxHashes(safeAddress, 'limit=10&offset=0'),
@@ -37,6 +37,7 @@ export const getSafeInfo = async (
       dispatch(sendWithState(getGnosisProxyThreshold, { safeAddress })),
       // dispatch(sendWithState(getGnosisProxyOracle, { safeAddress })),
     ])
+    console.log('after calls', contractInfo, modules, nonce, version, owners, threshold)
     if (state && contractInfo) {
     }
     // let thresholdPercentage = ''

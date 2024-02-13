@@ -4,6 +4,7 @@ import { EMPTY_DATA } from 'src/logic/wallets/ethTransactions'
 import semverSatisfies from 'semver/functions/satisfies'
 import { SAFE_VERSION_FOR_OFF_CHAIN_SIGNATURES } from './transactions/offchainSigner'
 import { hydraToHexAddress } from '../hydra/utils'
+import { _getChainId } from 'src/config'
 
 // Here we're checking that safe contract version is greater or equal 1.1.1, but
 // theoretically EIP712 should also work for 1.0.0 contracts
@@ -50,14 +51,13 @@ export const generateSignaturesFromTxConfirmations = (
   // The constant parts need to be sorted so that the recovered signers are sorted ascending
   // (natural order) by address (not checksummed).
   confirmationsMap = confirmationsMap.sort((ownerA, ownerB) => ownerA.owner.localeCompare(ownerB.owner))
-
   let sigs = '0x'
   confirmationsMap.forEach(({ signature, owner }) => {
     if (signature) {
       sigs += signature.slice(2)
     } else {
       // https://docs.gnosis.io/safe/docs/contracts_signatures/#pre-validated-signatures
-      sigs += getPreValidatedSignatures('0x' + hydraToHexAddress(owner), '')
+      sigs += getPreValidatedSignatures('0x' + hydraToHexAddress(owner, _getChainId()), '')
     }
   })
 

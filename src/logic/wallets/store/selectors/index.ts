@@ -1,5 +1,5 @@
 import { createSelector } from 'reselect'
-import { CHAIN_ID, ChainId } from 'src/config/chain.d'
+import { ChainId } from 'src/config/chain.d'
 
 import { currentChainId } from 'src/logic/config/store/selectors'
 import { PROVIDER_REDUCER_ID, ProvidersState } from 'src/logic/wallets/store/reducer'
@@ -24,7 +24,7 @@ export const providerHydraSdkSelector = createSelector(providerSelector, ({ hydr
 })
 
 export const networkSelector = createSelector(providerSelector, ({ network }: ProvidersState): ChainId => {
-  return network ?? CHAIN_ID.UNKNOWN
+  return network ?? '1'
 })
 
 export const providerHydraAccountSelector = createSelector(

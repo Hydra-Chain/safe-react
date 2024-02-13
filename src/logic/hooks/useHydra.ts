@@ -55,7 +55,7 @@ export default function (): { account: any; hydraSDK: any; error: string } {
           const hydraExtension = new Hydraweb3(window.hydrawallet.rpcProvider)
           const chainId = account?.network?.toLowerCase() === 'testnet' ? '2' : '1'
           store.dispatch(updateProviderWallet(account?.name || ''))
-          store.dispatch(updateProviderAccount(hydraToHexAddress(account?.address, true)))
+          store.dispatch(updateProviderAccount(hydraToHexAddress(account?.address, chainId, true)))
           store.dispatch(updateProviderNetwork(chainId))
           store.dispatch(closeSnackbar({ dismissAll: true }))
           store.dispatch(updateProviderHydraSDK(hydraExtension))

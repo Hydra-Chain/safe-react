@@ -220,7 +220,7 @@ const AppFrame = ({ appUrl }: Props): ReactElement => {
     communicator?.on(Methods.getSafeBalances, async (msg) => {
       const { currency = 'usd' } = msg.data.params as GetBalanceParams
 
-      const balances = await fetchTokenCurrenciesBalances({ safeAddress, selectedCurrency: currency })
+      const balances = await fetchTokenCurrenciesBalances({ safeAddress, selectedCurrency: currency, chainId })
 
       return balances
     })

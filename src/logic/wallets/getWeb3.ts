@@ -92,7 +92,7 @@ export const isSmartContract = async (account: string, chainId: ChainId): Promis
   let contractInfo: any
   // let contractCode = ''
   try {
-    contractInfo = await fetchContractInfo(hydraToHexAddress(account))
+    contractInfo = await fetchContractInfo(hydraToHexAddress(account, chainId))
     // contractCode = await getWeb3ReadOnly(chainId).eth.getCode(account)
   } catch (e) {
     console.log('e', e)

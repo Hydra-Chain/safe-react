@@ -63,6 +63,7 @@ export const fetchSafeTokens =
       tokenCurrenciesBalances = await fetchTokenCurrenciesBalances({
         safeAddress,
         selectedCurrency,
+        chainId: state.config.chainId,
       })
     } catch (e) {
       logError(Errors._601, e.message)

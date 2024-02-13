@@ -17,7 +17,9 @@ const StyledParagraph = styled(Paragraph)`
 
 const AssetTableCell = ({ asset, safeAddress }: { asset: BalanceData['asset']; safeAddress: string }): ReactElement => {
   const isNativeCurrency = asset.address === getNativeCurrencyAddress()
-  const url = `https://${_getChainId()! === '2' ? 'test' : ''}explorer.hydrachain.org/contract/${safeAddress}`
+  const url = `https://${_getChainId() === '2' ? 'test' : ''}explorer.hydrachain.org/contract/${safeAddress}`
+  console.log('chainIDDDDDDDDDDDD', _getChainId())
+
   return (
     <Block justify="left">
       <Img alt={asset.name} height={26} onError={setImageToPlaceholder} src={asset.logoUri} />

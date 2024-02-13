@@ -329,7 +329,7 @@ export const sendRemoveExistingOwner = async (
   const oracleTx = await contractSend(
     getContract(sdk, oracleAddress.value[0], SnapshotOracle),
     'removeAdmin',
-    [hydraToHexAddress(address), ownerAddress],
+    [hydraToHexAddress(address, state.config.chainId), ownerAddress],
     address,
   )
 

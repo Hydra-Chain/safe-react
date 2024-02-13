@@ -322,8 +322,8 @@ export class TxSender {
     }
 
     // Selectors
-    const { account } = providerSelector(state)
-    this.from = hydraToHexAddress(account, true)
+    const { account, network } = providerSelector(state)
+    this.from = hydraToHexAddress(account, network, true)
 
     this.safeVersion = currentSafeCurrentVersion(state)
     this.safeInstance = getGnosisSafeInstanceAt(txProps.safeAddress, this.safeVersion)

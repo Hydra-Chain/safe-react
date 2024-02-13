@@ -325,6 +325,7 @@ export const transferHydra = (
     !t.qrc20TokenTransfers
 
   if (!isSentHydra && !isReceiveHydra) return
+  const _chainId = _getChainId()
   const nonce = logsDecoded.find((l) => l.name === 'ExecutionParams')?.events?.find((e) => e.name === '_nonce')?.value
   const tli = {} as Transaction
   tli.conflictType = 'None'
@@ -339,11 +340,15 @@ export const transferHydra = (
   tli.transaction.txInfo.type = 'Transfer'
   tli.transaction.txInfo.sender = {
     value: hydraToHexAddress(
-      isSentHydra ? safeAddrHydra : input ? getDepositToSafeAddress(_getChainId()) : receipt?.sender,
+      isSentHydra ? safeAddrHydra : input ? getDepositToSafeAddress(_chainId) : receipt?.sender,
+      _chainId,
     ),
   } as AddressEx
   tli.transaction.txInfo.recipient = {
-    value: hydraToHexAddress(isReceiveHydra ? safeAddrHydra : logsDecoded[1].events.find((e) => e.name === 'to').value),
+    value: hydraToHexAddress(
+      isReceiveHydra ? safeAddrHydra : logsDecoded[1].events.find((e) => e.name === 'to').value,
+      _chainId,
+    ),
   } as AddressEx
   tli.transaction.txInfo.direction = isReceiveHydra ? TransferDirection.INCOMING : TransferDirection.OUTGOING
   tli.transaction.txInfo.transferInfo = (tli.transaction.txInfo.transferInfo ?? {
@@ -364,7 +369,7 @@ export const creation = (t: any, tli: Transaction, receipt: any): Transaction =>
   tli.transaction.txInfo.factory = {} as AddressEx
   tli.transaction.txInfo.implementation = {} as AddressEx
   tli.transaction.txInfo.type = 'Creation'
-  tli.transaction.txInfo.creator.value = hydraToHexAddress(receipt.sender, true)
+  tli.transaction.txInfo.creator.value = hydraToHexAddress(receipt.sender, chaidId, true)
   tli.transaction.txInfo.factory.value = getProxyFactorynAddress(chaidId)
   tli.transaction.txInfo.implementation.value = getSingletonAddress(chaidId)
   tli.transaction.txInfo.transactionHash = '0x' + t.id
