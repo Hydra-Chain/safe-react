@@ -21,7 +21,11 @@ import { TransactionReviewType } from './Review'
 import { NativeCoinValue } from './NativeCoinValue'
 import { ModalHeader } from '../ModalHeader'
 import { getStepTitle } from 'src/routes/safe/components/Balances/SendModal/utils'
-import useSafeAddress from 'src/logic/currentSession/hooks/useSafeAddress'
+// import useSafeAddress from 'src/logic/currentSession/hooks/useSafeAddress'
+import { contractCall, getContract } from 'src/logic/hydra/contractInteractions/core'
+import { useSelector } from 'react-redux'
+import { providerHydraSdkSelector, userAccountSelector } from 'src/logic/wallets/store/selectors'
+import { getCallResult } from 'src/logic/hydra/contractInteractions/utils'
 
 const useStyles = makeStyles(styles)
 
@@ -54,7 +58,9 @@ const ContractInteraction: React.FC<ContractInteractionProps> = ({
   switchMethod,
 }) => {
   const classes = useStyles()
-  const { safeAddress } = useSafeAddress()
+  // const { safeAddress } = useSafeAddress()
+  const hydraSdk = useSelector(providerHydraSdkSelector)
+  const account = useSelector(userAccountSelector)
   let setCallResults
 
   useMemo(() => {
@@ -76,10 +82,23 @@ const ContractInteraction: React.FC<ContractInteractionProps> = ({
       try {
         const txObject = createTxObject(selectedMethod, contractAddress, values)
         const data = txObject.encodeABI()
-
+        const contractAbi = JSON.parse(values.abi.replaceAll(' ', '').replaceAll('\n', ''))
+        const args = (txObject as any)?.arguments.map((arg) =>
+          arg?.length === 42 && arg.startsWith('0x') ? arg.replace('0x', '') : arg,
+        )
+        const address = account.startsWith('0x', 0) ? account.replace('0x', '') : account
         if (isReadMethod(selectedMethod) && submit) {
-          const result = await txObject.call({ from: safeAddress })
-          setCallResults(result)
+          const resp = await contractCall(
+            getContract(hydraSdk, contractAddress, contractAbi),
+            selectedMethod.name,
+            args ?? [],
+            address,
+          )
+          const result = getCallResult(resp)
+
+          // return result.value[0].toString()
+          // const result = await txObject.call({ from: safeAddress })
+          setCallResults(JSON.stringify(result.value))
 
           // this was a read method, so we won't go to the 'review' screen
           return
@@ -123,7 +142,7 @@ const ContractInteraction: React.FC<ContractInteractionProps> = ({
                 <FormErrorMessage />
                 <Paragraph color="disabled" noMargin size="lg">
                   <Switch checked={!isABI} onChange={() => saveForm(rest.values)} />
-                  Use custom data (hex encoded)
+                  Use custom data (hex encoded)--va
                 </Paragraph>
               </Block>
               <Buttons onClose={onClose} requiresMethod />

@@ -17,7 +17,6 @@ import { useSidebarItems } from 'src/components/AppLayout/Sidebar/useSidebarItem
 import useAddressBookSync from 'src/logic/addressBook/hooks/useAddressBookSync'
 import { useCurrentSafeAddressSync } from 'src/logic/currentSession/hooks/useCurrentSafeAddressSync'
 import useHydra from 'src/logic/hooks/useHydra'
-import useHydraAccAndSDK from 'src/logic/hooks/useHydraAccAndSDK'
 
 const Frame = styled.div`
   display: flex;
@@ -37,8 +36,7 @@ const App: React.FC = ({ children }) => {
 
   useCurrentSafeAddressSync()
   useAddressBookSync()
-  const { account, hydraSDK } = useHydra()
-  useHydraAccAndSDK(account, hydraSDK)
+  useHydra()
 
   const sendFunds = safeActionsState.sendFunds
   const balance = formatCurrency(currentSafeBalance.toString(), currentCurrency)

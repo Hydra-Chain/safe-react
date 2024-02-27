@@ -8,8 +8,6 @@ import updateProviderHydraAccount from '../wallets/store/actions/updateProviderH
 import updateProviderHydraSDK from '../wallets/store/actions/updateProviderHydraSDK'
 import updateProviderNetwork from '../wallets/store/actions/updateProviderNetwork'
 import updateProviderWallet from '../wallets/store/actions/updateProviderWallet'
-import { setChainId } from '../config/utils'
-// import invoke from '../hydra/mobileInvoke/browser'
 
 // const rawCall = invoke.bind('rawCall')
 
@@ -20,9 +18,9 @@ declare global {
   }
 }
 
-export default function (): { account: any; hydraSDK: any; error: string } {
-  const [account, setAccount] = useState()
-  const [hydraSDK, setHydraSDK] = useState()
+export default function (): { error: string } {
+  // const [account, setAccount] = useState()
+  // const [hydraSDK, setHydraSDK] = useState()
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -61,9 +59,9 @@ export default function (): { account: any; hydraSDK: any; error: string } {
           store.dispatch(updateProviderHydraSDK(hydraExtension))
           store.dispatch(updateProviderHydraAccount(account))
           //   const hydraExtension = new Hydraweb3(window.ReactNativeWebView ? { rawCall } : window.hydrawallet.rpcProvider)
-          setChainId(chainId)
-          setAccount(account)
-          setHydraSDK(hydraExtension)
+          // setChainId(chainId)
+          // setAccount(account)
+          // setHydraSDK(hydraExtension)
         }
       },
       false,
@@ -97,5 +95,6 @@ export default function (): { account: any; hydraSDK: any; error: string } {
     )
   }, [])
 
-  return { account, hydraSDK, error }
+  // return { account, hydraSDK, error }
+  return { error }
 }

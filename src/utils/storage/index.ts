@@ -6,13 +6,14 @@ import Storage from './Storage'
 // @TODO: migrate them to chain ids.
 const STORAGE_KEYS: Record<ChainId, string> = {
   '1': 'MAINNET',
-  '4': 'RINKEBY',
-  '56': 'BSC',
-  '100': 'XDAI',
-  '137': 'POLYGON',
-  '246': 'ENERGY_WEB_CHAIN',
-  '42161': 'ARBITRUM',
-  '73799': 'VOLTA',
+  '2': 'TESTNET',
+  // '4': 'RINKEBY',
+  // '56': 'BSC',
+  // '100': 'XDAI',
+  // '137': 'POLYGON',
+  // '246': 'ENERGY_WEB_CHAIN',
+  // '42161': 'ARBITRUM',
+  // '73799': 'VOLTA',
 }
 
 export const storage = new Storage(window.localStorage, '')
