@@ -142,7 +142,7 @@ const ContractInteraction: React.FC<ContractInteractionProps> = ({
                 <FormErrorMessage />
                 <Paragraph color="disabled" noMargin size="lg">
                   <Switch checked={!isABI} onChange={() => saveForm(rest.values)} />
-                  Use custom data (hex encoded)--va
+                  Use custom data (*hex encoded)
                 </Paragraph>
               </Block>
               <Buttons onClose={onClose} requiresMethod />
