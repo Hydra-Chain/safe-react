@@ -68,6 +68,7 @@ const ProviderInfo = ({ connected, provider, userAddress }: ProviderInfoProps): 
   const currentNetwork = useSelector(networkSelector)
   const ensName = useSelector(userEnsSelector)
   const chain = getChainById(currentNetwork)
+
   const addressColor = connected ? 'text' : 'warning'
   return (
     <>

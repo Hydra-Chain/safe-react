@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 
 import Modal from 'src/components/Modal'
@@ -6,7 +6,6 @@ import { userAccountSelector } from 'src/logic/wallets/store/selectors'
 import { addressBookAddOrUpdate } from 'src/logic/addressBook/store/actions'
 import { TX_NOTIFICATION_TYPES } from 'src/logic/safe/transactions'
 import { createTransaction } from 'src/logic/safe/store/actions/createTransaction'
-import { checksumAddress } from 'src/utils/checksumAddress'
 import { makeAddressBookEntry } from 'src/logic/addressBook/model/addressBook'
 import { Dispatch } from 'src/logic/safe/store/actions/types.d'
 import { TxParameters } from 'src/routes/safe/container/hooks/useTransactionParameters'
@@ -14,7 +13,6 @@ import { TxParameters } from 'src/routes/safe/container/hooks/useTransactionPara
 import { OwnerForm } from './screens/OwnerForm'
 import { ReviewAddOwner } from './screens/Review'
 import { ThresholdForm } from './screens/ThresholdForm'
-import { getSafeSDK } from 'src/logic/wallets/getWeb3'
 import { Errors, logError } from 'src/logic/exceptions/CodedException'
 import { currentSafe, currentSafeCurrentVersion } from 'src/logic/safe/store/selectors'
 import { currentChainId } from 'src/logic/config/store/selectors'
@@ -22,6 +20,13 @@ import { trackEvent } from 'src/utils/googleTagManager'
 import { SETTINGS_EVENTS } from 'src/utils/events/settings'
 import { store } from 'src/store'
 import useSafeAddress from 'src/logic/currentSession/hooks/useSafeAddress'
+import {
+  encodeMethodWithParams,
+  // getSnapshotOracleAdminsByPercentage,
+  // sendAddNewOwner,
+  // sendWithState,
+} from 'src/logic/hydra/contractInteractions/utils'
+import { GnosisSafe } from 'src/logic/hydra/abis'
 
 export type OwnerValues = {
   ownerAddress: string
@@ -30,7 +35,7 @@ export type OwnerValues = {
 }
 
 export const sendAddOwner = async (
-  values: OwnerValues,
+  { ownerAddress, threshold }: OwnerValues,
   safeAddress: string,
   safeVersion: string,
   txParameters: TxParameters,
@@ -38,28 +43,28 @@ export const sendAddOwner = async (
   connectedWalletAddress: string,
   delayExecution: boolean,
 ): Promise<void> => {
-  const sdk = await getSafeSDK(connectedWalletAddress, safeAddress, safeVersion)
-  const safeTx = await sdk.getAddOwnerTx(
-    { ownerAddress: values.ownerAddress, threshold: +values.threshold },
-    { safeTxGas: 0 },
-  )
-  const txData = safeTx.data.data
-
+  const txData = encodeMethodWithParams(GnosisSafe, 'addOwnerWithThreshold', ['0x' + ownerAddress, threshold])
   await dispatch(
-    createTransaction({
-      safeAddress,
-      to: safeAddress,
-      valueInWei: '0',
-      txData,
-      txNonce: txParameters.safeNonce,
-      safeTxGas: txParameters.safeTxGas,
-      ethParameters: txParameters,
-      notifiedTransaction: TX_NOTIFICATION_TYPES.SETTINGS_CHANGE_TX,
-      delayExecution,
-    }),
+    createTransaction(
+      {
+        safeAddress,
+        to: safeAddress,
+        valueInWei: '0',
+        txData,
+        txNonce: txParameters.safeNonce,
+        safeTxGas: txParameters.safeTxGas,
+        ethParameters: txParameters,
+        notifiedTransaction: TX_NOTIFICATION_TYPES.SETTINGS_CHANGE_TX,
+        delayExecution,
+      },
+      // undefined,
+      // undefined,
+      // undefined,
+      // result,
+    ),
   )
 
-  trackEvent({ ...SETTINGS_EVENTS.THRESHOLD.THRESHOLD, label: values.threshold })
+  trackEvent({ ...SETTINGS_EVENTS.THRESHOLD.THRESHOLD, label: threshold })
   trackEvent({ ...SETTINGS_EVENTS.THRESHOLD.OWNERS, label: currentSafe(store.getState()).owners.length })
 }
 
@@ -77,13 +82,17 @@ export const AddOwnerModal = ({ isOpen, onClose }: Props): React.ReactElement =>
   const connectedWalletAddress = useSelector(userAccountSelector)
   const chainId = useSelector(currentChainId)
 
-  useEffect(
-    () => () => {
-      setActiveScreen('selectOwner')
-      setValues({ ownerName: '', ownerAddress: '', threshold: '' })
-    },
-    [isOpen],
-  )
+  // useEffect(
+  //   () => () => {
+  //     const getNewThreshold = async () => {
+  //       const threshold = await dispatch(sendWithState(getSnapshotOracleAdminsByPercentage, { safeAddress }))
+  //       setActiveScreen('selectOwner')
+  //       setValues({ ownerName: '', ownerAddress: '', threshold: threshold as unknown as string })
+  //     }
+  //     if (connectedWalletAddress) getNewThreshold()
+  //   },
+  //   [isOpen, connectedWalletAddress, dispatch, safeAddress],
+  // )
 
   const onClickBack = () => {
     if (activeScreen === 'reviewAddOwner') {
@@ -97,7 +106,7 @@ export const AddOwnerModal = ({ isOpen, onClose }: Props): React.ReactElement =>
     setValues((stateValues) => ({
       ...stateValues,
       ownerName: newValues.ownerName,
-      ownerAddress: checksumAddress(newValues.ownerAddress),
+      ownerAddress: newValues.ownerAddress,
     }))
     setActiveScreen('selectThreshold')
   }

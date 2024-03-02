@@ -15,6 +15,7 @@ export const ethSigner = async ({ safeTxHash, sender }: EthSignerArgs): Promise<
 
   return new Promise(function (resolve, reject) {
     const provider = web3.currentProvider as AbstractProvider
+
     provider.sendAsync(
       {
         jsonrpc: '2.0',

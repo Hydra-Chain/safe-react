@@ -57,7 +57,7 @@ export const ThresholdForm = ({ onClickBack, onClose, onSubmit, initialValues }:
             <Block className={classes.formContainer}>
               <Row>
                 <Paragraph className={classes.headingText} weight="bolder">
-                  Set the required owner confirmations:
+                  Required owner confirmations after adding new owner:
                 </Paragraph>
               </Row>
               <Row>

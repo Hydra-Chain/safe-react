@@ -38,6 +38,7 @@ import ChainIndicator from 'src/components/ChainIndicator'
 import { currentChainId } from 'src/logic/config/store/selectors'
 import { trackEvent } from 'src/utils/googleTagManager'
 import { SETTINGS_EVENTS } from 'src/utils/events/settings'
+import { hydraFromHexAddress } from 'src/logic/hydra/utils'
 
 export const SAFE_NAME_INPUT_TEST_ID = 'safe-name-input'
 export const SAFE_NAME_SUBMIT_BTN_TEST_ID = 'change-safe-name-btn'
@@ -120,7 +121,7 @@ const SafeDetails = (): ReactElement => {
   useEffect(() => {
     const getMasterCopyInfo = async () => {
       const masterCopies = await fetchMasterCopies()
-      const masterCopyAddress = await getMasterCopyAddressFromProxyAddress(safeAddress)
+      const masterCopyAddress = await getMasterCopyAddressFromProxyAddress(safeAddress, dispatch)
       const masterCopy = masterCopies?.find((mc) => sameAddress(mc.address, masterCopyAddress))
       setSafeInfo(masterCopy)
     }
@@ -128,7 +129,7 @@ const SafeDetails = (): ReactElement => {
     if (safeAddress) {
       getMasterCopyInfo()
     }
-  }, [safeAddress])
+  }, [safeAddress, dispatch])
 
   return (
     <GnoForm onSubmit={handleSubmit}>
@@ -187,6 +188,24 @@ const SafeDetails = (): ReactElement => {
                   label="Safe name*"
                   type="text"
                   validate={composeValidators(required, validAddressBookName)}
+                />
+              </Block>
+            </Block>
+          )}
+
+          {safeAddress != null && (
+            <Block className={classes.formContainer}>
+              <Heading tag="h2">Safe&apos;s Base58 PubkeyHash address</Heading>
+              <Paragraph>Safe&apos;s converted address from Hex to Base58 format.</Paragraph>
+              <Block className={classes.root}>
+                <Field
+                  component={TextField}
+                  defaultValue={hydraFromHexAddress(safeAddress, chainId)}
+                  name="safeBase58"
+                  placeholder="Safe Base58*"
+                  label="Safe Base58*"
+                  type="text"
+                  disabled
                 />
               </Block>
             </Block>

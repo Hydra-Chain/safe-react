@@ -74,14 +74,13 @@ export const getTxAmount = (txInfo?: TransactionInfo, formatted = true): string 
   if (!txInfo || !isTransferTxInfo(txInfo)) {
     return NOT_AVAILABLE
   }
-
-  switch (txInfo.transferInfo.type) {
+  switch (txInfo?.transferInfo?.type) {
     case TransactionTokenType.ERC20:
       return getAmountWithSymbol(
         {
-          decimals: `${txInfo.transferInfo.decimals ?? 0}`,
-          symbol: `${txInfo.transferInfo.tokenSymbol ?? NOT_AVAILABLE}`,
-          value: txInfo.transferInfo.value,
+          decimals: `${txInfo.transferInfo?.decimals ?? 0}`,
+          symbol: `${txInfo.transferInfo?.tokenSymbol ?? NOT_AVAILABLE}`,
+          value: txInfo.transferInfo?.value,
         },
         formatted,
       )
@@ -92,9 +91,9 @@ export const getTxAmount = (txInfo?: TransactionInfo, formatted = true): string 
       const nativeCurrency = getNativeCurrency()
       return getAmountWithSymbol(
         {
-          decimals: nativeCurrency.decimals,
-          symbol: nativeCurrency.symbol,
-          value: txInfo.transferInfo.value,
+          decimals: nativeCurrency?.decimals ?? 0,
+          symbol: nativeCurrency?.symbol ?? NOT_AVAILABLE,
+          value: txInfo.transferInfo?.value,
         },
         formatted,
       )
@@ -112,20 +111,20 @@ type txTokenData = {
 
 export const getTxTokenData = (txInfo: Transfer): txTokenData => {
   const nativeCurrency = getNativeCurrency()
-  switch (txInfo.transferInfo.type) {
+  switch (txInfo?.transferInfo?.type) {
     case TransactionTokenType.ERC20:
       return {
-        address: txInfo.transferInfo.tokenAddress,
-        value: txInfo.transferInfo.value,
-        decimals: txInfo.transferInfo.decimals,
+        address: txInfo?.transferInfo?.tokenAddress ?? '',
+        value: txInfo?.transferInfo?.value ?? '',
+        decimals: txInfo?.transferInfo?.decimals ?? 0,
       }
     case TransactionTokenType.ERC721:
       return { address: txInfo.transferInfo.tokenAddress, value: '1', decimals: 0 }
     default:
       return {
-        address: getNativeCurrencyAddress(),
-        value: txInfo.transferInfo.value,
-        decimals: nativeCurrency.decimals,
+        address: getNativeCurrencyAddress() ?? '',
+        value: txInfo?.transferInfo?.value ?? '',
+        decimals: nativeCurrency?.decimals ?? 0,
       }
   }
 }
@@ -142,18 +141,18 @@ export const addressInList =
     list.some((ownerAddress) => sameAddress(ownerAddress.value, address))
 
 export const getTxTo = ({ txInfo }: Pick<Transaction, 'txInfo'>): AddressEx | undefined => {
-  switch (txInfo.type) {
+  switch (txInfo?.type) {
     case 'Transfer': {
-      return txInfo.recipient
+      return txInfo?.recipient
     }
     case 'SettingsChange': {
       return undefined
     }
     case 'Custom': {
-      return txInfo.to
+      return txInfo?.to
     }
     case 'Creation': {
-      return txInfo.factory || undefined
+      return txInfo?.factory || undefined
     }
   }
 }
@@ -251,12 +250,12 @@ export const makeTxFromDetails = (txDetails: TransactionDetails): Transaction =>
     signers,
     confirmations,
   }: MultisigExecutionDetails): MultisigExecutionInfo['missingSigners'] => {
-    const missingSigners = signers.filter(({ value }) => {
+    const missingSigners = signers?.filter(({ value }) => {
       const hasConfirmed = confirmations?.some(({ signer }) => signer?.value === value)
       return !hasConfirmed
     })
 
-    return missingSigners.length ? missingSigners : null
+    return missingSigners?.length ? missingSigners : null
   }
 
   const getMultisigExecutionInfo = ({

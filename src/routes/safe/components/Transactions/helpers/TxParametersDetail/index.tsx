@@ -6,7 +6,7 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  ButtonLink,
+  // ButtonLink,
   Divider,
   EthHashInfo,
   CopyToClipboardBtn,
@@ -54,14 +54,14 @@ const ColoredText = styled(Text)<ColoredTextProps>`
   color: ${(props) => (props.isError ? props.theme.colors.error : props.color)};
 `
 
-const StyledButtonLink = styled(ButtonLink)`
-  padding-left: 0;
-  margin: 8px 0 0 0;
+// const StyledButtonLink = styled(ButtonLink)`
+//   padding-left: 0;
+//   margin: 8px 0 0 0;
 
-  > p {
-    margin-left: 0;
-  }
-`
+//   > p {
+//     margin-left: 0;
+//   }
+// `
 
 const StyledDivider = styled(Divider)`
   margin-right: -${md};
@@ -97,13 +97,13 @@ type Props = {
   txParameters: TxParameters
   compact?: boolean
   parametersStatus: ParametersStatus
-  onEdit: () => void
+  onEdit?: () => void
   isTransactionCreation: boolean
   isOffChainSignature: boolean
 }
 
 export const TxParametersDetail = ({
-  onEdit,
+  // onEdit,
   txParameters,
   compact = true,
   parametersStatus,
@@ -169,11 +169,11 @@ export const TxParametersDetail = ({
           </TxParameterWrapper>
 
           {showSafeTxGas && <TxParameter name="SafeTxGas" value={txParameters.safeTxGas || '0'} color={color} />}
-          <Track {...MODALS_EVENTS.EDIT_ADVANCED_PARAMS}>
+          {/* <Track {...MODALS_EVENTS.EDIT_ADVANCED_PARAMS}>
             <StyledButtonLink color="primary" textSize="xl" onClick={onEdit}>
               Edit
             </StyledButtonLink>
-          </Track>
+          </Track> */}
           {storedTx?.length > 0 && <TxAdvancedParametersDetail tx={storedTx[0]} />}
         </AccordionDetailsWrapper>
       </AccordionDetails>

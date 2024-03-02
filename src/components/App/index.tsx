@@ -16,6 +16,7 @@ import ReceiveModal from './ReceiveModal'
 import { useSidebarItems } from 'src/components/AppLayout/Sidebar/useSidebarItems'
 import useAddressBookSync from 'src/logic/addressBook/hooks/useAddressBookSync'
 import { useCurrentSafeAddressSync } from 'src/logic/currentSession/hooks/useCurrentSafeAddressSync'
+import useHydra from 'src/logic/hooks/useHydra'
 
 const Frame = styled.div`
   display: flex;
@@ -35,6 +36,7 @@ const App: React.FC = ({ children }) => {
 
   useCurrentSafeAddressSync()
   useAddressBookSync()
+  useHydra()
 
   const sendFunds = safeActionsState.sendFunds
   const balance = formatCurrency(currentSafeBalance.toString(), currentCurrency)

@@ -38,11 +38,17 @@ export const TxInfoTransfer = ({
 
   useEffect(() => {
     if (isTransferAssetInfo(assetInfo)) {
-      const txDirection = txInfo.direction.toUpperCase()
+      const txDirection = txInfo?.direction?.toUpperCase()
+      makeTitle(txDirection, assetInfo.amountWithSymbol, txStatus)
       setDetails({
-        title: makeTitle(txDirection, assetInfo.amountWithSymbol, txStatus),
-        address: txDirection === TransferDirection.INCOMING ? txInfo.sender.value : txInfo.recipient.value,
-        name: (txDirection === TransferDirection.INCOMING ? txInfo.sender.name : txInfo.recipient.name) || undefined,
+        title: makeTitle(txDirection, assetInfo.amountWithSymbol, txStatus) ?? 'Waiting tx...',
+        address:
+          (txDirection === TransferDirection.INCOMING ? txInfo?.sender?.value : txInfo?.recipient?.value) ??
+          'Waiting tx...',
+        name:
+          ((txDirection === TransferDirection.INCOMING ? txInfo?.sender?.name : txInfo?.recipient?.name) ||
+            undefined) ??
+          '',
       })
     }
   }, [assetInfo, txInfo.direction, txInfo.recipient, txInfo.sender, txStatus])

@@ -89,7 +89,6 @@ export const SpendingLimitModalWrapper = ({
   const estimateGasLimit = useCallback(() => {
     return estimateGasForAllowanceTransfer(allowanceTransferParams)
   }, [allowanceTransferParams])
-
   const gasLimit = useEstimateGasLimit(estimateGasLimit, true, EMPTY_DATA, manualGasLimit)
 
   const checkAllowanceTransferTx = useCallback(() => {

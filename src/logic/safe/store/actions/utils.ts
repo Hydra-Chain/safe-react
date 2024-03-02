@@ -7,7 +7,7 @@ import { SafeRecordProps } from 'src/logic/safe/store/models/safe'
 import { getSpendingLimits } from 'src/logic/safe/utils/spendingLimits'
 import { buildModulesLinkedList } from 'src/logic/safe/utils/modules'
 import { enabledFeatures, safeNeedsUpdate } from 'src/logic/safe/utils/safeVersion'
-import { checksumAddress } from 'src/utils/checksumAddress'
+// import { checksumAddress } from 'src/utils/checksumAddress'
 import { ChainId } from 'src/config/chain.d'
 
 import {
@@ -16,7 +16,7 @@ import {
   LocalTransactionStatus,
   isMultiSigExecutionDetails,
 } from 'src/logic/safe/store/models/types/gateway.d'
-import { getGnosisSafeInstanceAt } from 'src/logic/contracts/safeContracts'
+// import { getGnosisSafeInstanceAt } from 'src/logic/contracts/safeContracts'
 import { logError, Errors } from 'src/logic/exceptions/CodedException'
 import { getRecommendedNonce } from '../../api/fetchSafeTxGasEstimation'
 import {
@@ -27,16 +27,20 @@ import {
   SAFE_ROUTES,
   TRANSACTION_ID_SLUG,
 } from 'src/routes/routes'
+import { Dispatch } from './types'
+import { getGnosisProxyNonce, getGnosisProxyThreshold, sendWithState } from 'src/logic/hydra/contractInteractions/utils'
+import { SafeInfoHydra } from 'src/logic/hydra/utils'
 
 export const canExecuteCreatedTx = async (
   safeInstance: GnosisSafe,
   nonce: string,
   lastTx: Transaction | null,
+  dispatch: Dispatch,
 ): Promise<boolean> => {
-  const safeNonce = (await safeInstance.methods.nonce().call()).toString()
-  const thresholdAsString = await safeInstance.methods.getThreshold().call()
+  const safeAddress = safeInstance.options.address.toLocaleLowerCase()
+  const safeNonce = await dispatch(sendWithState(getGnosisProxyNonce, { safeAddress }))
+  const thresholdAsString = await dispatch(sendWithState(getGnosisProxyThreshold, { safeAddress }))
   const threshold = Number(thresholdAsString)
-
   // Needs to collect owners signatures
   if (threshold > 1) {
     return false
@@ -99,6 +103,7 @@ export const extractRemoteSafeInfo = async (remoteSafeInfo: SafeInfo): Promise<P
   safeInfo.txQueuedTag = remoteSafeInfo.txQueuedTag
   safeInfo.txHistoryTag = remoteSafeInfo.txHistoryTag
   safeInfo.chainId = remoteSafeInfo.chainId as ChainId
+  // safeInfo.thresholdPercentage = remoteSafeInfo.thresholdPercentage
 
   return safeInfo
 }
@@ -117,21 +122,36 @@ export const buildSafeOwners = (
   if (remoteSafeOwners) {
     // ToDo: review if checksums addresses is necessary,
     //  as they must be provided already in the checksum form from the services
-    return remoteSafeOwners.map(({ value }) => checksumAddress(value))
+    return remoteSafeOwners.map(({ value }) => value)
   }
 
   // nothing to do without remote owners, so we return the stored list
   return localSafeOwners
 }
 
-export const getNonce = async (safeAddress: string, safeVersion: string): Promise<string> => {
+export const buildSafeOracle = (
+  remoteSafeOracle?: SafeInfoHydra['oracle'],
+  localSafeOracle?: SafeRecordProps['oracle'],
+): SafeRecordProps['oracle'] | undefined => {
+  if (remoteSafeOracle) {
+    // ToDo: review if checksums addresses is necessary,
+    //  as they must be provided already in the checksum form from the services
+    return remoteSafeOracle.map(({ value }) => value)
+  }
+
+  // nothing to do without remote owners, so we return the stored list
+  return localSafeOracle
+}
+
+export const getNonce = async (safeAddress: string, safeVersion: string, dispatch: Dispatch): Promise<string> => {
   let nextNonce: string
   try {
-    nextNonce = (await getRecommendedNonce(safeAddress)).toString()
+    nextNonce = (await getRecommendedNonce(safeAddress, dispatch)).toString()
   } catch (e) {
     logError(Errors._616, e.message)
-    const safeInstance = getGnosisSafeInstanceAt(safeAddress, safeVersion)
-    nextNonce = await safeInstance.methods.nonce().call()
+    // const safeInstance = getGnosisSafeInstanceAt(safeAddress, safeVersion)
+    // nextNonce = await safeInstance.methods.nonce().call()
+    nextNonce = '0'
   }
   return nextNonce
 }
@@ -141,7 +161,12 @@ export const navigateToTx = (safeAddress: string, txDetails: TransactionDetails)
     return
   }
   const { shortName } = extractPrefixedSafeAddress()
-  const prefixedSafeAddress = getPrefixedSafeAddressSlug({ shortName, safeAddress })
+
+  const prefixedSafeAddress = getPrefixedSafeAddressSlug({
+    shortName,
+    safeAddress: safeAddress.substring(safeAddress.length - 40),
+  })
+
   const txRoute = generatePath(SAFE_ROUTES.TRANSACTIONS_SINGULAR, {
     [SAFE_ADDRESS_SLUG]: prefixedSafeAddress,
     [TRANSACTION_ID_SLUG]: txDetails.txId,

@@ -23,7 +23,6 @@ export const trackSafeAppOpenCount = (id: SafeApp['id']): void => {
   const trackData = getAppsUsageData()
   const currentOpenCount = trackData[id]?.openCount || 0
   const currentTxCount = trackData[id]?.txCount || 0
-
   local.setItem(APPS_DASHBOARD, {
     ...trackData,
     [id]: {

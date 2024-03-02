@@ -10,7 +10,7 @@ import { TxParameters } from 'src/routes/safe/container/hooks/useTransactionPara
 import { Dispatch, DispatchReturn } from './types'
 import { Confirmation } from 'src/logic/safe/store/models/types/confirmation'
 import { TxSender } from './createTransaction'
-import { logError, Errors } from 'src/logic/exceptions/CodedException'
+import { Errors, logError } from 'src/logic/exceptions/CodedException'
 
 interface ProcessTransactionArgs {
   approveAndExecute: boolean
@@ -45,7 +45,6 @@ export const processTransaction = (props: ProcessTransactionArgs): ProcessTransa
 
     // Selectors
     const state = getState()
-
     const { tx, approveAndExecute } = props
 
     // Set specific transaction being finalised
@@ -90,6 +89,6 @@ export const processTransaction = (props: ProcessTransactionArgs): ProcessTransa
 
     sender.safeTxHash = tx.safeTxHash
 
-    sender.submitTx()
+    sender.submitTx(dispatch)
   }
 }

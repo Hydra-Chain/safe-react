@@ -1,6 +1,6 @@
 import { Icon, Link, Loader, Text } from '@gnosis.pm/safe-react-components'
 import cn from 'classnames'
-import { ReactElement, useContext } from 'react'
+import { ReactElement, useContext, useEffect, useState } from 'react'
 import styled from 'styled-components'
 
 import {
@@ -15,7 +15,7 @@ import {
   Transaction,
 } from 'src/logic/safe/store/models/types/gateway.d'
 import { useTransactionDetails } from './hooks/useTransactionDetails'
-import { TxDetailsContainer, Centered, AlignItemsWithMargin } from './styled'
+import { AlignItemsWithMargin, Centered, TxDetailsContainer } from './styled'
 import { TxData } from './TxData'
 import { TxExpandedActions } from './TxExpandedActions'
 import { TxInfo } from './TxInfo'
@@ -30,6 +30,13 @@ import TxModuleInfo from './TxModuleInfo'
 import Track from 'src/components/Track'
 import { TX_LIST_EVENTS } from 'src/utils/events/txList'
 import TxShareButton from './TxShareButton'
+import { getDepositToSafeAddress } from 'src/logic/hydra/contracts'
+import { useHistory } from 'react-router-dom'
+import { SAFE_ROUTES } from 'src/routes/routes'
+import { fetchTransaction } from 'src/logic/hydra/api/explorer'
+import { TransactionDetails } from '@gnosis.pm/safe-react-gateway-sdk'
+import { currentSafeWithNames } from 'src/logic/safe/store/selectors'
+import { _getChainId } from '../../../../../config'
 
 const NormalBreakingText = styled(Text)`
   line-break: normal;
@@ -91,15 +98,46 @@ type TxDetailsProps = {
   transaction: Transaction
 }
 
+const isDepositConfirmedCheck = async ({ transaction }: TxDetailsProps) => {
+  const tx = await fetchTransaction((transaction?.txDetails as any).txHash.replace('0x', ''))
+  return tx.confirmations > 0
+}
+
 export const TxDetails = ({ transaction }: TxDetailsProps): ReactElement => {
+  const sender = (transaction.txInfo as any)?.to?.value
+  const isDeposit = sender === '0x' + getDepositToSafeAddress(_getChainId())
+  const history = useHistory()
+  const [isDepositConfirmed, setIsDepositConfirmed] = useState(false)
   const { txLocation } = useContext(TxLocationContext)
   const { data, loading } = useTransactionDetails(transaction.id, transaction.txDetails)
   const txStatus = useTxStatus(transaction)
   const willBeReplaced = txStatus === LocalTransactionStatus.WILL_BE_REPLACED
   const isPending = txStatus === LocalTransactionStatus.PENDING
   const currentUser = useSelector(userAccountSelector)
+  const { owners } = useSelector(currentSafeWithNames)
+  const isOwner = owners.find(
+    (o) => o.address === (currentUser.startsWith('0x') ? currentUser.substring(2) : currentUser),
+  )
   const isMultiSend = data && isMultiSendTxInfo(data.txInfo)
-  const shouldShowStepper = data?.detailedExecutionInfo && isMultiSigExecutionDetails(data.detailedExecutionInfo)
+  const shouldShowStepper =
+    (data?.detailedExecutionInfo as any)?.safeTxHash &&
+    isMultiSigExecutionDetails((data as TransactionDetails).detailedExecutionInfo)
+
+  if (isDepositConfirmed) {
+    history.push(SAFE_ROUTES.TRANSACTIONS_HISTORY)
+  }
+
+  useEffect(() => {
+    ;(async () => {
+      if (!isDeposit) return
+      const isDepositConfed = await isDepositConfirmedCheck({ transaction })
+      setIsDepositConfirmed(isDepositConfed)
+    })()
+
+    return () => {
+      setIsDepositConfirmed(false)
+    }
+  }, [transaction, isDeposit])
 
   // To avoid prop drilling into TxDataGroup, module details are positioned here accordingly
   const getModuleDetails = () => {
@@ -143,7 +181,7 @@ export const TxDetails = ({ transaction }: TxDetailsProps): ReactElement => {
   }
 
   const customTxNoData = isCustomTxInfo(data.txInfo) && !data.txInfo.methodName && !parseInt(data.txInfo.dataSize, 10)
-  const onChainRejection = isCancelTxDetails(data.txInfo) && isMultiSigExecutionDetails(data.detailedExecutionInfo)
+  const onChainRejection = isCancelTxDetails(data.txInfo)
   const noTxDataBlock = customTxNoData && !onChainRejection
   const txData = () =>
     isMultiSend ? (
@@ -194,7 +232,8 @@ export const TxDetails = ({ transaction }: TxDetailsProps): ReactElement => {
           >
             <TxOwners txDetails={data} isPending={isPending} />
           </div>
-          {!isPending && !data.executedAt && txLocation !== 'history' && !!currentUser && (
+          {/* {!isPending && !data.executedAt && txLocation !== 'history' && !!currentUser && ( */}
+          {!isPending && txLocation !== 'history' && !!currentUser && isOwner && (
             <div className={cn('tx-details-actions', { 'will-be-replaced': willBeReplaced })}>
               <TxExpandedActions transaction={transaction} />
             </div>

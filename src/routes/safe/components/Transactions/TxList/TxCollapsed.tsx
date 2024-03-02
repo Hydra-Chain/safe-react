@@ -125,7 +125,7 @@ export const TxCollapsed = ({
   const txStatus = useTxStatus(transaction)
   const isPending = txStatus === LocalTransactionStatus.PENDING
   const willBeReplaced = txStatus === LocalTransactionStatus.WILL_BE_REPLACED ? ' will-be-replaced' : ''
-
+  time = time ?? +Date.now()
   const txCollapsedNonce = (
     <div className={'tx-nonce' + willBeReplaced}>
       <Text size="xl">{nonce}</Text>

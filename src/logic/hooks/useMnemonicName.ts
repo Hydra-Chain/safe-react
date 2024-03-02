@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import { getChainName } from 'src/config'
-import { animalsDict, adjectivesDict } from './useMnemonicName.dict'
+import { adjectivesDict, animalsDict } from './useMnemonicName.dict'
 
 const animals: string[] = animalsDict.trim().split(/\s+/)
 const adjectives: string[] = adjectivesDict.trim().split(/\s+/)

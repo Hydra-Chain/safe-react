@@ -3,17 +3,12 @@ import styled from 'styled-components'
 
 import Button from 'src/components/layout/Button'
 import { KeyRing } from 'src/components/AppLayout/Header/components/KeyRing'
-import onboard, { checkWallet } from 'src/logic/wallets/onboard'
+// import onboard, { checkWallet } from 'src/logic/wallets/onboard'
 import { OVERVIEW_EVENTS } from 'src/utils/events/overview'
 import Track from '../Track'
 
 export const onConnectButtonClick = async (): Promise<void> => {
-  const walletSelected = await onboard().walletSelect()
-
-  // perform wallet checks only if user selected a wallet
-  if (walletSelected) {
-    await checkWallet()
-  }
+  window.postMessage({ message: { type: 'CONNECT_HYDRAWALLET' } }, '*')
 }
 
 const StyledContainer = styled.div`

@@ -44,6 +44,12 @@ const SETTINGS = {
       action: 'Remove owner',
     },
   },
+  ORACLE: {
+    ADD_ORACLE: {
+      event: GTM_EVENT.CLICK,
+      action: 'Add oracle',
+    },
+  },
   THRESHOLD: {
     CHANGE: {
       event: GTM_EVENT.CLICK,

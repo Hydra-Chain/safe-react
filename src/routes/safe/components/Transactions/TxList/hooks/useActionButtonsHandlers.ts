@@ -18,6 +18,7 @@ import { NOTIFICATIONS } from 'src/logic/notifications'
 import useTxStatus from 'src/logic/hooks/useTxStatus'
 import { trackEvent } from 'src/utils/googleTagManager'
 import { TX_LIST_EVENTS } from 'src/utils/events/txList'
+import { getLocalStorageApprovedTransactionSchema } from 'src/logic/hydra/api/explorer'
 
 type ActionButtonsHandlers = {
   canCancel: boolean
@@ -36,6 +37,15 @@ export const useActionButtonsHandlers = (transaction: Transaction): ActionButton
   const locationContext = useContext(TxLocationContext)
   const dispatch = useDispatch()
   const { canCancel, canConfirmThenExecute, canExecute } = useTransactionActions(transaction)
+  const safeTxHash = (transaction.txDetails?.detailedExecutionInfo as any)?.safeTxHash
+  const approvedTransactionSchema = getLocalStorageApprovedTransactionSchema()
+  if (safeTxHash && approvedTransactionSchema[safeTxHash]) {
+    for (const txHash in approvedTransactionSchema[safeTxHash]) {
+      if (approvedTransactionSchema[safeTxHash][txHash] === 0) {
+        transaction.txStatus = LocalTransactionStatus.PENDING
+      }
+    }
+  }
   const txStatus = useTxStatus(transaction)
   const isPending = txStatus === LocalTransactionStatus.PENDING
 
@@ -55,7 +65,6 @@ export const useActionButtonsHandlers = (transaction: Transaction): ActionButton
       const actionSelected = canExecute || canConfirmThenExecute ? 'execute' : 'confirm'
 
       trackEvent(TX_LIST_EVENTS[actionSelected.toUpperCase()])
-
       actionContext.current.selectAction({
         actionSelected,
         transactionId: transaction.id,

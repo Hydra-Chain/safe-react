@@ -77,7 +77,7 @@ const useTxData = (
       if (!isSendingNativeToken) {
         const ERC20TokenInstance = getERC20TokenContract(txToken.address)
         const erc20TransferAmount = toTokenUnit(txAmount, txToken.decimals)
-        txData = ERC20TokenInstance.methods.transfer(recipientAddress, erc20TransferAmount).encodeABI()
+        txData = ERC20TokenInstance.methods.transfer('0x' + recipientAddress, erc20TransferAmount).encodeABI()
       }
       setData(txData)
     }
@@ -157,7 +157,7 @@ const ReviewSendFundsTx = ({ onClose, onPrev, tx }: ReviewTxProps): React.ReactE
     async (txParameters: TxParameters, delayExecution: boolean) => {
       dispatch(
         createTransaction({
-          safeAddress: safeAddress,
+          safeAddress: '0x' + safeAddress,
           to: txRecipient as string,
           valueInWei: txValue,
           txData,

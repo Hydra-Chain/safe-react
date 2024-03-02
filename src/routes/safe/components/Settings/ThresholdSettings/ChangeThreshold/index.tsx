@@ -13,7 +13,7 @@ import Paragraph from 'src/components/layout/Paragraph'
 import Row from 'src/components/layout/Row'
 import { ModalHeader } from 'src/routes/safe/components/Balances/SendModal/screens/ModalHeader'
 import { currentSafeCurrentVersion } from 'src/logic/safe/store/selectors'
-import { getGnosisSafeInstanceAt } from 'src/logic/contracts/safeContracts'
+// import { getGnosisSafeInstanceAt } from 'src/logic/contracts/safeContracts'
 import { createTransaction } from 'src/logic/safe/store/actions/createTransaction'
 import { TX_NOTIFICATION_TYPES } from 'src/logic/safe/transactions'
 import { TxModalWrapper } from 'src/routes/safe/components/Transactions/helpers/TxModalWrapper'
@@ -22,6 +22,8 @@ import { TxParameters } from 'src/routes/safe/container/hooks/useTransactionPara
 import { useStyles } from './style'
 import { trackEvent } from 'src/utils/googleTagManager'
 import { SETTINGS_EVENTS } from 'src/utils/events/settings'
+import { encodeMethodWithParams } from 'src/logic/hydra/contractInteractions/utils'
+import { GnosisSafe } from 'src/logic/hydra/abis'
 
 const THRESHOLD_FIELD_NAME = 'threshold'
 
@@ -48,8 +50,8 @@ export const ChangeThresholdModal = ({
   useEffect(() => {
     let isCurrent = true
     const calculateChangeThresholdData = () => {
-      const safeInstance = getGnosisSafeInstanceAt(safeAddress, safeVersion)
-      const txData = safeInstance.methods.changeThreshold(editedThreshold).encodeABI()
+      // const txData = safeInstance.methods.changeThreshold(editedThreshold).encodeABI()
+      const txData = encodeMethodWithParams(GnosisSafe, 'changeThreshold', [editedThreshold])
       if (isCurrent) {
         setData(txData)
       }

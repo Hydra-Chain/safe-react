@@ -119,7 +119,13 @@ export const getExplorerUrl = (): string => {
 }
 
 export const getHashedExplorerUrl = (hash: string): string => {
-  const isTx = hash.length > 42
+  if (hash?.length === 42) {
+    hash = hash.substring(2)
+  }
+  const isTx = hash?.length > 40
+  if (isTx) {
+    hash = hash.substring(2)
+  }
   const param = isTx ? 'txHash' : 'address'
   const uri = getExplorerUriTemplate()[param]
   return evalTemplate(uri, { [param]: hash })

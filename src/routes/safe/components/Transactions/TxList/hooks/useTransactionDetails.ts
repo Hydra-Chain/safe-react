@@ -32,7 +32,7 @@ export const useTransactionDetails = (
       // lookup tx details
       dispatch.current(fetchTransactionDetails({ transactionId }))
     }
-  }, [data?.txDetails, transactionId])
+  }, [data?.txDetails, transactionId, transactionDetails])
 
   return txDetails
 }

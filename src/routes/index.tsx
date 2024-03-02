@@ -6,17 +6,17 @@ import { Redirect, Route, Switch, useLocation } from 'react-router-dom'
 import { LoadingContainer } from 'src/components/LoaderContainer'
 import { lastViewedSafe } from 'src/logic/currentSession/store/selectors'
 import {
+  ADDRESSED_ROUTE,
   generateSafeRoute,
+  GENERIC_APPS_ROUTE,
+  getNetworkRootRoutes,
+  LOAD_SAFE_ROUTE,
   LOAD_SPECIFIC_SAFE_ROUTE,
   OPEN_SAFE_ROUTE,
-  ADDRESSED_ROUTE,
-  WELCOME_ROUTE,
   ROOT_ROUTE,
-  LOAD_SAFE_ROUTE,
-  getNetworkRootRoutes,
-  SAFE_ROUTES,
-  GENERIC_APPS_ROUTE,
   SAFE_APP_LANDING_PAGE_ROUTE,
+  SAFE_ROUTES,
+  WELCOME_ROUTE,
 } from './routes'
 import { setChainId } from 'src/logic/config/utils'
 import { setChainIdFromUrl } from 'src/utils/history'

@@ -5,13 +5,21 @@ import InputAdornment from '@material-ui/core/InputAdornment'
 import CircularProgress from '@material-ui/core/CircularProgress'
 
 import TextField from 'src/components/forms/TextField'
-import { Validator, composeValidators, mustBeEthereumAddress, required } from 'src/components/forms/validator'
+import {
+  Validator,
+  composeValidators,
+  mustBeEthereumAddress,
+  mustBeHydraAddress,
+  required,
+} from 'src/components/forms/validator'
 import { trimSpaces } from 'src/utils/strings'
 import { getAddressFromDomain } from 'src/logic/wallets/getWeb3'
 import { isValidEnsName, isValidCryptoDomainName } from 'src/logic/wallets/ethAddresses'
-import { checksumAddress } from 'src/utils/checksumAddress'
+// import { checksumAddress } from 'src/utils/checksumAddress'
 import { Errors, logError } from 'src/logic/exceptions/CodedException'
 import { parsePrefixedAddress } from 'src/utils/prefixedAddress'
+// import { isValidAddressHydraHex } from 'src/utils/isValidAddress'
+// import { addressRemovePrefix } from 'src/logic/hydra/utils'
 
 export interface AddressInputProps {
   fieldMutator: (address: string) => void
@@ -25,6 +33,7 @@ export interface AddressInputProps {
   disabled?: boolean
   spellCheck?: boolean
   className?: string
+  isHydraAddress?: boolean
 }
 
 const AddressInput = ({
@@ -38,6 +47,7 @@ const AddressInput = ({
   validators = [],
   defaultValue,
   disabled,
+  isHydraAddress,
 }: AddressInputProps): React.ReactElement => {
   const [currentInput, setCurrentInput] = useState<string>('')
   const [resolutions, setResolutions] = useState<Record<string, string | undefined>>({})
@@ -55,8 +65,8 @@ const AddressInput = ({
 
   // Internal validators + externally passed validators
   const allValidators = useMemo(
-    () => composeValidators(required, mustBeEthereumAddress, sanitizedValidators),
-    [sanitizedValidators],
+    () => composeValidators(required, isHydraAddress ? mustBeHydraAddress : mustBeEthereumAddress, sanitizedValidators),
+    [sanitizedValidators, isHydraAddress],
   )
 
   const onValueChange = useCallback(
@@ -70,7 +80,7 @@ const AddressInput = ({
         setResolutions((prev) => ({ ...prev, [rawVal]: '' }))
         getAddressFromDomain(address)
           .then((resolverAddr) => {
-            const formattedAddress = checksumAddress(resolverAddr)
+            const formattedAddress = resolverAddr
             setResolutions((prev) => ({ ...prev, [rawVal]: formattedAddress }))
           })
           .catch((err) => {
@@ -81,7 +91,7 @@ const AddressInput = ({
         // A regular address hash
         if (!mustBeEthereumAddress(address)) {
           const parsed = parsePrefixedAddress(address)
-          const checkedAddress = checksumAddress(parsed.address) || parsed.address
+          const checkedAddress = parsed.address || parsed.address
 
           // Field mutator (parent component) always gets an unprefixed address
           fieldMutator(checkedAddress)

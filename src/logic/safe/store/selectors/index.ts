@@ -24,7 +24,7 @@ export const currentSafe = createSelector([safesAsMap, currentSafeAddress], (saf
   return safes.get(address, baseSafe(address)) ?? {}
 })
 
-const baseSafe = (address = '') => makeSafe({ address })
+export const baseSafe = (address = '') => makeSafe({ address })
 
 export const safeFieldSelector =
   <K extends keyof SafeRecordProps>(field: K) =>
@@ -47,6 +47,8 @@ export const currentSafeNonce = createSelector(currentSafe, safeFieldSelector('n
 
 export const currentSafeOwners = createSelector(currentSafe, safeFieldSelector('owners'))
 
+export const currentSafeOracle = createSelector(currentSafe, safeFieldSelector('oracle'))
+
 export const currentSafeModules = createSelector(currentSafe, safeFieldSelector('modules'))
 
 export const currentSafeFeaturesEnabled = createSelector(currentSafe, safeFieldSelector('featuresEnabled'))
@@ -60,7 +62,10 @@ export const currentSafeTotalFiatBalance = createSelector(currentSafe, safeField
 /*************************/
 const baseSafeWithName = (address = '') => ({ ...baseSafe(address).toJS(), name: '' })
 
-export type SafeRecordWithNames = Overwrite<SafeRecordProps, { owners: AddressBookEntry[] }> & { name: string }
+export type SafeRecordWithNames = Overwrite<
+  SafeRecordProps,
+  { owners: AddressBookEntry[]; oracle: AddressBookEntry[] }
+> & { name: string }
 
 export const safesWithNamesAsList = createSelector(
   [safesAsList, currentNetworkAddressBookAsMap, currentChainId],
@@ -74,7 +79,11 @@ export const safesWithNamesAsList = createSelector(
           return addressBookMap?.[ownerAddress] ?? makeAddressBookEntry({ address: ownerAddress, name: '', chainId })
         })
 
-        return { ...safe, name, owners }
+        const oracle = safe.oracle.map((oracleAddress) => {
+          return addressBookMap?.[oracleAddress] ?? makeAddressBookEntry({ address: oracleAddress, name: '', chainId })
+        })
+
+        return { ...safe, name, owners, oracle }
       })
       .toJS()
   },

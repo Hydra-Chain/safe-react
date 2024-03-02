@@ -13,9 +13,9 @@ import useSafeAddress from 'src/logic/currentSession/hooks/useSafeAddress'
 
 const useSidebarItems = (): ListItemType[] => {
   const featuresEnabled = useSelector(currentSafeFeaturesEnabled)
-  const safeAppsEnabled = hasFeature(FEATURES.SAFE_APPS)
+  // const safeAppsEnabled = hasFeature(FEATURES.SAFE_APPS)
   const isCollectiblesEnabled = hasFeature(FEATURES.ERC721)
-  const isSpendingLimitEnabled = hasFeature(FEATURES.SPENDING_LIMIT)
+  // const isSpendingLimitEnabled = hasFeature(FEATURES.SPENDING_LIMIT)
   const { needsUpdate } = useSelector(currentSafeWithNames)
   const { shortName, safeAddress } = useSafeAddress()
   const granted = useSelector(grantedSelector)
@@ -90,17 +90,22 @@ const useSidebarItems = (): ListItemType[] => {
         iconType: 'owners',
         href: currentSafeRoutes.SETTINGS_OWNERS,
       }),
+      // makeEntryItem({
+      //   label: 'Oracle',
+      //   iconType: 'oracle',
+      //   href: currentSafeRoutes.SETTINGS_ORACLE,
+      // }),
       makeEntryItem({
         label: 'Policies',
         iconType: 'requiredConfirmations',
         href: currentSafeRoutes.SETTINGS_POLICIES,
       }),
-      makeEntryItem({
-        disabled: !isSpendingLimitEnabled,
-        label: 'Spending Limit',
-        iconType: 'fuelIndicator',
-        href: currentSafeRoutes.SETTINGS_SPENDING_LIMIT,
-      }),
+      // makeEntryItem({
+      //   disabled: !isSpendingLimitEnabled,
+      //   label: 'Spending Limit',
+      //   iconType: 'fuelIndicator',
+      //   href: currentSafeRoutes.SETTINGS_SPENDING_LIMIT,
+      // }),
       makeEntryItem({
         label: 'Advanced',
         iconType: 'settingsTool',
@@ -131,30 +136,35 @@ const useSidebarItems = (): ListItemType[] => {
         iconType: 'addressBook',
         href: currentSafeRoutes.ADDRESS_BOOK,
       }),
-      makeEntryItem({
-        disabled: !safeAppsEnabled,
-        label: 'Apps',
-        iconType: 'apps',
-        href: currentSafeRoutes.APPS,
-      }),
+      // makeEntryItem({
+      //   disabled: !safeAppsEnabled,
+      //   label: 'Apps',
+      //   iconType: 'apps',
+      //   href: currentSafeRoutes.APPS,
+      // }),
       makeEntryItem({
         label: 'Settings',
         iconType: 'settings',
         href: currentSafeRoutes.SETTINGS_DETAILS,
         subItems: settingsSubItems,
       }),
+      makeEntryItem({
+        label: 'Deposit',
+        iconType: 'paymentToken',
+        href: currentSafeRoutes.DEPOSIT_HYDRA,
+      }),
     ]
   }, [
     featuresEnabled,
     granted,
     isCollectiblesEnabled,
-    isSpendingLimitEnabled,
+    // isSpendingLimitEnabled,
     makeEntryItem,
     matchSafe,
     matchSafeWithSidebarSection,
     needsUpdate,
     safeAddress,
-    safeAppsEnabled,
+    // safeAppsEnabled,
     shortName,
   ])
 }

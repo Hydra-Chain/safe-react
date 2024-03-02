@@ -5,8 +5,8 @@ import { ADDRESS_BOOK_DEFAULT_NAME, AddressBookEntry } from 'src/logic/addressBo
 import { currentChainId } from 'src/logic/config/store/selectors'
 import { AppReduxState } from 'src/store'
 import { Overwrite } from 'src/types/helpers'
-import { checksumAddress } from 'src/utils/checksumAddress'
-import { isValidAddress } from 'src/utils/isValidAddress'
+// import { checksumAddress } from 'src/utils/checksumAddress'
+import { isValidAddressHydraHex } from 'src/utils/isValidAddress'
 
 export const addressBookState = (state: AppReduxState): AppReduxState['addressBook'] => state['addressBook']
 
@@ -38,10 +38,10 @@ export const addressBookAsMap = createSelector([addressBookState], (addressBook)
 })
 
 const getNameByAddress = (addressBook, address: string, chainId: ChainId): string => {
-  if (!isValidAddress(address)) {
+  if (!isValidAddressHydraHex(address)) {
     return ''
   }
-  return addressBook?.[chainId]?.[checksumAddress(address)]?.name || ''
+  return addressBook?.[chainId]?.[address]?.name || ''
 }
 
 type GetNameParams = Overwrite<Partial<AddressBookEntry>, { address: string }>

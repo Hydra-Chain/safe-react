@@ -2,7 +2,7 @@ import React from 'react'
 import styled from 'styled-components'
 
 import { CircleDot } from 'src/components/AppLayout/Header/components/CircleDot'
-import { getChainById } from 'src/config'
+// import { getChainById } from 'src/config'
 import { ChainId } from 'src/config/chain.d'
 
 interface Props {
@@ -22,7 +22,7 @@ const ChainIndicator = ({ chainId, hideCircle }: Props): React.ReactElement => {
   return (
     <Wrapper>
       {!hideCircle && <CircleDot networkId={chainId} />}
-      {getChainById(chainId).chainName}
+      HydraChain {chainId === '1' ? 'MainNet' : 'TestNet'}
     </Wrapper>
   )
 }

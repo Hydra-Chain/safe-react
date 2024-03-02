@@ -27,7 +27,12 @@ import {
   SAFE_PENDING_CREATION_STORAGE_KEY,
 } from './fields/createSafeFields'
 import { useMnemonicSafeName } from 'src/logic/hooks/useMnemonicName'
-import { providerNameSelector, shouldSwitchWalletChain, userAccountSelector } from 'src/logic/wallets/store/selectors'
+import {
+  networkSelector,
+  providerNameSelector,
+  shouldSwitchWalletChain,
+  userAccountSelector,
+} from 'src/logic/wallets/store/selectors'
 import OwnersAndConfirmationsNewSafeStep, {
   ownersAndConfirmationsNewSafeStepLabel,
 } from './steps/OwnersAndConfirmationsNewSafeStep'
@@ -36,17 +41,18 @@ import ReviewNewSafeStep, { reviewNewSafeStepLabel } from './steps/ReviewNewSafe
 import { loadFromStorage, saveToStorage } from 'src/utils/storage'
 import SafeCreationProcess from './components/SafeCreationProcess'
 import SelectWalletAndNetworkStep, { selectWalletAndNetworkStepLabel } from './steps/SelectWalletAndNetworkStep'
-import { reverseENSLookup } from 'src/logic/wallets/getWeb3'
+// import { reverseENSLookup } from 'src/logic/wallets/getWeb3'
 import { CREATE_SAFE_CATEGORY, CREATE_SAFE_EVENTS } from 'src/utils/events/createLoadSafe'
 import { trackEvent } from 'src/utils/googleTagManager'
+import { hydraToHexAddress } from 'src/logic/hydra/utils'
 
 function CreateSafePage(): ReactElement {
   const [safePendingToBeCreated, setSafePendingToBeCreated] = useState<CreateSafeFormValues>()
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const providerName = useSelector(providerNameSelector)
+  const chainId = useSelector(networkSelector)
   const isWrongNetwork = useSelector(shouldSwitchWalletChain)
   const provider = !!providerName && !isWrongNetwork
-
   useEffect(() => {
     const checkIfSafeIsPendingToBeCreated = async (): Promise<void> => {
       setIsLoading(true)
@@ -62,6 +68,7 @@ function CreateSafePage(): ReactElement {
       }
       setIsLoading(false)
     }
+
     checkIfSafeIsPendingToBeCreated()
   }, [provider])
 
@@ -92,7 +99,13 @@ function CreateSafePage(): ReactElement {
     let isCurrent = true
     if (provider && userWalletAddress) {
       const getInitValues = async () => {
-        const initialValuesFromUrl = await getInitialValues(userWalletAddress, addressBook, location, safeRandomName)
+        const initialValuesFromUrl = await getInitialValues(
+          userWalletAddress,
+          addressBook,
+          location,
+          safeRandomName,
+          chainId,
+        )
         if (isCurrent) {
           setInitialFormValues(initialValuesFromUrl)
         }
@@ -102,7 +115,7 @@ function CreateSafePage(): ReactElement {
     return () => {
       isCurrent = false
     }
-  }, [provider, userWalletAddress, addressBook, location, safeRandomName])
+  }, [provider, userWalletAddress, addressBook, location, safeRandomName, chainId])
 
   if (isLoading) {
     return (
@@ -158,7 +171,13 @@ export default CreateSafePage
 const DEFAULT_THRESHOLD_VALUE = 1
 
 // initial values can be present in the URL because the Old MultiSig migration
-async function getInitialValues(userAddress, addressBook, location, suggestedSafeName): Promise<CreateSafeFormValues> {
+async function getInitialValues(
+  userAddress,
+  addressBook,
+  location,
+  suggestedSafeName,
+  chainId,
+): Promise<CreateSafeFormValues> {
   const query = queryString.parse(location.search, { arrayFormat: 'comma' })
   const { name, owneraddresses, ownernames, threshold } = query
 
@@ -187,20 +206,19 @@ async function getInitialValues(userAddress, addressBook, location, suggestedSaf
     [FIELD_SAFE_OWNER_ENS_LIST]: (
       await Promise.all(
         owners.map(async (address) => {
-          return { [address]: await reverseENSLookup(address) }
+          return { [address]: hydraToHexAddress(address, chainId, true) }
         }),
       )
     ).reduce((acc, owner) => {
       return { ...acc, ...owner }
     }, {}),
     // we set owners address values as owner-address-${index} format in the form state
-    ...owners.reduce(
-      (ownerAddressFields, ownerAddress, index) => ({
+    ...owners.reduce((ownerAddressFields, ownerAddress, index) => {
+      return {
         ...ownerAddressFields,
-        [`owner-address-${index}`]: ownerAddress,
-      }),
-      {},
-    ),
+        [`owner-address-${index}`]: hydraToHexAddress(ownerAddress, chainId, false),
+      }
+    }, {}),
     // we set owners name values as owner-name-${index} format in the form state
     ...ownerNames.reduce(
       (ownerNameFields, ownerName, index) => ({

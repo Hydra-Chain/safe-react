@@ -15,7 +15,7 @@ export default (chainId: string, safeAddress: string) =>
       actionFn: typeof addHistoryTransactions | typeof addQueuedTransactions,
     ) => {
       try {
-        const values = (await loadFn(safeAddress)) as any[]
+        const values = (await loadFn(safeAddress, dispatch)) as any[]
         dispatch(actionFn({ chainId, safeAddress, values }))
       } catch (e) {
         e.log()

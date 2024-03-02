@@ -7,14 +7,25 @@ import { useAssetInfo } from './hooks/useAssetInfo'
 import { useTransactionStatus } from './hooks/useTransactionStatus'
 import { useTransactionType } from './hooks/useTransactionType'
 import { TxCollapsed } from './TxCollapsed'
+import { _getChainId } from 'src/config'
 
 export type CalculatedVotes = { votes: string; submitted: number; required: number }
 
 const calculateVotes = (executionInfo: MultisigExecutionInfo, isPending: boolean): CalculatedVotes | undefined => {
   if (!executionInfo) return
-
+  const chainName = _getChainId() === '2' ? 'TESTNET' : 'MAINNET'
   const submitted = executionInfo.confirmationsSubmitted
-  const required = executionInfo.confirmationsRequired
+  let required = executionInfo.confirmationsRequired
+
+  if (!required || required === 0) {
+    let current = localStorage.getItem(`_immortal|v2_${chainName}__CURRENT_SESSION`)
+    current = JSON.parse(current ?? '')
+    current = current?.['currentSafeAddress']
+    let safes = localStorage.getItem(`_immortal|v2_${chainName}__SAFES`)
+    safes = JSON.parse(safes ?? '')
+    const safe = safes?.[current ?? ''] ?? {}
+    required = safe.threshold
+  }
 
   if (isPending && submitted < required) return
 

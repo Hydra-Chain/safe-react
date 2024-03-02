@@ -2,9 +2,9 @@
 /build
 .DS_Store
 yarn-error.log
-.env*
 .eslintcache
 /.idea
+/.vscode
 dist
 electron-builder.yml
 /.yalc

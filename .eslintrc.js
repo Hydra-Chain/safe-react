@@ -33,6 +33,7 @@ module.exports = {
      * The following was added by legacy devs to suppress warnings
      */
     '@typescript-eslint/no-explicit-any': 'off',
+    '@typescript-eslint/ban-ts-comment': 'off',
     'react/prop-types': 'off',
   },
   settings: {

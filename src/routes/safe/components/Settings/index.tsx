@@ -18,12 +18,13 @@ import Track from 'src/components/Track'
 import useSafeAddress from 'src/logic/currentSession/hooks/useSafeAddress'
 
 const Advanced = lazy(() => import('./Advanced'))
-const SpendingLimitSettings = lazy(() => import('./SpendingLimit'))
+// const SpendingLimitSettings = lazy(() => import('./SpendingLimit'))
 const ManageOwners = lazy(() => import('./ManageOwners'))
 const RemoveSafeModal = lazy(() => import('./RemoveSafeModal'))
 const SafeDetails = lazy(() => import('./SafeDetails'))
 const ThresholdSettings = lazy(() => import('./ThresholdSettings'))
 const Appearance = lazy(() => import('./Appearance'))
+// const ManageOracle = lazy(() => import('./ManageOracle'))
 
 export const OWNERS_SETTINGS_TAB_TEST_ID = 'owner-settings-tab'
 
@@ -62,12 +63,15 @@ const Settings = (): React.ReactElement => {
     case currentSafeRoutes.SETTINGS_POLICIES:
       settingsSection = 'Policies'
       break
-    case currentSafeRoutes.SETTINGS_SPENDING_LIMIT:
-      settingsSection = 'Spending Limit'
-      break
+    // case currentSafeRoutes.SETTINGS_SPENDING_LIMIT:
+    //   settingsSection = 'Spending Limit'
+    //   break
     case currentSafeRoutes.SETTINGS_ADVANCED:
       settingsSection = 'Advanced'
       break
+    // case currentSafeRoutes.SETTINGS_ORACLE:
+    //   settingsSection = 'Oracle'
+    //   break
     default:
       settingsSection = ''
   }
@@ -121,7 +125,12 @@ const Settings = (): React.ReactElement => {
                 render={() => <ManageOwners granted={granted} owners={owners} />}
               />
               <Route path={SAFE_ROUTES.SETTINGS_POLICIES} exact render={() => <ThresholdSettings />} />
-              <Route path={SAFE_ROUTES.SETTINGS_SPENDING_LIMIT} exact render={() => <SpendingLimitSettings />} />
+              {/* <Route
+                path={SAFE_ROUTES.SETTINGS_ORACLE}
+                exact
+                render={() => <ManageOracle granted={granted} oracle={oracle} />}
+              /> */}
+              {/* <Route path={SAFE_ROUTES.SETTINGS_SPENDING_LIMIT} exact render={() => <SpendingLimitSettings />} /> */}
               <Route path={SAFE_ROUTES.SETTINGS_ADVANCED} exact render={() => <Advanced />} />
               <Redirect to={SAFE_ROUTES.SETTINGS_DETAILS} />
             </Switch>

@@ -35,7 +35,7 @@ type Props = { txDetails: ExpandedTxDetails }
 export const TxSummary = ({ txDetails }: Props): ReactElement => {
   const { txHash, detailedExecutionInfo, executedAt, txData, txInfo } = txDetails
   const [expanded, setExpanded] = useState(false)
-
+  const noAdvanced = true
   const toggleExpanded = () => {
     setExpanded((val) => !val)
   }
@@ -73,9 +73,8 @@ export const TxSummary = ({ txDetails }: Props): ReactElement => {
       <TxDataRow title="SafeTxHash:" value={safeTxHash} inlineType="hash" hasExplorer={false} />
       <TxDataRow title="Created:" value={typeof created === 'number' ? formatDateTime(created) : null} />
       <TxDataRow title="Executed:" value={executedAt ? formatDateTime(executedAt) : NOT_AVAILABLE} />
-
       {/* Advanced TxData */}
-      {txData && (
+      {txData && !noAdvanced && (
         <>
           <StyledButtonLink onClick={toggleExpanded} color="primary" iconSize="sm" textSize="xl">
             Advanced Details

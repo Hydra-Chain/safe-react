@@ -1,0 +1,242 @@
+[
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "_thresholdPercentage",
+        "type": "uint8"
+      }
+    ],
+    "name": "setThresholdPercentage",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "admin",
+        "type": "address"
+      }
+    ],
+    "name": "addAdminWithTreshhold",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "TRAILING_PERIOD",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "prevAdmin",
+        "type": "address"
+      },
+      {
+        "name": "admin",
+        "type": "address"
+      }
+    ],
+    "name": "removeAdmin",
+    "outputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "thresholdPercentage",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "REVISION_COUNT",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "addr",
+        "type": "address"
+      }
+    ],
+    "name": "isEligible",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "WEEK_IN_BLOCKS",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "gnosisSafeProxy",
+    "outputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "ELIGIBLE_HYDRA_BALANCE_MIN",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "adminCount",
+        "type": "uint256"
+      }
+    ],
+    "name": "getAdminsByPercentage",
+    "outputs": [
+      {
+        "name": "result",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "bnHYDRA",
+    "outputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "name": "_gnosisSafeProxy",
+        "type": "address"
+      },
+      {
+        "name": "_bnHYDRA",
+        "type": "address"
+      },
+      {
+        "name": "_thresholdPercentage",
+        "type": "uint8"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "name": "previous",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "name": "current",
+        "type": "uint8"
+      }
+    ],
+    "name": "ThresholdPercentageChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "name": "sender",
+        "type": "address"
+      }
+    ],
+    "name": "Remove",
+    "type": "event"
+  }
+]

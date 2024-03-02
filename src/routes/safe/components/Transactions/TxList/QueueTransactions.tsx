@@ -8,7 +8,7 @@ import { QueueTxList } from './QueueTxList'
 import { Centered, NoTransactions } from './styled'
 import { TxsInfiniteScroll } from './TxsInfiniteScroll'
 import { TxLocationContext } from './TxLocationProvider'
-import { BatchExecute } from 'src/routes/safe/components/Transactions/TxList/BatchExecute'
+// import { BatchExecute } from 'src/routes/safe/components/Transactions/TxList/BatchExecute'
 import { trackEvent } from 'src/utils/googleTagManager'
 import { TX_LIST_EVENTS } from 'src/utils/events/txList'
 import { BatchExecuteHoverProvider } from 'src/routes/safe/components/Transactions/TxList/BatchExecuteHoverProvider'
@@ -50,7 +50,7 @@ export const QueueTransactions = (): ReactElement => {
 
   return (
     <BatchExecuteHoverProvider>
-      <BatchExecute />
+      {/* <BatchExecute /> */}
       <TxsInfiniteScroll next={next} hasMore={hasMore} isLoading={isLoading}>
         {/* Next list */}
         <TxLocationContext.Provider value={{ txLocation: 'queued.next' }}>

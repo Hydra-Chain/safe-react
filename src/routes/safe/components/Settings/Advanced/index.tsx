@@ -2,15 +2,15 @@ import { Text, theme, Title } from '@gnosis.pm/safe-react-components'
 import { ReactElement } from 'react'
 import { useSelector } from 'react-redux'
 import styled from 'styled-components'
-import semverSatisfies from 'semver/functions/satisfies'
+// import semverSatisfies from 'semver/functions/satisfies'
 
-import { getModuleData } from './dataFetcher'
+// import { getModuleData } from './dataFetcher'
 import { useStyles } from './style'
-import { ModulesTable } from './ModulesTable'
+// import { ModulesTable } from './ModulesTable'
 
 import Block from 'src/components/layout/Block'
 import { currentSafe } from 'src/logic/safe/store/selectors'
-import { TransactionGuard } from './TransactionGuard'
+// import { TransactionGuard } from './TransactionGuard'
 
 const InfoText = styled(Text)`
   margin-top: 16px;
@@ -20,26 +20,27 @@ const Bold = styled.strong`
   color: ${theme.colors.text};
 `
 
-const NoModuleLegend = (): ReactElement => (
-  <InfoText color="secondaryLight" size="xl">
-    No modules enabled
-  </InfoText>
-)
+// const NoModuleLegend = (): ReactElement => (
+//   <InfoText color="secondaryLight" size="xl">
+//     No modules enabled
+//   </InfoText>
+// )
 
-const NoTransactionGuardLegend = (): ReactElement => (
-  <InfoText color="secondaryLight" size="xl">
-    No transaction guard set
-  </InfoText>
-)
+// const NoTransactionGuardLegend = (): ReactElement => (
+//   <InfoText color="secondaryLight" size="xl">
+//     No transaction guard set
+//   </InfoText>
+// )
 
-const DOCS_LINK = 'https://docs.gnosis-safe.io/contracts/modules-1'
+// const DOCS_LINK = 'https://docs.gnosis-safe.io/contracts/modules-1'
 
 const Advanced = (): ReactElement => {
   const classes = useStyles()
-  const { nonce, modules, guard, currentVersion } = useSelector(currentSafe) ?? {}
+  // const { nonce, modules, guard, currentVersion } = useSelector(currentSafe) ?? {}
+  const { nonce } = useSelector(currentSafe) ?? {}
 
-  const moduleData = modules ? getModuleData(modules) ?? null : null
-  const isVersionWithGuards = semverSatisfies(currentVersion, '>=1.3.0')
+  // const moduleData = modules ? getModuleData(modules) ?? null : null
+  // const isVersionWithGuards = semverSatisfies(currentVersion, '>=1.1.1')
 
   return (
     <>
@@ -58,7 +59,7 @@ const Advanced = (): ReactElement => {
       </Block>
 
       {/* Modules */}
-      <Block className={classes.container}>
+      {/* <Block className={classes.container}>
         <Title size="xs" withoutMargin>
           Safe Modules
         </Title>
@@ -72,10 +73,10 @@ const Advanced = (): ReactElement => {
         </InfoText>
 
         {!moduleData || !moduleData.length ? <NoModuleLegend /> : <ModulesTable moduleData={moduleData} />}
-      </Block>
+      </Block> */}
 
       {/* Transaction guard */}
-      {isVersionWithGuards && (
+      {/* {isVersionWithGuards && (
         <Block className={classes.container}>
           <Title size="xs" withoutMargin>
             Transaction Guard
@@ -96,7 +97,7 @@ const Advanced = (): ReactElement => {
 
           {!guard ? <NoTransactionGuardLegend /> : <TransactionGuard address={guard} />}
         </Block>
-      )}
+      )} */}
     </>
   )
 }
